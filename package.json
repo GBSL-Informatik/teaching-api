@@ -6,7 +6,7 @@
   "author": "Silas Berger <silas.berger@outlook.com>",
   "license": "CC-BY-SA",
   "scripts": {
-    "dev": "nodemon ./index.ts"
+    "dev": "nodemon src/index.ts"
   },
   "dependencies": {
     "@types/express": "^4.17.21",
