@@ -1,0 +1,9 @@
+services:
+  postgres:
+    build:
+      context: db/docker
+      dockerfile: PostgreSQL.dockerfile
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: qSpEx2Zz8BS9
