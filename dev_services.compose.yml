@@ -5,5 +5,10 @@ services:
       dockerfile: PostgreSQL.dockerfile
     ports:
       - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: qSpEx2Zz8BS9
+
+volumes:
+  postgres_data:
