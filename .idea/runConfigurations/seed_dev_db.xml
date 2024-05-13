@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="seed_dev_db" type="DatabaseScript">
+    <script-file value="$PROJECT_DIR$/db/scripts/seed.js" />
+    <script-mode>FILE</script-mode>
+    <data-source id="6ed7a698-2160-4ac2-9506-10ecf4abb278" />
+    <method v="2" />
+  </configuration>
+</component>
