@@ -1,8 +1,23 @@
 # Teaching Website Backend
 The backend for my teaching website.
 
+## Dev Dependencies
+
+In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) shall be installed globally:
+
+```bash
+yarn global add dotenv-cli
+```
+
 ## Dev Services
+
 Run `scripts/purge_dev_services.sh` or the `purge_dev_services` run config to remove all containers **and volumes** associated with the dev services.
+
+Run
+```bash
+docker compose --file dev_services.compose.yml up
+```
+to start the dev services.
 
 ### Postgres
 `docker-compose` rebuilds the container PostgreSQL container on restart. When building the container, all files in `db/docker/sql` are copied to `/docker-entrypoint-initdb.d/`. They are executed by PostgreSQL **only** if **no volume exists** yet. These init files reflect the expected database setup for a production deployment, including a dedicated user for the backend.
