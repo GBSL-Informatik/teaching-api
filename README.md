@@ -56,9 +56,21 @@ DATABASE_URL="postgresql://teaching_website:teaching_website@localhost:5432/teac
 Now run all prisma migrations:
 
 ```bash
-yarn run prisma migrate dev
+yarn db:migrate:dev
 ```
 
+### Seed Database
+
+To seed the database, run
+
+```bash
+yarn db:seed
+```
+
+the seed file is located in `prisma/seed.ts`. It will create
+- a user for `USER_EMAIL` and `USER_ID` from the .env file (if present)
+- a test user `foo@bar.ch` with the uuid `4e90b891-7e31-4a49-9ac7-a71a0ad6863a`
+- a group `test_group` with the memebers 
 
 ### Generate Database Documentation
 
