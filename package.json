@@ -9,7 +9,9 @@
     "dev": "nodemon src/index.ts",
     "db:migrate": "yarn prisma migrate deploy",
     "db:migrate:dev": "yarn prisma migrate dev",
-    "db:seed": "yarn prisma db seed"
+    "db:seed": "yarn prisma db seed",
+    "db:reset": "dotenv -- ts-node prisma/reset.ts",
+    "db:recreate": "yarn run db:reset && yarn run db:migrate && yarn run db:seed"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",
@@ -20,7 +22,8 @@
   },
   "prisma": {
     "schema": "./prisma/schema.prisma",
-    "seed": "dotenv -- ts-node prisma/seed.ts"
+    "seed": "dotenv -- ts-node prisma/seed.ts",
+    "reset": "dotenv -- ts-node prisma/reset.ts"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^10.9.1",
