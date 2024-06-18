@@ -28,6 +28,53 @@ The following users are created:
 - Admin: `postgres` / `qSpEx2Zz8BS9`
 - User for DB `teaching_website`: `teaching_website_backend` / `zW4SMEXLHpXXxxk`
 
+#### Local Setup
+To set up a local dev database, run
+
+```bash
+psql postgres # sudo -u postgres psql
+
+postgres=> CREATE ROLE teaching_website WITH LOGIN PASSWORD 'teaching_website';
+postgres=> ALTER ROLE teaching_website CREATEDB;
+postgres=> \du
+postgres=> \q
+
+psql -d postgres -h localhost -U teaching_website
+
+postgres=> CREATE DATABASE teaching_website;
+postgres=> CREATE DATABASE teaching_website_test; # for testing
+postgres=> \list
+postgres=> \c teaching_website
+```
+
+make sure to set the db-name and the password in the `.env` file:
+
+```
+DATABASE_URL="postgresql://teaching_website:teaching_website@localhost:5432/teaching_website"
+```
+
+Now run all prisma migrations:
+
+```bash
+yarn run prisma migrate dev
+```
+
+
+### Generate Database Documentation
+
+run
+
+```bash
+yarn run prisma generate
+```
+
+this will generate
+- [docs](public/prisma-docs/index.html) with the [prisma-docs-generator](https://github.com/pantharshit00/prisma-docs-generator)
+- [schema.dbml](prisma/dbml/schema.dbml) with the [prisma-dbml-generator](https://notiz.dev/blog/prisma-dbml-generator)
+
+the docs will be publically available under `/prisma/index.html`.
+
+
 ## Deployment
 ### PostgreSQL
 - Set up a database and user according to the scripts in `db/docker/sql`.

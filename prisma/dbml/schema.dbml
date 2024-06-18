@@ -1,0 +1,79 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table users {
+  id String [pk]
+  email String [unique, not null]
+  documents documents [not null]
+  groups users_on_groups [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table groups {
+  id String [pk]
+  name String [not null, default: '']
+  description String [not null, default: '']
+  users users_on_groups [not null]
+  documents groups_on_documents [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table documents {
+  id String [pk]
+  author users [not null]
+  authorId String [not null]
+  documents groups_on_documents [not null]
+  type String [not null]
+  data Json [not null]
+  parentId String
+  parent documents
+  children documents [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table users_on_groups {
+  user users [not null]
+  userId String [not null]
+  group groups [not null]
+  groupId String [not null]
+  role Role [not null, default: 'STUDENT']
+
+  indexes {
+    (userId, groupId) [pk]
+  }
+}
+
+Table groups_on_documents {
+  group groups [not null]
+  groupId String [not null]
+  document documents [not null]
+  documentId String [not null]
+  readAccess Role
+  writeAccess Role
+
+  indexes {
+    (groupId, documentId) [pk]
+  }
+}
+
+Enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+Ref: documents.authorId > users.id
+
+Ref: documents.parentId - documents.id
+
+Ref: users_on_groups.userId > users.id
+
+Ref: users_on_groups.groupId > groups.id
+
+Ref: groups_on_documents.groupId > groups.id
+
+Ref: groups_on_documents.documentId > documents.id

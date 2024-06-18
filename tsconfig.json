@@ -113,7 +113,6 @@
     ],
     "types": [
       "node",
-      "jest",
       "express"
     ]      
   }
