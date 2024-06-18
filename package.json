@@ -11,17 +11,20 @@
     "migrate:dev": "yarn prisma migrate dev"
   },
   "dependencies": {
-    "@prisma/client": "^5.14.0",
+    "@prisma/client": "^5.15.0",
     "@types/express": "^4.17.21",
-    "dotenv-cli": "^7.4.2",
     "express": "^4.19.2",
     "global": "^4.4.0",
     "nodemon": "^3.1.0",
-    "prisma": "^5.14.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"
+  },
+  "devDependencies": {
+    "prisma": "^5.15.0",
+    "prisma-dbml-generator": "^0.12.0",
+    "prisma-docs-generator": "^0.8.0"
   }
 }
