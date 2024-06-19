@@ -122,6 +122,14 @@ when you want to reset, migrate and seed the database, run
 yarn db:recreate
 ```
 
+### Prisma Studio
+
+Run Prisma Studio - a simplistic local database viewer - with
+
+```bash
+yarn run prisma studio
+```
+
 ### Generate Database Documentation
 
 run
