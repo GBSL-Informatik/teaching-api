@@ -72,6 +72,24 @@ the seed file is located in `prisma/seed.ts`. It will create
 - a test user `foo@bar.ch` with the uuid `4e90b891-7e31-4a49-9ac7-a71a0ad6863a`
 - a group `test_group` with the memebers 
 
+### Reset Database
+
+To reset the database, run
+
+```bash
+yarn db:reset
+```
+
+This will
+- drop all tables
+- drop all database types
+
+when you want to reset, migrate and seed the database, run
+
+```bash
+yarn db:recreate
+```
+
 ### Generate Database Documentation
 
 run
