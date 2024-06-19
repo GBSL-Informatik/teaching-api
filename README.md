@@ -9,7 +9,26 @@ In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dot
 yarn global add dotenv-cli
 ```
 
+## Environment Variables
+
+| Variable       | Description                                       | Example                                             |
+|:---------------|:--------------------------------------------------|:----------------------------------------------------|
+| `DATABASE_URL` | The URL to the PostgreSQL database.               | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
+| `USER_EMAIL`   | The email of the user to be created on seeding.   | `reto.holz@gbsl.ch`                                 |
+| `USER_ID`      | The UUID of the user to be created on seeding. \* | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
+
+\* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).
+
+These variables are stored in a `.env` file in the root directory. Make sure to not check this file into version control. Copy the `.example.env` file and fill in the values as described above.
+
+```bash
+cp .example.env .env
+```
+
 ## Dev Services
+
+## Database
+### Docker Compose
 
 Run `scripts/purge_dev_services.sh` or the `purge_dev_services` run config to remove all containers **and volumes** associated with the dev services.
 
@@ -19,16 +38,17 @@ docker compose --file dev_services.compose.yml up
 ```
 to start the dev services.
 
-### Postgres
+#### Postgres
 `docker-compose` rebuilds the container PostgreSQL container on restart. When building the container, all files in `db/docker/sql` are copied to `/docker-entrypoint-initdb.d/`. They are executed by PostgreSQL **only** if **no volume exists** yet. These init files reflect the expected database setup for a production deployment, including a dedicated user for the backend.
 
-The `db/scripts` directory contains files for creating tables, as well as seeding and purging the DB. Volumes stay intact, which means that the aforementioned init scripts will not be run again. 
+The `db/scripts` directory contains files for purging the DB. Volumes stay intact, which means that the aforementioned init scripts will not be run again. 
 
 The following users are created:
 - Admin: `postgres` / `qSpEx2Zz8BS9`
 - User for DB `teaching_website`: `teaching_website_backend` / `zW4SMEXLHpXXxxk`
 
 #### Local Setup
+
 To set up a local dev database, run
 
 ```bash
@@ -49,19 +69,29 @@ postgres=> \c teaching_website
 
 make sure to set the db-name and the password in the `.env` file:
 
-```
+```bash
 DATABASE_URL="postgresql://teaching_website:teaching_website@localhost:5432/teaching_website"
 ```
 
-Now run all prisma migrations:
+#### Create the Database
+
+Run all prisma migrations:
+
+```bash
+yarn db:migrate
+```
+
+or when you change the schema during development, run
 
 ```bash
 yarn db:migrate:dev
 ```
 
-### Seed Database
+to be prompted for a version name.
 
-To seed the database, run
+#### Seed Database
+
+To seed the database with some basic *users*, *documents*, *groups* and relations between them, run
 
 ```bash
 yarn db:seed
@@ -72,7 +102,7 @@ the seed file is located in `prisma/seed.ts`. It will create
 - a test user `foo@bar.ch` with the uuid `4e90b891-7e31-4a49-9ac7-a71a0ad6863a`
 - a group `test_group` with the memebers 
 
-### Reset Database
+#### Reset Database
 
 To reset the database, run
 
@@ -83,6 +113,8 @@ yarn db:reset
 This will
 - drop all tables
 - drop all database types
+
+#### Recreate Database
 
 when you want to reset, migrate and seed the database, run
 
