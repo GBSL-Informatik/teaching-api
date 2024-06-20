@@ -1,11 +1,10 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../src/prisma';
 
-
 async function main() {
     const { DATABASE_URL } = process.env;
     const user = DATABASE_URL?.split(':')[1].split('//')[1];
-    const dropTableSql = await prisma.$queryRaw<{query: string}[]>(
+    const dropTableSql = await prisma.$queryRaw<{ query: string }[]>(
         Prisma.sql`
             SELECT 'drop table if exists "' || tablename || '" cascade;' as query
             FROM pg_tables
@@ -18,7 +17,7 @@ async function main() {
         const r = await prisma.$queryRawUnsafe(dropTableSql[i].query);
         console.log(`Dropped table ${table}`);
     }
-    const dropTypeSql = await prisma.$queryRaw<{query: string}[]>(
+    const dropTypeSql = await prisma.$queryRaw<{ query: string }[]>(
         Prisma.sql`
             SELECT 'drop type if exists "' || pg_type.typname || '" cascade;' as query
             FROM pg_type
@@ -33,8 +32,6 @@ async function main() {
         const r = await prisma.$queryRawUnsafe(dropTypeSql[i].query);
         console.log(`Dropped type ${table}`);
     }
-
-
 }
 
 main()

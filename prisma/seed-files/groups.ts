@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client"
+import { Prisma } from '@prisma/client';
 const { USER_EMAIL, USER_ID } = process.env;
 
 export const ALL_USERS_GROUP_ID = '8f60f838-940a-4ab3-bb65-405308b0db6c';

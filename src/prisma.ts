@@ -1,9 +1,9 @@
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma, PrismaClient } from '@prisma/client';
 
-const options: Prisma.PrismaClientOptions = {}
+const options: Prisma.PrismaClientOptions = {};
 if (process.env.LOG) {
-    options.log = ['query', 'info', 'warn']
+    options.log = ['query', 'info', 'warn'];
 }
-const prisma = new PrismaClient(options)
+const prisma = new PrismaClient(options);
 
-export default prisma
+export default prisma;
