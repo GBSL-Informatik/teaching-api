@@ -9,6 +9,16 @@ In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dot
 yarn global add dotenv-cli
 ```
 
+## Code Formatting
+
+For a consistent code style, the project uses [Prettier](https://prettier.io/). To format the code, run
+
+```bash
+yarn run format
+```
+
+to format all typescript files.
+
 ## Environment Variables
 
 | Variable       | Description                                       | Example                                             |
