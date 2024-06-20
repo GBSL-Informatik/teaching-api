@@ -2,10 +2,7 @@ import Logger from '../utils/logger';
 import { getStrategy } from './azure-ad';
 import { getStrategy as mockStrategy } from './mock';
 export const strategyForEnvironment = () => {
-    if (
-        process.env.NODE_ENV === 'test' ||
-        (process.env.USER_ID && process.env.NODE_ENV !== 'production')
-    ) {
+    if (process.env.NODE_ENV === 'test' || (process.env.USER_ID && process.env.NODE_ENV !== 'production')) {
         if (process.env.USER_ID) {
             const tid = process.env.USER_ID;
             const n = tid.length >= 46 ? 0 : 46 - tid.length;

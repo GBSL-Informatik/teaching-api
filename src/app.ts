@@ -109,7 +109,6 @@ app.get(`${API_URL}`, (req, res) => {
 });
 
 const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) => {
-    Logger.info(req.user)
     if (req.isAuthenticated()) {
         return next();
     }
@@ -128,8 +127,8 @@ app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) =>
 });
 
 app.post(`${API_URL}/logout`, SessionOauthStrategy, async (req, res) => {
-    Logger.info(req.user)
-    Logger.info(req.session)
+    Logger.info(req.user);
+    Logger.info(req.session);
     await prisma.sessions.delete({ where: { sid: req.session.id } });
     res.clearCookie(SESSION_KEY).status(200).send('OK');
 });
