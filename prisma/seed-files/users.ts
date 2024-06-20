@@ -8,18 +8,25 @@ const { USER_EMAIL, USER_ID } = process.env;
 const users = [
     {
         email: 'foo@bar.ch',
-        id: FOO_BAR_ID
+        id: FOO_BAR_ID,
+        firstName: 'Foo',
+        lastName: 'Bar'
     },
     {
         email: 'test@user.ch',
-        id: TEST_USER_ID
+        id: TEST_USER_ID,
+        firstName: 'Test',
+        lastName: 'User'
     }
 ] satisfies Prisma.UserCreateInput[];
 
 if (USER_EMAIL && USER_ID) {
+    const name = USER_EMAIL.split('@')[0];
     users.push({
         email: USER_EMAIL,
-        id: USER_ID
+        id: USER_ID,
+        firstName: name.split('.')[0],
+        lastName: name.split('.')[1] || name
     });
 }
 

@@ -5,6 +5,9 @@
 Table users {
   id String [pk]
   email String [unique, not null]
+  firstName String [not null]
+  lastName String [not null]
+  role Role [not null, default: 'STUDENT']
   documents documents [not null]
   userGroups users_on_groups [not null]
   createdAt DateTime [default: `now()`, not null]
@@ -58,6 +61,12 @@ Table groups_on_documents {
   indexes {
     (groupId, documentId) [pk]
   }
+}
+
+Table sessions {
+  sid String [pk]
+  sess Json [not null]
+  expire DateTime [not null]
 }
 
 Enum Role {

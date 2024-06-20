@@ -1,0 +1,10 @@
+GET http://localhost:3002/api/v1/user
+
+###
+
+GET http://localhost:3002/api/v1/users
+
+###
+
+GET http://localhost:3002/api/v1/users/96651c13-3af6-4cc0-b242-ea38d438dc41
+

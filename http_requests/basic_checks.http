@@ -1,6 +1,14 @@
-GET localhost:8080/
+GET http://localhost:3002/api/v1/
 
 ###
 
-GET localhost:8080/error
+GET http://localhost:3002/api/v1/checklogin
+###
+
+POST http://localhost:3002/api/v1/logout
+
+###
+
+GET http://localhost:3002/api/v1/error
+
 

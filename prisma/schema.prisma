@@ -26,6 +26,10 @@ generator erd {
 model User {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String     @unique
+  firstName String    @map("first_name")
+  lastName  String    @map("last_name")
+  role      Role       @default(STUDENT)
+
   documents Document[] @relation("documents")
 
   userGroups UsersOnGroups[]
@@ -94,6 +98,15 @@ model GroupsOnDocuments {
 
   @@id([groupId, documentId])
   @@map("groups_on_documents")
+}
+
+model Sessions {
+    sid    String   @id @db.VarChar
+    sess   Json     @db.Json
+    expire DateTime @db.Timestamp(6)
+
+    @@index([expire], map: "IDX_session_expire")
+    @@map("sessions")
 }
 
 enum Role {
