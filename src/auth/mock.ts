@@ -15,7 +15,11 @@ class MockStrat extends Strategy {
         req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
         options?: any
     ) {
-        let where: { email: string } | { id: string } = { id: process.env.USER_ID || '-1' };
+        if (process.env.NODE_ENV === 'production') {
+            return this.fail('Mock Strategy not available in production');
+        }
+
+        let where: { email: string } | { id: string } | undefined = undefined;
         if (process.env.NODE_ENV === 'test' && req.headers.authorization) {
             try {
                 const auth = JSON.parse(req.headers.authorization) as { email: string };
@@ -24,8 +28,20 @@ class MockStrat extends Strategy {
                 Logger.warn('Bearer Verify Error', err);
                 return this.fail('Could not parse authorization header');
             }
+        } else if (req.headers.authorization) {
+            try {
+                const auth = JSON.parse(req.headers.authorization) as { email: string } | { id: string };
+                if ('id' in auth) {
+                    where = { id: auth.id };
+                } else if ('email' in auth) {
+                    where = { email: auth.email };
+                }
+            } catch (/* istanbul ignore next */ err) {
+                Logger.warn('Bearer Verify Error', err);
+                return this.fail('Could not parse authorization header');
+            }
         }
-        if ('id' in where && where.id === '-1') {
+        if (!where) {
             return this.fail('No User provided in request');
         }
         try {

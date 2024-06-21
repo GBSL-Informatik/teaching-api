@@ -1,0 +1,5 @@
+@userId = {{$dotenv USER_ID}}
+
+GET http://localhost:3002/api/v1/groups
+Authorization: { "id": "{{userId}}" }
+

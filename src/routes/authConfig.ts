@@ -88,6 +88,15 @@ const authConfig: Config = {
                     roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
                 }
             ]
+        },
+        groups: {
+            path: '/groups',
+            access: [
+                {
+                    methods: ['GET', 'PUT', 'POST', 'DELETE'],
+                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                }
+            ]
         }
     }
 };

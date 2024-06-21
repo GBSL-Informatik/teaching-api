@@ -1,10 +1,40 @@
+@userId = {{$dotenv USER_ID}}
+
 GET http://localhost:3002/api/v1/user
+Authorization: { "id": "{{userId}}" }
 
 ###
 
 GET http://localhost:3002/api/v1/users
+Authorization: { "id": "{{userId}}" }
 
 ###
 
 GET http://localhost:3002/api/v1/users/96651c13-3af6-4cc0-b242-ea38d438dc41
+Authorization: { "id": "{{userId}}" }
 
+
+###
+PUT http://localhost:3002/api/v1/users/96651c13-3af6-4cc0-b242-ea38d438dc41
+Authorization: { "id": "96651c13-3af6-4cc0-b242-ea38d438dc41" }
+content-type: application/json
+
+{
+    "data": {
+        "firstName": "John",
+        "lastName": "Doe"
+    }
+}
+
+###
+
+PUT http://localhost:3002/api/v1/users/96651c13-3af6-4cc0-b242-ea38d438dc41
+Authorization: { "email": "foo@bar.ch" }
+content-type: application/json
+
+{
+    "data": {
+        "firstName": "Foo",
+        "lastName": "Bar"
+    }
+}

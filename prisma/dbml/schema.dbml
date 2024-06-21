@@ -75,14 +75,14 @@ Enum Role {
   ADMIN
 }
 
-Ref: documents.authorId > users.id
+Ref: documents.authorId > users.id [delete: Cascade]
 
-Ref: documents.parentId - documents.id
+Ref: documents.parentId - documents.id [delete: Restrict]
 
-Ref: users_on_groups.userId > users.id
+Ref: users_on_groups.userId > users.id [delete: Cascade]
 
-Ref: users_on_groups.groupId > groups.id
+Ref: users_on_groups.groupId > groups.id [delete: Cascade]
 
-Ref: groups_on_documents.groupId > groups.id
+Ref: groups_on_documents.groupId > groups.id [delete: Cascade]
 
-Ref: groups_on_documents.documentId > documents.id
+Ref: groups_on_documents.documentId > documents.id [delete: Cascade]

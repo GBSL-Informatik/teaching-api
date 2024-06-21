@@ -1,8 +1,15 @@
+@userId = {{$dotenv USER_ID}}
+
 GET http://localhost:3002/api/v1/
 
 ###
 
 GET http://localhost:3002/api/v1/checklogin
+###
+
+GET http://localhost:3002/api/v1/checklogin
+Authorization: { "id": "{{userId}}" }
+
 ###
 
 POST http://localhost:3002/api/v1/logout
