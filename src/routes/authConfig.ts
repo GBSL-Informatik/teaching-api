@@ -1,4 +1,5 @@
 import { Role } from '@prisma/client';
+import { documents } from '../../prisma/seed-files/documents';
 
 interface Credentials {
     tenantID: string;
@@ -91,6 +92,15 @@ const authConfig: Config = {
         },
         groups: {
             path: '/groups',
+            access: [
+                {
+                    methods: ['GET', 'PUT', 'POST', 'DELETE'],
+                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                }
+            ]
+        },
+        documents: {
+            path: '/documents',
             access: [
                 {
                     methods: ['GET', 'PUT', 'POST', 'DELETE'],
