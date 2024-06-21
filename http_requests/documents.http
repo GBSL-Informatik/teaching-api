@@ -17,8 +17,7 @@ Content-Type: application/json
 
 {
     "type": "exampleType",
-    "data": { "key": "value" },
-    "parentId": "parentDocumentId"
+    "data": { "key": "value" }
 }
 
 ###

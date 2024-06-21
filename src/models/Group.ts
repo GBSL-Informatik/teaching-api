@@ -3,16 +3,13 @@ import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
 import Logger from '../utils/logger';
-const getData = createDataExtractor<Prisma.GroupUncheckedUpdateInput>([
-    'description',
-    'name'
-]);
+const getData = createDataExtractor<Prisma.GroupUncheckedUpdateInput>(['description', 'name']);
 
 function Group(db: PrismaClient['group']) {
     return Object.assign(db, {
         async findModel(id: string): Promise<DbGroup | null> {
-            return await db.findUnique({ 
-                where: { 
+            return await db.findUnique({
+                where: {
                     id: id
                 },
                 include: {
@@ -22,7 +19,7 @@ function Group(db: PrismaClient['group']) {
                             user: {
                                 select: {
                                     id: true,
-                                    role: true,
+                                    role: true
                                 }
                             }
                         }
@@ -75,7 +72,7 @@ function Group(db: PrismaClient['group']) {
                     users: {
                         create: {
                             userId: actor.id,
-                            role: Role.ADMIN,
+                            role: Role.ADMIN
                         }
                     }
                 },
@@ -85,7 +82,7 @@ function Group(db: PrismaClient['group']) {
                             user: {
                                 select: {
                                     id: true,
-                                    role: true,
+                                    role: true
                                 }
                             }
                         }
@@ -108,7 +105,7 @@ function Group(db: PrismaClient['group']) {
                     id: id
                 }
             });
-        },
+        }
     });
 }
 

@@ -28,7 +28,9 @@ if (USER_EMAIL && USER_ID) {
         id: USER_ID,
         firstName: name.split('.')[0],
         lastName: name.split('.')[1] || name,
-        role: Object.values(Role).includes(process.env.USER_ROLE as Role) ? process.env.USER_ROLE as Role : Role.STUDENT
+        role: Object.values(Role).includes(process.env.USER_ROLE as Role)
+            ? (process.env.USER_ROLE as Role)
+            : Role.STUDENT
     });
 }
 

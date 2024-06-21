@@ -17,7 +17,7 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
 };
 
 export const update: RequestHandler<{ id: string }, any, { data: DbUser }> = async (req, res, next) => {
-    Logger.info(req.body)
+    Logger.info(req.body);
 
     try {
         const model = await User.updateModel(req.user!, req.params.id, req.body.data);

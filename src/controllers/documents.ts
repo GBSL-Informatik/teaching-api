@@ -6,7 +6,7 @@ import { JsonObject } from '@prisma/client/runtime/library';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const document = await Document.findModel(req.params.id);
+        const document = await Document.findModel(req.user!, req.params.id);
         res.json(document);
     } catch (error) {
         next(error);
