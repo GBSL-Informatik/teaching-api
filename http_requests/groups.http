@@ -3,3 +3,49 @@
 GET http://localhost:3002/api/v1/groups
 Authorization: { "id": "{{userId}}" }
 
+### 
+GET http://localhost:3002/api/v1/groups/8f60f838-940a-4ab3-bb65-405308b0db6c
+Authorization: { "id": "{{userId}}" }
+content-type: application/json
+
+### 
+# @prompt id
+
+PUT http://localhost:3002/api/v1/groups/{{id}}
+Authorization: { "id": "{{userId}}" }
+content-type: application/json
+
+{
+    "data": {
+        "name": "Foo Group",
+        "description": "This is a foo group"
+    }
+}
+
+### foo@bar.ch is not allowed to update group
+
+PUT http://localhost:3002/api/v1/groups/8f60f838-940a-4ab3-bb65-405308b0db6c
+Authorization: { "email": "foo@bar.ch" }
+content-type: application/json
+
+{
+    "data": {
+        "name": "Foos Group",
+        "description": "This is a foo group"
+    }
+}
+
+### 
+
+POST http://localhost:3002/api/v1/groups
+Authorization: { "id": "{{userId}}" }
+content-type: application/json
+
+{
+    "name": "Test Group"
+}
+
+### 
+# @prompt id
+DELETE http://localhost:3002/api/v1/groups/{{id}}
+Authorization: { "id": "{{userId}}" }

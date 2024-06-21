@@ -11,12 +11,29 @@ const getData = createDataExtractor<Prisma.GroupUncheckedUpdateInput>([
 function Group(db: PrismaClient['group']) {
     return Object.assign(db, {
         async findModel(id: string): Promise<DbGroup | null> {
-            return await db.findUnique({ where: { id } });
+            return await db.findUnique({ 
+                where: { 
+                    id: id
+                },
+                include: {
+                    users: {
+                        select: {
+                            role: true,
+                            user: {
+                                select: {
+                                    id: true,
+                                    role: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         },
         async updateModel(actor: User, id: string, data: Partial<DbGroup>): Promise<DbGroup> {
-            const record = await db.findUnique({ where: { id: id } });
+            const record = await this.findModel(id);
             if (!record) {
-                throw new HTTP404Error('User not found');
+                throw new HTTP404Error('Group not found');
             }
             if (!(record.id === actor.id || actor.role === Role.ADMIN)) {
                 throw new HTTP403Error('Not authorized');
@@ -50,6 +67,32 @@ function Group(db: PrismaClient['group']) {
                     }
                 }
             });
+        },
+        async createModel(actor: User, name: string): Promise<DbGroup> {
+            const record = await db.create({
+                data: {
+                    name: name,
+                    users: {
+                        create: {
+                            userId: actor.id,
+                            role: Role.ADMIN,
+                        }
+                    }
+                },
+                include: {
+                    users: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    role: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return record;
         },
         async deleteModel(actor: User, id: string): Promise<DbGroup> {
             const record = await db.findUnique({ where: { id: id } });

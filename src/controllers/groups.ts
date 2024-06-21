@@ -12,9 +12,18 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     }
 };
 
-export const update: RequestHandler<{ id: string }, any, { data: DbGroup }> = async (req, res, next) => {
-    Logger.info(req.body)
+export const create: RequestHandler<any, any, DbGroup> = async (req, res, next) => {
+    try {
+        Logger.info(req.body);
+        const { name } = req.body;
+        const model = await Group.createModel(req.user!, name);
+        res.status(200).json(model);
+    } catch (error) {
+        next(error);
+    }
+};
 
+export const update: RequestHandler<{ id: string }, any, { data: DbGroup }> = async (req, res, next) => {
     try {
         const model = await Group.updateModel(req.user!, req.params.id, req.body.data);
         res.status(200).json(model);
