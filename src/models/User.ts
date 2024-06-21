@@ -33,7 +33,7 @@ function User(db: PrismaClient['user']) {
             }
             return await db.findMany({
                 where: {
-                    groups: {
+                    userGroups: {
                         some: {
                             AND: {
                                 group: {
