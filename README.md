@@ -1,9 +1,9 @@
 # Teaching Website Backend
-The backend for my teaching website.
+The backend for our teaching website.
 
 ## Dev Dependencies
 
-In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) shall be installed globally:
+In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) must be installed globally:
 
 ```bash
 yarn global add dotenv-cli
@@ -23,7 +23,7 @@ to format all typescript files.
 
 | Variable       | Description                                       | Example                                             |
 |:---------------|:--------------------------------------------------|:----------------------------------------------------|
-| `DATABASE_URL` | The URL to the PostgreSQL database.               | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
+| `DATABASE_URL` | The URL to connect to the PostgreSQL database.               | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
 | `USER_EMAIL`   | The email of the user to be created on seeding.   | `reto.holz@gbsl.ch`                                 |
 | `USER_ID`      | The UUID of the user to be created on seeding. \* | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
 
