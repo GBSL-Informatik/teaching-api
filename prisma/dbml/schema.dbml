@@ -7,19 +7,25 @@ Table users {
   email String [unique, not null]
   firstName String [not null]
   lastName String [not null]
-  role Role [not null, default: 'STUDENT']
+  isAdmin Boolean [not null, default: false]
   documents documents [not null]
-  userGroups users_on_groups [not null]
+  studentGroups student_groups [not null]
+  rootUserPermissions root_user_permissions [not null]
+  documentUserPermissions document_user_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
 
-Table groups {
+Table student_groups {
   id String [pk]
   name String [not null, default: '']
   description String [not null, default: '']
-  users users_on_groups [not null]
-  groupDocuments groups_on_documents [not null]
+  users users [not null]
+  parentId String
+  parent student_groups
+  children student_groups [not null]
+  rootGroupPermissions root_group_permissions [not null]
+  documentGroupPermissions document_group_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
@@ -28,39 +34,61 @@ Table documents {
   id String [pk]
   author users [not null]
   authorId String [not null]
-  documentGroups groups_on_documents [not null]
   type String [not null]
   data Json [not null]
   parentId String
   parent documents
   children documents [not null]
+  documentRoot document_roots [not null]
+  documentRootId String [not null]
+  documentGroupPermissions document_group_permissions [not null]
+  documentUserPermissions document_user_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
 
-Table users_on_groups {
-  user users [not null]
-  userId String [not null]
-  group groups [not null]
-  groupId String [not null]
-  role Role [not null, default: 'STUDENT']
-
-  indexes {
-    (userId, groupId) [pk]
-  }
+Table document_roots {
+  id String [pk]
+  access Access [not null, default: 'RW']
+  documents documents [not null]
+  rootGroupPermissions root_group_permissions [not null]
+  rootUserPermissions root_user_permissions [not null]
 }
 
-Table groups_on_documents {
-  group groups [not null]
+Table root_group_permissions {
+  id String [pk]
+  access Access [not null]
+  studentGroup student_groups [not null]
+  studentGroupId String [not null]
+  documentRoot document_roots [not null]
+  documentRootId String [not null]
+}
+
+Table root_user_permissions {
+  id String [pk]
+  access Access [not null]
+  user users [not null]
+  userId String [not null]
+  documentRoot document_roots [not null]
+  documentRootId String [not null]
+}
+
+Table document_group_permissions {
+  id String [pk]
+  access Access [not null]
+  group student_groups [not null]
   groupId String [not null]
   document documents [not null]
   documentId String [not null]
-  readAccess Role
-  writeAccess Role
+}
 
-  indexes {
-    (groupId, documentId) [pk]
-  }
+Table document_user_permissions {
+  id String [pk]
+  access Access [not null]
+  document documents [not null]
+  documentId String [not null]
+  user users [not null]
+  userId String [not null]
 }
 
 Table sessions {
@@ -69,20 +97,42 @@ Table sessions {
   expire DateTime [not null]
 }
 
-Enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
+Table documents {
+  documentsId String [ref: > documents.id]
+  documentsId String [ref: > documents.id]
 }
+
+Table StudentGroupToUser {
+  studentgroupsId String [ref: > student_groups.id]
+  usersId String [ref: > users.id]
+}
+
+Enum Access {
+  RO
+  RW
+  None
+}
+
+Ref: student_groups.parentId - student_groups.id [delete: Cascade]
 
 Ref: documents.authorId > users.id [delete: Cascade]
 
-Ref: documents.parentId - documents.id [delete: Restrict]
+Ref: documents.parentId - documents.id [delete: Cascade]
 
-Ref: users_on_groups.userId > users.id [delete: Cascade]
+Ref: documents.documentRootId > document_roots.id [delete: Cascade]
 
-Ref: users_on_groups.groupId > groups.id [delete: Cascade]
+Ref: root_group_permissions.studentGroupId > student_groups.id [delete: Cascade]
 
-Ref: groups_on_documents.groupId > groups.id [delete: Cascade]
+Ref: root_group_permissions.documentRootId > document_roots.id [delete: Cascade]
 
-Ref: groups_on_documents.documentId > documents.id [delete: Cascade]
+Ref: root_user_permissions.userId > users.id [delete: Cascade]
+
+Ref: root_user_permissions.documentRootId > document_roots.id [delete: Cascade]
+
+Ref: document_group_permissions.groupId > student_groups.id [delete: Cascade]
+
+Ref: document_group_permissions.documentId > documents.id [delete: Cascade]
+
+Ref: document_user_permissions.documentId > documents.id [delete: Cascade]
+
+Ref: document_user_permissions.userId > users.id [delete: Cascade]

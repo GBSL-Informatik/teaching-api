@@ -28,30 +28,40 @@ model User {
   email     String     @unique
   firstName String     @map("first_name")
   lastName  String     @map("last_name")
-  role      Role       @default(STUDENT)
+  isAdmin   Boolean    @default(false) @map("is_admin")
 
   documents Document[] @relation("documents")
 
-  userGroups UsersOnGroups[]
+  studentGroups StudentGroup[]
 
+  rootUserPermissions RootUserPermission[] @relation("root_user_to_user_permission")
+  documentUserPermissions DocumentUserPermission[] @relation("document_user_to_user_permission")
+  
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("users")
 }
 
-model Group {
+
+model StudentGroup {
   id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String @default("")
   description String @default("")
 
-  users     UsersOnGroups[]
-  groupDocuments GroupsOnDocuments[]
+  users     User[]
+  
+  parentId String?    @map("parent_id") @db.Uuid
+  parent   StudentGroup?  @relation("parent_student_group", fields: [parentId], references: [id], onDelete: Cascade)
+  children StudentGroup[] @relation("parent_student_group")
+
+  rootGroupPermissions RootGroupPermission[] @relation("root_group_to_student_group_permission")
+  documentGroupPermissions DocumentGroupPermission[] @relation("document_group_to_student_group_permission")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  @@map("groups")
+  @@map("student_groups")
 }
 
 model Document {
@@ -60,13 +70,18 @@ model Document {
   author   User   @relation("documents", fields: [authorId], references: [id], onDelete: Cascade)
   authorId String @map("author_id") @db.Uuid
 
-  documentGroups GroupsOnDocuments[]
-
   type     String
   data     Json
+
   parentId String?    @map("parent_id") @db.Uuid
-  parent   Document?  @relation("connected_documents", fields: [parentId], references: [id], onDelete: Restrict)
+  parent   Document?  @relation("connected_documents", fields: [parentId], references: [id], onDelete: Cascade)
   children Document[] @relation("connected_documents")
+
+  documentRoot DocumentRoot @relation("documents", fields: [documentRootId], references: [id], onDelete: Cascade)
+  documentRootId String @map("document_root_id") @db.Uuid
+
+  documentGroupPermissions DocumentGroupPermission[] @relation("document_group_to_document_permission")
+  documentUserPermissions DocumentUserPermission[] @relation("document_user_to_document_permission")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
@@ -74,30 +89,69 @@ model Document {
   @@map("documents")
 }
 
-model UsersOnGroups {
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @map("user_id") @db.Uuid
+model DocumentRoot {
+  id String @id @db.Uuid
+  access Access @default(RW)
+  documents Document[] @relation("documents")
 
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId String @map("group_id") @db.Uuid
-  role    Role   @default(STUDENT)
+  rootGroupPermissions RootGroupPermission[] @relation("root_group_to_document_root_permission")
+  rootUserPermissions RootUserPermission[] @relation("root_user_to_document_root_permission")
 
-  @@id([userId, groupId])
-  @@map("users_on_groups")
+  @@map("document_roots")
 }
 
-model GroupsOnDocuments {
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+model RootGroupPermission {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  access Access
+  studentGroup StudentGroup @relation("root_group_to_student_group_permission", fields: [studentGroupId], references: [id], onDelete: Cascade)
+  studentGroupId String @map("student_group_id") @db.Uuid
+
+  documentRoot DocumentRoot @relation("root_group_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
+  documentRootId String @map("document_root_id") @db.Uuid
+
+  @@map("root_group_permissions")
+}
+
+
+model RootUserPermission {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  access Access
+
+  user User @relation("root_user_to_user_permission", fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  documentRoot DocumentRoot @relation("root_user_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
+  documentRootId String @map("document_root_id") @db.Uuid
+
+  @@map("root_user_permissions")
+}
+
+
+model DocumentGroupPermission {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  access Access
+
+  group StudentGroup @relation("document_group_to_student_group_permission", fields: [groupId], references: [id], onDelete: Cascade)
   groupId String @map("group_id") @db.Uuid
 
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId  String   @map("document_id") @db.Uuid
+  document Document @relation("document_group_to_document_permission", fields: [documentId], references: [id], onDelete: Cascade)
+  documentId String @map("document_id") @db.Uuid
 
-  readAccess  Role?    @map("read_access")
-  writeAccess Role?    @map("write_access")
+  @@map("document_group_permissions")
+}
 
-  @@id([groupId, documentId])
-  @@map("groups_on_documents")
+
+model DocumentUserPermission {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  access Access
+
+  document Document @relation("document_user_to_document_permission", fields: [documentId], references: [id], onDelete: Cascade)
+  documentId String @map("document_id") @db.Uuid
+
+  user User @relation("document_user_to_user_permission", fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  @@map("document_user_permissions")
 }
 
 model Sessions {
@@ -109,8 +163,8 @@ model Sessions {
     @@map("sessions")
 }
 
-enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
+enum Access {
+  RO
+  RW
+  None
 }
