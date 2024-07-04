@@ -1,0 +1,103 @@
+datasource db {
+  url        = env("DATABASE_URL")
+  provider   = "postgresql"
+  extensions = [pg_trgm, pgcrypto]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views", "postgresqlExtensions"]
+}
+
+generator docs {
+  provider = "node node_modules/prisma-docs-generator"
+  output   = "../docs/prisma"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../docs/erd.svg"
+}
+
+model User {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String     @unique
+  documents Document[] @relation("documents")
+
+  userGroups UsersOnGroups[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Group {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String @default("")
+  description String @default("")
+
+  users     UsersOnGroups[]
+  groupDocuments GroupsOnDocuments[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("groups")
+}
+
+model Document {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  author   User   @relation("documents", fields: [authorId], references: [id])
+  authorId String @map("author_id") @db.Uuid
+
+  documentGroups GroupsOnDocuments[]
+
+  type     String
+  data     Json
+  parentId String?    @map("parent_id") @db.Uuid
+  parent   Document?  @relation("connected_documents", fields: [parentId], references: [id])
+  children Document[] @relation("connected_documents")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("documents")
+}
+
+model UsersOnGroups {
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map("user_id") @db.Uuid
+
+  group   Group  @relation(fields: [groupId], references: [id])
+  groupId String @map("group_id") @db.Uuid
+  role    Role   @default(STUDENT)
+
+  @@id([userId, groupId])
+  @@map("users_on_groups")
+}
+
+model GroupsOnDocuments {
+  group   Group  @relation(fields: [groupId], references: [id])
+  groupId String @map("group_id") @db.Uuid
+
+  document    Document @relation(fields: [documentId], references: [id])
+  documentId  String   @map("document_id") @db.Uuid
+
+  readAccess  Role?    @map("read_access")
+  writeAccess Role?    @map("write_access")
+
+  @@id([groupId, documentId])
+  @@map("groups_on_documents")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}

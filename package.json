@@ -2,22 +2,37 @@
   "name": "teaching-website-backend",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://github.com/SilasBerger/teaching-website-backend.git",
-  "author": "Silas Berger <silas.berger@outlook.com>",
+  "repository": "https://github.com/GBSL-Informatik/teaching-website-backend.git",
+  "author": "GBSL Informatik",
   "license": "CC-BY-SA",
   "scripts": {
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon src/index.ts",
+    "db:migrate": "yarn prisma migrate deploy",
+    "db:migrate:dev": "yarn prisma migrate dev",
+    "db:seed": "yarn prisma db seed",
+    "db:reset": "dotenv -- ts-node prisma/reset.ts",
+    "db:recreate": "yarn run db:reset && yarn run db:migrate && yarn run db:seed"
   },
   "dependencies": {
-    "@prisma/client": "^5.14.0",
+    "@prisma/client": "^5.15.0",
     "@types/express": "^4.17.21",
     "express": "^4.19.2",
-    "nodemon": "^3.1.0",
-    "prisma": "^5.14.0",
-    "ts-node": "^10.9.2",
+    "global": "^4.4.0",
     "typescript": "^5.4.5"
   },
   "prisma": {
-    "schema": "./schema.prisma"
+    "schema": "./prisma/schema.prisma",
+    "seed": "dotenv -- ts-node prisma/seed.ts",
+    "reset": "dotenv -- ts-node prisma/reset.ts"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^10.9.1",
+    "dotenv-cli": "^7.4.2",
+    "nodemon": "^3.1.3",
+    "prisma": "^5.15.0",
+    "prisma-dbml-generator": "^0.12.0",
+    "prisma-docs-generator": "^0.8.0",
+    "prisma-erd-generator": "^1.11.2",
+    "ts-node": "^10.9.2"
   }
 }
