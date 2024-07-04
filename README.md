@@ -3,7 +3,7 @@ The backend for my teaching website.
 
 ## Dev Dependencies
 
-In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) shall be installed globally:
+In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) must be installed globally:
 
 ```bash
 yarn global add dotenv-cli
