@@ -1,5 +1,5 @@
 # Teaching Website Backend
-The backend for my teaching website.
+The backend for our teaching website.
 
 ## Dev Dependencies
 
