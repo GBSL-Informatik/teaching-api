@@ -14,6 +14,4 @@ app.get('/', async (req, res) => {
     res.json({message: "Hello, world!"})
 });
 
-// prisma.messages.findMany().then((res: any) => console.log(res));
-
 app.listen(PORT, HOSTNAME, () => console.log(`🚀 App listening on ${HOSTNAME}:${PORT}`));

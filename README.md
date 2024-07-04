@@ -13,7 +13,7 @@ yarn global add dotenv-cli
 
 | Variable       | Description                                       | Example                                             |
 |:---------------|:--------------------------------------------------|:----------------------------------------------------|
-| `DATABASE_URL` | The URL to the PostgreSQL database.               | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
+| `DATABASE_URL` | The URL to connect to the PostgreSQL database.               | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
 | `USER_EMAIL`   | The email of the user to be created on seeding.   | `reto.holz@gbsl.ch`                                 |
 | `USER_ID`      | The UUID of the user to be created on seeding. \* | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
 
