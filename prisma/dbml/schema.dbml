@@ -11,7 +11,6 @@ Table users {
   documents documents [not null]
   studentGroups student_groups [not null]
   rootUserPermissions root_user_permissions [not null]
-  documentUserPermissions document_user_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
@@ -25,7 +24,6 @@ Table student_groups {
   parent student_groups
   children student_groups [not null]
   rootGroupPermissions root_group_permissions [not null]
-  documentGroupPermissions document_group_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
@@ -41,8 +39,6 @@ Table documents {
   children documents [not null]
   documentRoot document_roots [not null]
   documentRootId String [not null]
-  documentGroupPermissions document_group_permissions [not null]
-  documentUserPermissions document_user_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
@@ -71,24 +67,6 @@ Table root_user_permissions {
   userId String [not null]
   documentRoot document_roots [not null]
   documentRootId String [not null]
-}
-
-Table document_group_permissions {
-  id String [pk]
-  access Access [not null]
-  group student_groups [not null]
-  groupId String [not null]
-  document documents [not null]
-  documentId String [not null]
-}
-
-Table document_user_permissions {
-  id String [pk]
-  access Access [not null]
-  document documents [not null]
-  documentId String [not null]
-  user users [not null]
-  userId String [not null]
 }
 
 Table sessions {
@@ -128,11 +106,3 @@ Ref: root_group_permissions.documentRootId > document_roots.id [delete: Cascade]
 Ref: root_user_permissions.userId > users.id [delete: Cascade]
 
 Ref: root_user_permissions.documentRootId > document_roots.id [delete: Cascade]
-
-Ref: document_group_permissions.groupId > student_groups.id [delete: Cascade]
-
-Ref: document_group_permissions.documentId > documents.id [delete: Cascade]
-
-Ref: document_user_permissions.documentId > documents.id [delete: Cascade]
-
-Ref: document_user_permissions.userId > users.id [delete: Cascade]

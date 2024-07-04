@@ -75,26 +75,6 @@ CREATE TABLE "root_user_permissions" (
 );
 
 -- CreateTable
-CREATE TABLE "document_group_permissions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "access" "Access" NOT NULL,
-    "group_id" UUID NOT NULL,
-    "document_id" UUID NOT NULL,
-
-    CONSTRAINT "document_group_permissions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "document_user_permissions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "access" "Access" NOT NULL,
-    "document_id" UUID NOT NULL,
-    "user_id" UUID NOT NULL,
-
-    CONSTRAINT "document_user_permissions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "sessions" (
     "sid" VARCHAR NOT NULL,
     "sess" JSON NOT NULL,
@@ -144,18 +124,6 @@ ALTER TABLE "root_user_permissions" ADD CONSTRAINT "root_user_permissions_user_i
 
 -- AddForeignKey
 ALTER TABLE "root_user_permissions" ADD CONSTRAINT "root_user_permissions_document_root_id_fkey" FOREIGN KEY ("document_root_id") REFERENCES "document_roots"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "document_group_permissions" ADD CONSTRAINT "document_group_permissions_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "student_groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "document_group_permissions" ADD CONSTRAINT "document_group_permissions_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "document_user_permissions" ADD CONSTRAINT "document_user_permissions_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "document_user_permissions" ADD CONSTRAINT "document_user_permissions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_StudentGroupToUser" ADD CONSTRAINT "_StudentGroupToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "student_groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
