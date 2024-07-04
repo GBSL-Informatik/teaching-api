@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="clean_dev_db" type="DatabaseScript">
-    <script-file value="$PROJECT_DIR$/db/scripts/00_purge_teaching_website_db.sql" />
-    <script-mode>FILE</script-mode>
-    <data-source id="adb25c18-bacf-48c2-a8b0-7657ace8ae28" />
-    <method v="2" />
-  </configuration>
-</component>
