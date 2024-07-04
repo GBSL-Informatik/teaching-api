@@ -93,7 +93,7 @@ function Document(db: PrismaClient['document']) {
                 record.authorId === actor.id ||
                 record.documentGroups.some((group) => {
                     return group.group.users.some((user) => {
-                        return user.userId === actor.id && hasWriteAccess(user.role, group.writeAccess)
+                        return user.userId === actor.id && hasWriteAccess(user.role, group.writeAccess);
                     });
                 });
             if (!canWrite) {
