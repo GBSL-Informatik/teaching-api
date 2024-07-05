@@ -2,6 +2,8 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/db/docker/sql/00_create_user_and_db.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/docs/sql_scripts/get_groups_with_their_parents.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/docs/sql_scripts/get_users_with_their_groups.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>
