@@ -1,6 +1,3 @@
-import { Role } from '@prisma/client';
-import { documents } from '../../prisma/seed-files/documents';
-
 interface Credentials {
     tenantID: string;
     clientID: string;
@@ -20,7 +17,7 @@ export interface AccessMatrix {
         path: string;
         access: {
             methods: ('GET' | 'POST' | 'PUT' | 'DELETE')[];
-            roles: Role[];
+            adminOnly: boolean;
         }[];
     };
 }
@@ -59,7 +56,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                    adminOnly: false,
                 }
             ]
         },
@@ -68,7 +65,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'POST'],
-                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                    adminOnly: false,
                 }
             ]
         },
@@ -77,7 +74,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                    adminOnly: false,
                 }
             ]
         },
@@ -86,7 +83,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT'],
-                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                    adminOnly: false,
                 }
             ]
         },
@@ -95,7 +92,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT', 'POST', 'DELETE'],
-                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                    adminOnly: false,
                 }
             ]
         },
@@ -104,7 +101,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT', 'POST', 'DELETE'],
-                    roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
+                    adminOnly: false,
                 }
             ]
         }

@@ -1,8 +1,7 @@
-import type { Role } from '@prisma/client';
-import { Request, Response, NextFunction } from 'express';
-import { AccessMatrix, PUBLIC_ROUTES } from '../routes/authConfig';
+import {NextFunction, Request, Response} from 'express';
+import {AccessMatrix, PUBLIC_ROUTES} from '../routes/authConfig';
 import Logger from '../utils/logger';
-import { HttpStatusCode } from '../utils/errors/BaseError';
+import {HttpStatusCode} from '../utils/errors/BaseError';
 
 interface AccessRegexRule {
     path: string;
@@ -10,7 +9,7 @@ interface AccessRegexRule {
     weight: number;
     access: {
         methods: ('GET' | 'POST' | 'PUT' | 'DELETE')[];
-        roles: Role[];
+        adminOnly: boolean,
     }[];
 }
 
@@ -82,7 +81,7 @@ const routeGuard = (accessMatrix: AccessRegexRule[]) => {
             return res.status(HttpStatusCode.FORBIDDEN).json({ error: 'No roles claim found!' });
         }
 
-        if (!requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.role || 'PUBLIC')) {
+        if (!requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.isAdmin || false)) {
             return res
                 .status(HttpStatusCode.FORBIDDEN)
                 .json({ error: 'User does not have the role, method or path' });
@@ -99,10 +98,10 @@ const requestHasRequiredAttributes = (
     accessMatrix: AccessRegexRule[],
     path: string,
     method: string,
-    role: Role | 'PUBLIC'
+    isAdmin: boolean
 ) => {
-    if (role === 'PUBLIC') {
-        return method === 'GET';
+    if (isAdmin) {
+        return true;
     }
     const accessRules = Object.values(accessMatrix);
     const accessRule = accessRules
@@ -112,11 +111,10 @@ const requestHasRequiredAttributes = (
     if (!accessRule) {
         return false;
     }
-    const hasRole = accessRule.access.some(
-        (rule) =>
-            rule.roles.includes(role) && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
+    return accessRule.access.some(
+      (rule) =>
+        !rule.adminOnly && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
     );
-    return hasRole;
 };
 
 export default routeGuard;
