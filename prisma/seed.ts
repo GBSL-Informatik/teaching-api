@@ -1,23 +1,23 @@
-import {Access, PrismaClient, User} from '@prisma/client';
-import {FOO_BAR_ID, TEST_USER_ID, users as seedUsers} from './seed-files/users';
-import {
-    documents as seedDocuments
-} from './seed-files/documents';
+import { Access, PrismaClient, User } from '@prisma/client';
+import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
+import { documents as seedDocuments } from './seed-files/documents';
 import {
     ALL_USERS_GROUP_ID,
     CLASS_GROUP_ID,
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
-} from "./seed-files/student-groups";
+} from './seed-files/student-groups';
 import {
     documentRoots as seedDocumentRoots,
-    NONE_EXAM_DOCUMENT_ID, RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
+    NONE_EXAM_DOCUMENT_ID,
+    RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
+    RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
     RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
-} from "./seed-files/document-roots";
+} from './seed-files/document-roots';
 import {
     rootUserPermissions as seedRootUserPermissions,
-    rootGroupPermissions as seedRootGroupPermissions,
-} from "./seed-files/document-root-permissions";
+    rootGroupPermissions as seedRootGroupPermissions
+} from './seed-files/document-root-permissions';
 
 const prisma = new PrismaClient();
 
@@ -30,58 +30,58 @@ async function main() {
 
     console.log(seedUsers);
     const users = await prisma.user.createMany({
-        data: seedUsers,
+        data: seedUsers
     });
 
     const documentRoots = await prisma.documentRoot.createMany({
-        data: seedDocumentRoots,
-    })
+        data: seedDocumentRoots
+    });
 
     const documents = await prisma.document.createMany({
-        data: seedDocuments,
+        data: seedDocuments
     });
 
     const groups = await prisma.studentGroup.createMany({
-        data: seedStudentGroups,
+        data: seedStudentGroups
     });
 
     /** Connect users and student groups. */
     // TODO: Is there a more elegant way to add entries to the implicit _StudentGroupToUser join table?
-    const allUsersGroupMembers = [{id: FOO_BAR_ID}, {id: TEST_USER_ID}]
+    const allUsersGroupMembers = [{ id: FOO_BAR_ID }, { id: TEST_USER_ID }];
     if (USER_EMAIL && USER_ID) {
-        allUsersGroupMembers.push({id: USER_ID});
+        allUsersGroupMembers.push({ id: USER_ID });
     }
     const allUsersGroupUpdate = await prisma.studentGroup.update({
-        where: {id: ALL_USERS_GROUP_ID},
+        where: { id: ALL_USERS_GROUP_ID },
         data: {
             users: {
-                connect: allUsersGroupMembers,
-            },
-        },
+                connect: allUsersGroupMembers
+            }
+        }
     });
     const classGroupUpdate = await prisma.studentGroup.update({
-        where: {id: CLASS_GROUP_ID},
+        where: { id: CLASS_GROUP_ID },
         data: {
             users: {
-                connect: [{id: FOO_BAR_ID}, {id: TEST_USER_ID}],
-            },
-        },
+                connect: [{ id: FOO_BAR_ID }, { id: TEST_USER_ID }]
+            }
+        }
     });
     const projectGroupUpdate = await prisma.studentGroup.update({
-        where: {id: PROJECT_GROUP_ID},
+        where: { id: PROJECT_GROUP_ID },
         data: {
             users: {
-                connect: [{id: FOO_BAR_ID}],
-            },
-        },
+                connect: [{ id: FOO_BAR_ID }]
+            }
+        }
     });
 
     const rootUserPermissions = await prisma.rootUserPermission.createMany({
-        data: seedRootUserPermissions,
+        data: seedRootUserPermissions
     });
 
     const rootGroupPermissions = await prisma.rootGroupPermission.createMany({
-        data: seedRootGroupPermissions,
+        data: seedRootGroupPermissions
     });
 }
 

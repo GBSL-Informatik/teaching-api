@@ -1,7 +1,7 @@
-import {NextFunction, Request, Response} from 'express';
-import {AccessMatrix, PUBLIC_ROUTES} from '../routes/authConfig';
+import { NextFunction, Request, Response } from 'express';
+import { AccessMatrix, PUBLIC_ROUTES } from '../routes/authConfig';
 import Logger from '../utils/logger';
-import {HttpStatusCode} from '../utils/errors/BaseError';
+import { HttpStatusCode } from '../utils/errors/BaseError';
 
 interface AccessRegexRule {
     path: string;
@@ -9,7 +9,7 @@ interface AccessRegexRule {
     weight: number;
     access: {
         methods: ('GET' | 'POST' | 'PUT' | 'DELETE')[];
-        adminOnly: boolean,
+        adminOnly: boolean;
     }[];
 }
 
@@ -112,8 +112,7 @@ const requestHasRequiredAttributes = (
         return false;
     }
     return accessRule.access.some(
-      (rule) =>
-        !rule.adminOnly && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
+        (rule) => !rule.adminOnly && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
     );
 };
 

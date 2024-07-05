@@ -15,7 +15,13 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
 export const create: RequestHandler<any, any, DbDocument> = async (req, res, next) => {
     try {
         const { type, documentRootId, data, parentId } = req.body;
-        const model = await Document.createModel(req.user!, type, documentRootId, data, parentId ? parentId : undefined);
+        const model = await Document.createModel(
+            req.user!,
+            type,
+            documentRootId,
+            data,
+            parentId ? parentId : undefined
+        );
         res.status(200).json(model);
     } catch (error) {
         next(error);

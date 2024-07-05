@@ -1,7 +1,7 @@
 import { StudentGroup as DbStudentGroup } from '@prisma/client';
 import { RequestHandler } from 'express';
 import Logger from '../utils/logger';
-import StudentGroup from "../models/StudentGroup";
+import StudentGroup from '../models/StudentGroup';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -23,7 +23,11 @@ export const create: RequestHandler<any, any, DbStudentGroup> = async (req, res,
     }
 };
 
-export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup }> = async (req, res, next) => {
+export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup }> = async (
+    req,
+    res,
+    next
+) => {
     try {
         const model = await StudentGroup.updateModel(req.user!, req.params.id, req.body.data);
         res.status(200).json(model);

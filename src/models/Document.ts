@@ -1,12 +1,11 @@
-import {Document as DbDocument, PrismaClient, User} from '@prisma/client';
+import { Document as DbDocument, PrismaClient, User } from '@prisma/client';
 import prisma from '../prisma';
-import {HTTP403Error, HTTP404Error} from '../utils/errors/Errors';
-import {JsonObject} from '@prisma/client/runtime/library';
-import DocumentRoot from "./DocumentRoot";
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import { JsonObject } from '@prisma/client/runtime/library';
+import DocumentRoot from './DocumentRoot';
 
 function Document(db: PrismaClient['document']) {
     return Object.assign(db, {
-
         async findModel(actor: User, id: string) {
             // TODO: Only return the document, if the user has at least RO access on its root.
             return db.findUnique({
@@ -25,7 +24,13 @@ function Document(db: PrismaClient['document']) {
             });
         },
 
-        async createModel(actor: User, type: string, documentRootId: string, data: any, parentId?: string): Promise<DbDocument> {
+        async createModel(
+            actor: User,
+            type: string,
+            documentRootId: string,
+            data: any,
+            parentId?: string
+        ): Promise<DbDocument> {
             // TODO: Create document root if it doesn't exist and the user is admin or has RW access on it.
             // TODO: Guard against nonexistent parent if parentId is specified?
             const documentRoot = await DocumentRoot.findModel(documentRootId);

@@ -1,13 +1,12 @@
-import {Prisma, PrismaClient, StudentGroup as DbStudentGroup, User} from '@prisma/client';
+import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '@prisma/client';
 import prisma from '../prisma';
-import {HTTP403Error, HTTP404Error} from '../utils/errors/Errors';
-import {createDataExtractor} from '../helpers/dataExtractor';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import { createDataExtractor } from '../helpers/dataExtractor';
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(['description', 'name']);
 
 function StudentGroup(db: PrismaClient['studentGroup']) {
     return Object.assign(db, {
-
         async findModel(id: string): Promise<DbStudentGroup | null> {
             return db.findUnique({
                 where: {
@@ -16,7 +15,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 include: {
                     users: {
                         select: {
-                            id: true,
+                            id: true
                         }
                     }
                 }
@@ -68,13 +67,17 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
         },
 
-        async createModel(name: string, description: string, parentId: string | null): Promise<DbStudentGroup> {
+        async createModel(
+            name: string,
+            description: string,
+            parentId: string | null
+        ): Promise<DbStudentGroup> {
             // TODO: Guard against nonexistent parent if parentId is specified?
             return db.create({
                 data: {
                     name: name,
                     description: description,
-                    parentId: parentId,
+                    parentId: parentId
                 }
             });
         },

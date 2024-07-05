@@ -1,22 +1,20 @@
 import express from 'express';
 import { all as allUsers, user, find as findUser, update as updateUser } from '../controllers/users';
 import {
-  all as allStudentGroups,
-  find as findStudentGroup,
-  update as updateStudentGroup,
-  create as createStudentGroup,
-  destroy as deleteStudentGroup
+    all as allStudentGroups,
+    find as findStudentGroup,
+    update as updateStudentGroup,
+    create as createStudentGroup,
+    destroy as deleteStudentGroup
 } from '../controllers/student-groups';
 import {
-  all as allDocuments,
-  find as findDocument,
-  update as updateDocument,
-  create as createDocument,
-  destroy as deleteDocument
+    all as allDocuments,
+    find as findDocument,
+    update as updateDocument,
+    create as createDocument,
+    destroy as deleteDocument
 } from '../controllers/documents';
-import {
-  find as findDocumentRoot
-} from '../controllers/document-roots';
+import { find as findDocumentRoot } from '../controllers/document-roots';
 
 // initialize router
 const router = express.Router();

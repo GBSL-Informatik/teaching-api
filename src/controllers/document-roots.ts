@@ -1,5 +1,5 @@
-import {RequestHandler} from "express";
-import DocumentRoot from "../models/DocumentRoot";
+import { RequestHandler } from 'express';
+import DocumentRoot from '../models/DocumentRoot';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {

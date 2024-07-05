@@ -6,9 +6,8 @@ const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName
 
 function User(db: PrismaClient['user']) {
     return Object.assign(db, {
-
         async findModel(id: string): Promise<DbUser | null> {
-            return db.findUnique({where: {id}});
+            return db.findUnique({ where: { id } });
         },
 
         async updateModel(actor: DbUser, id: string, data: Partial<DbUser>): Promise<DbUser> {

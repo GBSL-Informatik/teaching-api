@@ -56,7 +56,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: false,
+                    adminOnly: false
                 }
             ]
         },
@@ -65,7 +65,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'POST'],
-                    adminOnly: false,
+                    adminOnly: false
                 }
             ]
         },
@@ -74,7 +74,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: false,
+                    adminOnly: false
                 }
             ]
         },
@@ -83,7 +83,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT'],
-                    adminOnly: false,
+                    adminOnly: false
                 }
             ]
         },
@@ -92,11 +92,11 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: false,
+                    adminOnly: false
                 },
                 {
                     methods: ['PUT', 'POST', 'DELETE'],
-                    adminOnly: true,
+                    adminOnly: true
                 }
             ]
         },
@@ -105,7 +105,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT', 'POST', 'DELETE'],
-                    adminOnly: false,
+                    adminOnly: false
                 }
             ]
         }
