@@ -172,3 +172,38 @@ the docs will be publically available under `/prisma/index.html`.
 ## Next steps
 - Introduce an ORM and connect to DB.
 - Introduce passport.js and set up a first authenticated endpoint (username / password)
+
+
+
+## Dokku
+
+```bash
+dokku apps:create dev-teaching-api
+dokku domains:add dev-teaching-api domain.tld
+
+dokku postgres:create dev-teaching-api
+dokku postgres:link dev-teaching-api dev-teaching-api
+
+dokku config:set dev-teaching-api CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+dokku config:set dev-teaching-api TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+dokku config:set --no-restart dev-teaching-api DOKKU_LETSENCRYPT_EMAIL="foo@bar.ch"
+dokku config:set dev-teaching-api SESSION_SECRET="$(openssl rand -base64 32)"
+
+dokku nginx:set dev-teaching-api client-max-body-size 5m
+
+dokku nginx:set dev-teaching-api x-forwarded-proto-value '$http_x_forwarded_proto'
+dokku nginx:set dev-teaching-api x-forwarded-for-value '$http_x_forwarded_for'
+dokku nginx:set dev-teaching-api x-forwarded-port-value '$http_x_forwarded_port'
+
+######### on local machine #########
+# 1. add the remote to your project:
+git remote add dokku dokku@<dokku-ip>:dev-teaching-api
+# 2. push the code to the dokku server:
+git push dokku
+# or if you want to push a branch other than the main:
+# git push dokku <branch>:main
+
+################# on the server ################# - firs one who does it...
+dokku letsencrypt:enable dev-teaching-api
+## when it succeeds, re-enable the cloudflare proxy for domain.tld...
+```
