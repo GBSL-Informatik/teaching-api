@@ -27,6 +27,7 @@ function Document(db: PrismaClient['document']) {
 
         async createModel(actor: User, type: string, documentRootId: string, data: any, parentId?: string): Promise<DbDocument> {
             // TODO: Create document root if it doesn't exist and the user is admin or has RW access on it.
+            // TODO: Guard against nonexistent parent if parentId is specified?
             const documentRoot = await DocumentRoot.findModel(documentRootId);
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
