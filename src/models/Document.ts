@@ -8,6 +8,7 @@ function Document(db: PrismaClient['document']) {
     return Object.assign(db, {
 
         async findModel(actor: User, id: string) {
+            // TODO: Only return the document, if the user has at least RO access on its root.
             return db.findUnique({
                 where: {
                     id: id,
@@ -25,6 +26,7 @@ function Document(db: PrismaClient['document']) {
         },
 
         async createModel(actor: User, type: string, documentRootId: string, data: any, parentId?: string): Promise<DbDocument> {
+            // TODO: Create document root if it doesn't exist and the user is admin or has RW access on it.
             const documentRoot = await DocumentRoot.findModel(documentRootId);
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
@@ -45,11 +47,12 @@ function Document(db: PrismaClient['document']) {
         },
 
         async updateModel(actor: User, id: string, docData: JsonObject): Promise<DbDocument> {
+            // TODO: Only allow updates if the user has RW access on the document's root.
             const record = await this.findModel(actor, id);
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            const canWrite = record.authorId === actor.id || actor.isAdmin;
+            const canWrite = record.authorId === actor.id || actor.isAdmin; // TODO: Do we want admins to be able to make changes to non-owned documents?
             if (!canWrite) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -65,6 +68,7 @@ function Document(db: PrismaClient['document']) {
         },
 
         async deleteModel(actor: User, id: string): Promise<DbDocument> {
+            // TODO: Only allow deletion if the user has RW access on the document's root.
             const record = await db.findUnique({ where: { id: id } });
             if (!record) {
                 throw new HTTP404Error('Document not found');
@@ -80,6 +84,7 @@ function Document(db: PrismaClient['document']) {
         },
 
         async all(actor: User): Promise<DbDocument[]> {
+            // TODO: Only include documents where the (non-admin) user has at least RO access on the root.
             if (actor.isAdmin) {
                 return db.findMany({});
             }

@@ -26,6 +26,7 @@ router.put('/users/:id', updateUser);
 // router.put('/groups/:id', updateGroup);
 // router.delete('/groups/:id', deleteGroup);
 
+// TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
 router.get('/documentRoots/:id', findDocumentRoot);
 
 router.get('/documents', allDocuments);

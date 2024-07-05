@@ -1,7 +1,6 @@
 import { Document as DbDocument } from '@prisma/client';
 import { RequestHandler } from 'express';
 import Document from '../models/Document';
-import Logger from '../utils/logger';
 import { JsonObject } from '@prisma/client/runtime/library';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
