@@ -11,6 +11,7 @@ async function main() {
             WHERE tableowner = ${user};
         `
     );
+    console.log(dropTableSql);
     /** ensure drops happen sequential to prevent deadlocks (because of the cascade) */
     for (let i = 0; i < dropTableSql.length; i++) {
         const table = dropTableSql[i].query.split(' ')[4];
