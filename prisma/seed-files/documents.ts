@@ -2,7 +2,7 @@ import {Prisma} from '@prisma/client';
 import {FOO_BAR_ID, TEST_USER_ID} from './users';
 import {
   NONE_EXAM_DOCUMENT_ID,
-  RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
+  RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
   RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
 
 } from "./document-roots";
@@ -39,7 +39,7 @@ const documents: Prisma.DocumentCreateManyInput[] = [
   {
     id: FOO_BAR_EXERCISE_IMPSUM_DOCUMENT_ID,
     authorId: FOO_BAR_ID, // foo@bar.ch
-    documentRootId: RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
+    documentRootId: RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
     type: 'text',
     data: {
       text: 'This is the Ipsum exercise from foo@bar.ch. This document should be read-only for them, because their class has RO permission.'
@@ -48,7 +48,7 @@ const documents: Prisma.DocumentCreateManyInput[] = [
   {
     id: TEST_USER_EXERCISE_IPSUM_DOCUMENT_ID,
     authorId: TEST_USER_ID, // test@user.ch
-    documentRootId: RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
+    documentRootId: RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
     type: 'text',
     data: {
       text: 'This is the Ipsum exercise from test@user.ch. This document should be read-only for them, because their class has RO permission.'
@@ -94,7 +94,7 @@ if (USER_EMAIL && USER_ID) {
   });
   documents.push({
     authorId: USER_ID,
-    documentRootId: RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
+    documentRootId: RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
     type: 'text',
     data: {
       text: `This is the Ipsum exercise from ${USER_EMAIL}`

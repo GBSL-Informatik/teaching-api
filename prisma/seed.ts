@@ -11,7 +11,7 @@ import {
 } from "./seed-files/student-groups";
 import {
     documentRoots as seedDocumentRoots,
-    NONE_EXAM_DOCUMENT_ID, RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
+    NONE_EXAM_DOCUMENT_ID, RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
     RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
 } from "./seed-files/document-roots";
 import {

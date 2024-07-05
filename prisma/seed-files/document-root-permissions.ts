@@ -1,7 +1,7 @@
 import {Prisma} from '@prisma/client';
 import {
   NONE_EXAM_DOCUMENT_ID,
-  RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
+  RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID, RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
   RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
 } from "./document-roots";
 import {TEST_USER_ID} from "./users";
@@ -22,7 +22,7 @@ const rootUserPermissions: Prisma.RootUserPermissionCreateManyInput[] = [
 
 const rootGroupPermissions: Prisma.RootGroupPermissionCreateManyInput[] = [
   {
-    documentRootId: RO_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
+    documentRootId: RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
     studentGroupId: CLASS_GROUP_ID,
     access: Access.RO
   },
