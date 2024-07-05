@@ -87,12 +87,16 @@ const authConfig: Config = {
                 }
             ]
         },
-        groups: {
-            path: '/groups',
+        studentGroups: {
+            path: '/studentGroups',
             access: [
                 {
-                    methods: ['GET', 'PUT', 'POST', 'DELETE'],
+                    methods: ['GET'],
                     adminOnly: false,
+                },
+                {
+                    methods: ['PUT', 'POST', 'DELETE'],
+                    adminOnly: true,
                 }
             ]
         },

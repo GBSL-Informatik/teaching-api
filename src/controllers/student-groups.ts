@@ -1,31 +1,31 @@
-import { Role, Group as DbGroup } from '@prisma/client';
+import { StudentGroup as DbStudentGroup } from '@prisma/client';
 import { RequestHandler } from 'express';
-import Group from '../models/Group';
 import Logger from '../utils/logger';
+import StudentGroup from "../models/StudentGroup";
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const group = await Group.findModel(req.params.id);
+        const group = await StudentGroup.findModel(req.params.id);
         res.json(group);
     } catch (error) {
         next(error);
     }
 };
 
-export const create: RequestHandler<any, any, DbGroup> = async (req, res, next) => {
+export const create: RequestHandler<any, any, DbStudentGroup> = async (req, res, next) => {
     try {
         Logger.info(req.body);
-        const { name } = req.body;
-        const model = await Group.createModel(req.user!, name);
+        const { name, description, parentId } = req.body;
+        const model = await StudentGroup.createModel(name, description, parentId);
         res.status(200).json(model);
     } catch (error) {
         next(error);
     }
 };
 
-export const update: RequestHandler<{ id: string }, any, { data: DbGroup }> = async (req, res, next) => {
+export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup }> = async (req, res, next) => {
     try {
-        const model = await Group.updateModel(req.user!, req.params.id, req.body.data);
+        const model = await StudentGroup.updateModel(req.user!, req.params.id, req.body.data);
         res.status(200).json(model);
     } catch (error) {
         next(error);
@@ -34,7 +34,7 @@ export const update: RequestHandler<{ id: string }, any, { data: DbGroup }> = as
 
 export const all: RequestHandler = async (req, res, next) => {
     try {
-        const users = await Group.all(req.user!);
+        const users = await StudentGroup.all(req.user!);
         res.json(users);
     } catch (error) {
         next(error);
@@ -43,7 +43,7 @@ export const all: RequestHandler = async (req, res, next) => {
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const group = await Group.deleteModel(req.user!, req.params.id);
+        const group = await StudentGroup.deleteModel(req.user!, req.params.id);
         res.json(group);
     } catch (error) {
         next(error);

@@ -1,6 +1,13 @@
 import express from 'express';
 import { all as allUsers, user, find as findUser, update as updateUser } from '../controllers/users';
 import {
+  all as allStudentGroups,
+  find as findStudentGroup,
+  update as updateStudentGroup,
+  create as createStudentGroup,
+  destroy as deleteStudentGroup
+} from '../controllers/student-groups';
+import {
   all as allDocuments,
   find as findDocument,
   update as updateDocument,
@@ -20,11 +27,11 @@ router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
 
-// router.get('/groups', allGroups);
-// router.post('/groups', createGroup);
-// router.get('/groups/:id', findGroup);
-// router.put('/groups/:id', updateGroup);
-// router.delete('/groups/:id', deleteGroup);
+router.get('/studentGroups', allStudentGroups);
+router.post('/studentGroups', createStudentGroup);
+router.get('/studentGroups/:id', findStudentGroup);
+router.put('/studentGroups/:id', updateStudentGroup);
+router.delete('/studentGroups/:id', deleteStudentGroup);
 
 // TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
 router.get('/documentRoots/:id', findDocumentRoot);
