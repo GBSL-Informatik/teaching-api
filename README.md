@@ -62,7 +62,9 @@ The `db/scripts` directory contains files for purging the DB. Volumes stay intac
 
 The following users are created:
 - Admin: `postgres` / `qSpEx2Zz8BS9`
-- User for DB `teaching_website`: `teaching_website_backend` / `zW4SMEXLHpXXxxk`
+- User for DB `teaching_api`: `teaching_api` / `zW4SMEXLHpXXxxk`
+
+→ For the teaching-api, the resulting DB URL is `postgresql://teaching_api:zW4SMEXLHpXXxxk@localhost:5432/teaching_api`.
 
 #### Local Setup
 
