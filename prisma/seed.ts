@@ -1,9 +1,14 @@
 import { PrismaClient, User } from '@prisma/client';
-import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
+import {FOO_BAR_ID, TEST_USER_ID, users as seedUsers} from './seed-files/users';
 import {
     documents as seedDocuments
 } from './seed-files/documents';
-import {studentGroups as seedStudentGroups} from "./seed-files/student-groups";
+import {
+    ALL_USERS_GROUP_ID,
+    CLASS_GROUP_ID,
+    PROJECT_GROUP_ID,
+    studentGroups as seedStudentGroups
+} from "./seed-files/student-groups";
 import {documentRoots as seedDocumentRoots} from "./seed-files/document-roots";
 const prisma = new PrismaClient();
 
@@ -29,6 +34,36 @@ async function main() {
 
     const groups = await prisma.studentGroup.createMany({
         data: seedStudentGroups,
+    });
+
+    // TODO: Is there a more elegant way to add entries to the implicit _StudentGroupToUser join table?
+    const allUsersGroupMembers = [{id: FOO_BAR_ID}, {id: TEST_USER_ID}]
+    if (USER_EMAIL && USER_ID) {
+        allUsersGroupMembers.push({id: USER_ID});
+    }
+    const allUsersGroupUpdate = await prisma.studentGroup.update({
+        where: {id: ALL_USERS_GROUP_ID},
+        data: {
+            users: {
+                connect: allUsersGroupMembers,
+            },
+        },
+    });
+    const classGroupUpdate = await prisma.studentGroup.update({
+        where: {id: CLASS_GROUP_ID},
+        data: {
+            users: {
+                connect: [{id: FOO_BAR_ID}, {id: TEST_USER_ID}],
+            },
+        },
+    });
+    const projectGroupUpdate = await prisma.studentGroup.update({
+        where: {id: PROJECT_GROUP_ID},
+        data: {
+            users: {
+                connect: [{id: FOO_BAR_ID}],
+            },
+        },
     });
 
     //
