@@ -3,3 +3,4 @@ node_modules
 
 docs/prisma/**/*
 docs/*.svg
+dist/

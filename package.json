@@ -6,6 +6,8 @@
   "author": "GBSL Informatik",
   "license": "CC-BY-SA",
   "scripts": {
+    "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
+    "start": "node -r dotenv/config ./dist/src/server.js",
     "dev": "dotenv -- nodemon src/server.ts",
     "db:migrate": "yarn prisma migrate deploy",
     "db:migrate:dev": "yarn prisma migrate dev",
