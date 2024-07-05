@@ -1,78 +1,38 @@
-import { Prisma, PrismaClient, Document as DbDocument, User, Role } from '@prisma/client';
+import {Document as DbDocument, PrismaClient, User} from '@prisma/client';
 import prisma from '../prisma';
-import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
-import { JsonObject } from '@prisma/client/runtime/library';
-
-const hasWriteAccess = (actor: Role, docRole: Role | null) => {
-    if (!docRole) {
-        return false;
-    }
-    switch (docRole) {
-        case Role.ADMIN:
-            return actor === Role.ADMIN;
-        case Role.TEACHER:
-            return actor === Role.ADMIN || actor === Role.TEACHER;
-        case Role.STUDENT:
-            return true;
-        default:
-            return false;
-    }
-};
+import {HTTP403Error, HTTP404Error} from '../utils/errors/Errors';
+import {JsonObject} from '@prisma/client/runtime/library';
+import DocumentRoot from "./DocumentRoot";
 
 function Document(db: PrismaClient['document']) {
     return Object.assign(db, {
+
         async findModel(actor: User, id: string) {
-            const doc = await db.findUnique({
+            return db.findUnique({
                 where: {
                     id: id,
-                    OR: [
-                        { authorId: actor.id },
-                        {
-                            documentGroups: {
-                                some: {
-                                    group: {
-                                        users: {
-                                            some: {
-                                                userId: actor.id
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    ]
+                    authorId: actor.id
                 },
                 include: {
                     author: {
                         select: {
-                            id: true
-                        }
-                    },
-                    documentGroups: {
-                        select: {
-                            readAccess: true,
-                            writeAccess: true,
-                            group: {
-                                select: {
-                                    users: {
-                                        select: {
-                                            userId: true,
-                                            role: true
-                                        }
-                                    }
-                                }
-                            }
+                            id: true // TODO: don't we have the author_id anyway? Or is this something else?
                         }
                     },
                     children: true
                 }
             });
-            return doc;
         },
-        async createModel(actor: User, type: string, data: any, parentId?: string): Promise<DbDocument> {
-            const record = await db.create({
+
+        async createModel(actor: User, type: string, documentRootId: string, data: any, parentId?: string): Promise<DbDocument> {
+            const documentRoot = await DocumentRoot.findModel(documentRootId);
+            if (!documentRoot) {
+                throw new HTTP404Error('Document root not found');
+            }
+            return db.create({
                 data: {
                     type: type,
+                    documentRootId: documentRootId,
                     data: data,
                     parentId: parentId,
                     authorId: actor.id
@@ -82,25 +42,19 @@ function Document(db: PrismaClient['document']) {
                     children: true
                 }
             });
-            return record;
         },
+
         async updateModel(actor: User, id: string, docData: JsonObject): Promise<DbDocument> {
             const record = await this.findModel(actor, id);
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            const canWrite =
-                record.authorId === actor.id ||
-                record.documentGroups.some((group) => {
-                    return group.group.users.some((user) => {
-                        return user.userId === actor.id && hasWriteAccess(user.role, group.writeAccess);
-                    });
-                });
+            const canWrite = record.authorId === actor.id || actor.isAdmin;
             if (!canWrite) {
                 throw new HTTP403Error('Not authorized');
             }
-            /** remove fields not updatable */
-            return await db.update({
+            /** TODO: remove fields not updatable (id...?) */
+            return db.update({
                 where: {
                     id: id
                 },
@@ -109,25 +63,27 @@ function Document(db: PrismaClient['document']) {
                 }
             });
         },
+
         async deleteModel(actor: User, id: string): Promise<DbDocument> {
             const record = await db.findUnique({ where: { id: id } });
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            if (record.authorId !== actor.id && actor.role !== Role.ADMIN) {
+            if (record.authorId !== actor.id && !actor.isAdmin) {
                 throw new HTTP403Error('Not authorized');
             }
-            return await db.delete({
+            return db.delete({
                 where: {
                     id: id
                 }
             });
         },
+
         async all(actor: User): Promise<DbDocument[]> {
-            if (actor.role === Role.ADMIN) {
-                return await db.findMany({});
+            if (actor.isAdmin) {
+                return db.findMany({});
             }
-            return await db.findMany({
+            return db.findMany({
                 where: {
                     authorId: actor.id
                 },
