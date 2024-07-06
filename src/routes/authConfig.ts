@@ -48,7 +48,7 @@ const authConfig: Config = {
     settings: {
         validateIssuer: true,
         passReqToCallback: false,
-        loggingLevel: 'info'
+        loggingLevel: 'warn'
     },
     accessMatrix: {
         checklogin: {
