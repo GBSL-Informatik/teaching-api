@@ -10,7 +10,7 @@ interface Metadata {
 interface Settings {
     validateIssuer: boolean;
     passReqToCallback: boolean;
-    loggingLevel: string;
+    loggingLevel: 'info' | 'warn' | 'error';
 }
 export interface AccessMatrix {
     [key: string]: {
