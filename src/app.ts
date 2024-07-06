@@ -134,6 +134,42 @@ app.post(`${API_URL}/logout`, SessionOauthStrategy, async (req, res) => {
 });
 
 export const configure = (_app: typeof app) => {
+    /**
+     * Notification Middleware
+     * when the response `res` contains a `notifications` property, the middleware will
+     * send the notification over SocketIO to the specififed rooms.
+     */
+    _app.use((req: Request, res, next) => {
+        res.on('finish', async () => {
+            if (res.statusCode >= 400) {
+                return;
+            }
+            const io = req.io;
+
+            if (res.notifications && io) {
+                res.notifications.forEach((notification) => {
+                    const except: string[] = [];
+                    /** ignore this socket */
+                    if (!notification.toSelf) {
+                        const socketID = req.headers['x-metadata-socketid'] as string;
+                        if (socketID) {
+                            except.push(socketID);
+                        }
+                    }
+                    io.except(except)
+                        .to(notification.to)
+                        .emit(notification.event, notification.message as any);
+                });
+            }
+            res.locals.notifications = res.notifications;
+        });
+        next();
+    });
+    /**
+     * API Route Guard
+     * This middleware will check if the user is authenticated and has the required
+     * permissions to access the requested route.
+     */
     _app.use(
         `${API_URL}`,
         (req, res, next) => {
