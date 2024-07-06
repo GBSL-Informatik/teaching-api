@@ -27,7 +27,6 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         /**
          * TODO: Join the user's studentGroups?
          */
-
     });
 
     io.on('disconnect', (socket) => {

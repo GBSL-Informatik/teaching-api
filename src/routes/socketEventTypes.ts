@@ -1,4 +1,4 @@
-import { Document, User } from "@prisma/client";
+import { Document, User } from '@prisma/client';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
@@ -63,7 +63,7 @@ export type ServerToClientEvents = {
     [IoEvent.NEW_RECORD]: (message: NewRecord<RecordType>) => void;
     [IoEvent.CHANGED_RECORD]: (message: ChangedRecord<RecordType>) => void;
     [IoEvent.DELETED_RECORD]: (message: DeletedRecord) => void;
-    [IoEvent.PING]: (message: {time: number}) => void;
+    [IoEvent.PING]: (message: { time: number }) => void;
 };
 
 export interface ClientToServerEvents {}
