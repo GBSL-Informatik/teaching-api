@@ -17,13 +17,13 @@ export type ApiGroupPermission = {
     id: string;
     groupId: string;
     access: Access;
-}
+};
 
 export type ApiUserPermission = {
     id: string;
     userId: string;
     access: Access;
-}
+};
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -67,7 +67,7 @@ const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermis
         access: permission.access,
         groupId: permission.studentGroupId
     };
-}
+};
 
 const prepareUserPermission = (permission: RootUserPermission): ApiUserPermission => {
     return {
@@ -75,7 +75,7 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
         access: permission.access,
         userId: permission.userId
     };
-}
+};
 
 const prepareDocumentRoot = (
     actor: User,
@@ -191,7 +191,10 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                     rootGroupPermissions: config.groupPermissions?.length
                         ? {
                               createMany: {
-                                  data: config.groupPermissions.map((p) => ({ access: p.access, studentGroupId: p.groupId }))
+                                  data: config.groupPermissions.map((p) => ({
+                                      access: p.access,
+                                      studentGroupId: p.groupId
+                                  }))
                               }
                           }
                         : undefined,
