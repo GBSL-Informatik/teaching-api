@@ -14,7 +14,7 @@ import {
     create as createDocument,
     destroy as deleteDocument
 } from '../controllers/documents';
-import { find as findDocumentRoot } from '../controllers/document-roots';
+import { find as findDocumentRoot, create as createDocumentRoot } from '../controllers/document-roots';
 
 // initialize router
 const router = express.Router();
@@ -27,12 +27,17 @@ router.put('/users/:id', updateUser);
 
 router.get('/studentGroups', allStudentGroups);
 router.post('/studentGroups', createStudentGroup);
+/**
+ * TODO: do we need id-based access?
+ */
 router.get('/studentGroups/:id', findStudentGroup);
+
 router.put('/studentGroups/:id', updateStudentGroup);
 router.delete('/studentGroups/:id', deleteStudentGroup);
 
 // TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
 router.get('/documentRoots/:id', findDocumentRoot);
+router.post('/documentRoots/:id', createDocumentRoot);
 
 router.get('/documents', allDocuments);
 router.post('/documents', createDocument);
