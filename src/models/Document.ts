@@ -4,12 +4,19 @@ import {
     DocumentRoot as DbDocumentRoot,
     Prisma,
     PrismaClient,
+    RootGroupPermission,
+    RootUserPermission,
     User
 } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
-import DocumentRoot, { AccessCheckableDocumentRoot } from './DocumentRoot';
+import DocumentRoot, {
+    AccessCheckableDocumentRoot,
+    ApiDocumentRoot,
+    ApiGroupPermission,
+    ApiUserPermission
+} from './DocumentRoot';
 import { highestAccess } from '../helpers/accessPolicy';
 
 type AccessCheckableDocument = DbDocument & {
@@ -47,6 +54,15 @@ export const prepareDocument = (actor: User, document: AccessCheckableDocument |
         model.data = null;
     }
     return model;
+};
+
+type Response<T> = {
+    model: T;
+    permissions: {
+        access: Access;
+        group: ApiGroupPermission[];
+        user: ApiUserPermission[];
+    };
 };
 
 function Document(db: PrismaClient['document']) {
@@ -88,9 +104,11 @@ function Document(db: PrismaClient['document']) {
             documentRootId: string,
             data: any,
             parentId?: string
-        ): Promise<ApiDocument> {
+        ): Promise<Response<ApiDocument>> {
             // TODO: Create document root if it doesn't exist and the user is admin or has RW access on it.
-            // TODO: Guard against nonexistent parent if parentId is specified?
+            //       --> since more documents are created with an existing document root, this would be
+            //           a overhead to always send the initial data of the document root.
+            //           Currently, we handle this client side...
             const documentRoot = await DocumentRoot.findModel(actor, documentRootId);
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
@@ -100,11 +118,14 @@ function Document(db: PrismaClient['document']) {
                 if (!parent) {
                     throw new HTTP404Error('Parent document not found');
                 }
+                /**
+                 * TODO: this seems too permissive, should we check for RO/RW access instead?
+                 */
                 if (parent.authorId !== actor.id && !actor.isAdmin) {
                     throw new HTTP403Error('Not authorized');
                 }
             }
-            return db
+            const model = await db
                 .create({
                     data: {
                         type: type,
@@ -137,9 +158,17 @@ function Document(db: PrismaClient['document']) {
                     }
                 })
                 .then((doc) => prepareDocument(actor, doc)!);
+            return {
+                model: model,
+                permissions: {
+                    access: documentRoot.access,
+                    group: documentRoot.groupPermissions,
+                    user: documentRoot.userPermissions
+                }
+            };
         },
 
-        async updateModel(actor: User, id: string, docData: JsonObject): Promise<DbDocument> {
+        async updateModel(actor: User, id: string, docData: JsonObject) {
             // TODO: Only allow updates if the user has RW access on the document's root.
             const record = await this.findModel(actor, id);
             if (!record) {
@@ -149,16 +178,36 @@ function Document(db: PrismaClient['document']) {
             if (!canWrite) {
                 throw new HTTP403Error('Not authorized');
             }
-            /** TODO: remove fields not updatable (id...?) */
-            console.log(docData);
-            return db.update({
+            /**
+             * only the data field is allowed to be updated
+             */
+            const model = (await db.update({
                 where: {
                     id: id
                 },
                 data: {
                     data: docData
+                },
+                include: {
+                    documentRoot: {
+                        include: {
+                            rootGroupPermissions: {
+                                select: {
+                                    access: true,
+                                    studentGroupId: true
+                                }
+                            },
+                            rootUserPermissions: {
+                                select: {
+                                    access: true,
+                                    userId: true
+                                }
+                            }
+                        }
+                    }
                 }
-            });
+            })) satisfies DbDocument;
+            return model;
         },
 
         async deleteModel(actor: User, id: string): Promise<DbDocument> {

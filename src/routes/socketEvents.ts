@@ -3,7 +3,8 @@
 import type { User } from '@prisma/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
-import { ClientToServerEvents, IoEvents, ServerToClientEvents } from './socketEventTypes';
+import { ClientToServerEvents, ServerToClientEvents } from './socketEventTypes';
+import StudentGroup from '../models/StudentGroup';
 
 export enum IoRoom {
     ADMIN = 'admin',
@@ -11,22 +12,21 @@ export enum IoRoom {
 }
 
 const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => {
-    io.on('connection', (socket) => {
+    io.on('connection', async (socket) => {
         const user = (socket.request as { user?: User }).user;
         if (!user) {
             return socket.disconnect();
         }
-        const sid = (socket.request as { sessionID?: string }).sessionID;
-        if (sid) {
-            socket.join(sid);
-        }
+        socket.join(user.id);
         if (user.isAdmin) {
             socket.join(IoRoom.ADMIN);
         }
         socket.join(IoRoom.ALL);
-        /**
-         * TODO: Join the user's studentGroups?
-         */
+        const groups = await StudentGroup.all(user);
+        const groupIds = groups.map((group) => group.id);
+        if (groupIds.length > 0) {
+            socket.join(groupIds);
+        }
     });
 
     io.on('disconnect', (socket) => {
