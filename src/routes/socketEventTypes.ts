@@ -5,7 +5,8 @@ export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
     CHANGED_RECORD = 'CHANGED_RECORD',
     CHANGED_DOCUMENT = 'CHANGED_DOCUMENT',
-    DELETED_RECORD = 'DELETED_RECORD'
+    DELETED_RECORD = 'DELETED_RECORD',
+    CONNECTED_CLIENTS = 'CONNECTED_CLIENTS'
 }
 
 export enum RecordType {
@@ -32,6 +33,11 @@ export interface ChangedDocument {
     id: string;
     data: Prisma.JsonValue;
     updatedAt: Date;
+}
+
+export interface ConnectedClients {
+    room: string;
+    count: number;
 }
 
 export interface DeletedRecord {
@@ -79,6 +85,7 @@ export type ServerToClientEvents = {
     [IoEvent.CHANGED_RECORD]: (message: ChangedRecord<RecordType>) => void;
     [IoEvent.DELETED_RECORD]: (message: DeletedRecord) => void;
     [IoEvent.CHANGED_DOCUMENT]: (message: ChangedDocument) => void;
+    [IoEvent.CONNECTED_CLIENTS]: (message: ConnectedClients) => void;
 };
 
 export interface ClientToServerEvents {}
