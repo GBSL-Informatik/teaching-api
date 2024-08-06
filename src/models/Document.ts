@@ -1,9 +1,13 @@
-import {Access, Document as DbDocument, PrismaClient, User} from '@prisma/client';
+import { Access, Document as DbDocument, PrismaClient, User } from '@prisma/client';
 import prisma from '../prisma';
-import {HTTP403Error, HTTP404Error} from '../utils/errors/Errors';
-import {JsonObject} from '@prisma/client/runtime/library';
-import DocumentRoot, {AccessCheckableDocumentRoot, ApiGroupPermission, ApiUserPermission} from './DocumentRoot';
-import {highestAccess} from '../helpers/accessPolicy';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import { JsonObject } from '@prisma/client/runtime/library';
+import DocumentRoot, {
+    AccessCheckableDocumentRoot,
+    ApiGroupPermission,
+    ApiUserPermission
+} from './DocumentRoot';
+import { highestAccess } from '../helpers/accessPolicy';
 
 type AccessCheckableDocument = DbDocument & {
     documentRoot: AccessCheckableDocumentRoot;
@@ -15,7 +19,6 @@ interface DocumentWithPermission {
     document: ApiDocument;
     highestPermission: Access;
 }
-
 
 export const extractPermission = (actor: User, document: AccessCheckableDocument) => {
     if (document.documentRoot.sharedAccess === Access.None && document.authorId !== actor.id) {
@@ -38,7 +41,10 @@ export const extractPermission = (actor: User, document: AccessCheckableDocument
 
     permissions.add(document.documentRoot.access);
 
-    return highestAccess(permissions, document.authorId === actor.id ? undefined : document.documentRoot.sharedAccess);
+    return highestAccess(
+        permissions,
+        document.authorId === actor.id ? undefined : document.documentRoot.sharedAccess
+    );
 };
 export const prepareDocument = (actor: User, document: AccessCheckableDocument | null) => {
     if (!document) {
@@ -53,7 +59,7 @@ export const prepareDocument = (actor: User, document: AccessCheckableDocument |
     if (permission === Access.None) {
         model.data = null;
     }
-    return {document: model, highestPermission: permission};
+    return { document: model, highestPermission: permission };
 };
 
 type Response<T> = {
@@ -117,7 +123,13 @@ function Document(db: PrismaClient['document']) {
                 /**
                  * TODO: Should we allow creating children on documents where actor only has RO access?
                  */
-                if (!(parent.document.authorId === actor.id || actor.isAdmin || parent.highestPermission === Access.RW)) {
+                if (
+                    !(
+                        parent.document.authorId === actor.id ||
+                        actor.isAdmin ||
+                        parent.highestPermission === Access.RW
+                    )
+                ) {
                     throw new HTTP403Error('Insufficient access permission');
                 }
             }

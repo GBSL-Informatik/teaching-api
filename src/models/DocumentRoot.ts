@@ -8,8 +8,8 @@ import {
     RootUserPermission,
     User
 } from '@prisma/client';
-import {ApiDocument, prepareDocument} from './Document';
-import {highestAccess} from '../helpers/accessPolicy';
+import { ApiDocument, prepareDocument } from './Document';
+import { highestAccess } from '../helpers/accessPolicy';
 
 export type ApiGroupPermission = {
     id: string;
@@ -111,7 +111,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 },
                                 {
                                     documentRoot: {
-                                        sharedAccess: {in: [Access.RO, Access.RW]},
+                                        sharedAccess: { in: [Access.RO, Access.RW] },
                                         OR: [
                                             {
                                                 rootGroupPermissions: {

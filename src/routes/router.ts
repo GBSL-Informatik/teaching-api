@@ -1,5 +1,5 @@
 import express from 'express';
-import {all as allUsers, find as findUser, update as updateUser, user} from '../controllers/users';
+import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users';
 import {
     all as allStudentGroups,
     create as createStudentGroup,
@@ -13,7 +13,7 @@ import {
     find as findDocument,
     update as updateDocument
 } from '../controllers/documents';
-import {create as createDocumentRoot, find as findDocumentRoot} from '../controllers/documentRoots';
+import { create as createDocumentRoot, find as findDocumentRoot } from '../controllers/documentRoots';
 
 // initialize router
 const router = express.Router();

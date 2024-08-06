@@ -11,7 +11,6 @@ export const highestUserAccess = (permissions: Set<Access>) => {
     return Access.None;
 };
 
-
 export const highestAccess = (permissions: Set<Access>, maxAccess?: Access) => {
     const userAccess = highestUserAccess(permissions);
     if (!maxAccess) {
