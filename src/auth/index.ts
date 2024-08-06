@@ -1,6 +1,6 @@
 import Logger from '../utils/logger';
-import { getStrategy } from './azure-ad';
 import { getStrategy as mockStrategy } from './mock';
+import {getStrategy} from "./azureAD";
 export const strategyForEnvironment = () => {
     if (process.env.NODE_ENV === 'test' || (process.env.USER_ID && process.env.NODE_ENV !== 'production')) {
         if (process.env.USER_ID) {

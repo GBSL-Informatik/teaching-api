@@ -6,7 +6,7 @@ import {
     update as updateStudentGroup,
     create as createStudentGroup,
     destroy as deleteStudentGroup
-} from '../controllers/student-groups';
+} from '../controllers/studentGroups';
 import {
     all as allDocuments,
     find as findDocument,
@@ -14,7 +14,7 @@ import {
     create as createDocument,
     destroy as deleteDocument
 } from '../controllers/documents';
-import { find as findDocumentRoot, create as createDocumentRoot } from '../controllers/document-roots';
+import { find as findDocumentRoot, create as createDocumentRoot } from '../controllers/documentRoots';
 
 // initialize router
 const router = express.Router();
