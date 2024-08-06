@@ -1,20 +1,19 @@
 import express from 'express';
-import { all as allUsers, user, find as findUser, update as updateUser } from '../controllers/users';
+import {all as allUsers, find as findUser, update as updateUser, user} from '../controllers/users';
 import {
     all as allStudentGroups,
-    find as findStudentGroup,
-    update as updateStudentGroup,
     create as createStudentGroup,
-    destroy as deleteStudentGroup
+    destroy as deleteStudentGroup,
+    find as findStudentGroup,
+    update as updateStudentGroup
 } from '../controllers/studentGroups';
 import {
-    all as allDocuments,
-    find as findDocument,
-    update as updateDocument,
     create as createDocument,
-    destroy as deleteDocument
+    destroy as deleteDocument,
+    find as findDocument,
+    update as updateDocument
 } from '../controllers/documents';
-import { find as findDocumentRoot, create as createDocumentRoot } from '../controllers/documentRoots';
+import {create as createDocumentRoot, find as findDocumentRoot} from '../controllers/documentRoots';
 
 // initialize router
 const router = express.Router();
@@ -39,7 +38,10 @@ router.delete('/studentGroups/:id', deleteStudentGroup);
 router.get('/documentRoots/:id', findDocumentRoot);
 router.post('/documentRoots/:id', createDocumentRoot);
 
-router.get('/documents', allDocuments);
+/**
+ * TODO: Reactivate once the controller's permissions are updated.
+ * router.get('/documents', allDocuments);
+ */
 router.post('/documents', createDocument);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);

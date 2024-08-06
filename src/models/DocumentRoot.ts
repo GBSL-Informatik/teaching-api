@@ -87,7 +87,7 @@ const prepareDocumentRoot = (
         userPermissions: documentRoot.rootUserPermissions.map(prepareUserPermission),
         groupPermissions: documentRoot.rootGroupPermissions.map(prepareGroupPermission),
         documents: documentRoot.documents
-            .map((d) => prepareDocument(actor, { ...d, documentRoot: documentRoot }))
+            .map((d) => prepareDocument(actor, { ...d, documentRoot: documentRoot })?.document)
             .filter((d) => !!d)
     };
     delete (model as Partial<AccessCheckableDocumentRootWithDocuments>).rootGroupPermissions;
