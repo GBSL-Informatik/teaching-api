@@ -105,9 +105,6 @@ function Document(db: PrismaClient['document']) {
             data: any,
             parentId?: string
         ): Promise<Response<ApiDocument>> {
-            //       --> since more documents are created with an existing document root, this would be
-            //           a overhead to always send the initial data of the document root.
-            //           Currently, we handle this client side...
             const documentRoot = await DocumentRoot.findModel(actor, documentRootId);
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
