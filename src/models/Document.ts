@@ -115,7 +115,7 @@ function Document(db: PrismaClient['document']) {
                     throw new HTTP404Error('Parent document not found');
                 }
                 /**
-                 * TODO: this seems too permissive, should we check for RO/RW access instead?
+                 * TODO: this seems too restrictive, should we check for RO/RW access instead?
                  */
                 if (parent.authorId !== actor.id && !actor.isAdmin) {
                     throw new HTTP403Error('Not authorized');
