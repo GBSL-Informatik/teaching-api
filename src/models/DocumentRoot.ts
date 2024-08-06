@@ -1,17 +1,15 @@
 import prisma from '../prisma';
 import {
-    PrismaClient,
-    DocumentRoot as DbDocumentRoot,
     Access,
-    Prisma,
-    User,
-    DocumentRoot,
     Document,
+    DocumentRoot as DbDocumentRoot,
+    PrismaClient,
     RootGroupPermission,
-    RootUserPermission
+    RootUserPermission,
+    User
 } from '@prisma/client';
-import { ApiDocument, prepareDocument } from './Document';
-import { highestAccess } from '../helpers/accessPolicy';
+import {ApiDocument, prepareDocument} from './Document';
+import {highestAccess} from '../helpers/accessPolicy';
 
 export type ApiGroupPermission = {
     id: string;
@@ -31,7 +29,7 @@ export type ApiDocumentRoot = DbDocumentRoot & {
     groupPermissions: ApiGroupPermission[];
 };
 
-export type AccessCheckableDocumentRoot = DocumentRoot & {
+export type AccessCheckableDocumentRoot = DbDocumentRoot & {
     rootGroupPermissions: RootGroupPermission[];
     rootUserPermissions: RootUserPermission[];
 };
@@ -113,6 +111,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 },
                                 {
                                     documentRoot: {
+                                        sharedAccess: {in: [Access.RO, Access.RW]},
                                         OR: [
                                             {
                                                 rootGroupPermissions: {

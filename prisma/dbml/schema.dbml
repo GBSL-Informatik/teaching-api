@@ -46,6 +46,7 @@ Table documents {
 Table document_roots {
   id String [pk]
   access Access [not null, default: 'RW']
+  sharedAccess Access [not null, default: 'None']
   documents documents [not null]
   rootGroupPermissions root_group_permissions [not null]
   rootUserPermissions root_user_permissions [not null]
