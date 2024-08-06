@@ -1,19 +1,9 @@
-import {
-    Access,
-    Document as DbDocument,
-    DocumentRoot as DbDocumentRoot,
-    Prisma,
-    PrismaClient,
-    RootGroupPermission,
-    RootUserPermission,
-    User
-} from '@prisma/client';
+import { Access, Document as DbDocument, PrismaClient, User } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
 import DocumentRoot, {
     AccessCheckableDocumentRoot,
-    ApiDocumentRoot,
     ApiGroupPermission,
     ApiUserPermission
 } from './DocumentRoot';
@@ -25,7 +15,15 @@ type AccessCheckableDocument = DbDocument & {
 
 export type ApiDocument = DbDocument;
 
+interface DocumentWithPermission {
+    document: ApiDocument;
+    highestPermission: Access;
+}
+
 export const extractPermission = (actor: User, document: AccessCheckableDocument) => {
+    if (document.documentRoot.sharedAccess === Access.None && document.authorId !== actor.id) {
+        return null;
+    }
     const permissions = new Set([
         ...document.documentRoot.rootGroupPermissions.map((p) => p.access),
         ...document.documentRoot.rootUserPermissions.map((p) => p.access)
@@ -40,20 +38,28 @@ export const extractPermission = (actor: User, document: AccessCheckableDocument
         }
         return Access.None;
     }
+
     permissions.add(document.documentRoot.access);
-    return highestAccess(permissions);
+
+    return highestAccess(
+        permissions,
+        document.authorId === actor.id ? undefined : document.documentRoot.sharedAccess
+    );
 };
 export const prepareDocument = (actor: User, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
     }
     const permission = extractPermission(actor, document);
+    if (!permission) {
+        return null;
+    }
     const model: ApiDocument = { ...document };
     delete (model as Partial<AccessCheckableDocument>).documentRoot;
     if (permission === Access.None) {
         model.data = null;
     }
-    return model;
+    return { document: model, highestPermission: permission };
 };
 
 type Response<T> = {
@@ -67,7 +73,7 @@ type Response<T> = {
 
 function Document(db: PrismaClient['document']) {
     return Object.assign(db, {
-        async findModel(actor: User, id: string): Promise<ApiDocument | null> {
+        async findModel(actor: User, id: string): Promise<DocumentWithPermission | null> {
             return db
                 .findUnique({
                     where: {
@@ -115,10 +121,16 @@ function Document(db: PrismaClient['document']) {
                     throw new HTTP404Error('Parent document not found');
                 }
                 /**
-                 * TODO: this seems too restrictive, should we check for RO/RW access instead?
+                 * TODO: Should we allow creating children on documents where actor only has RO access?
                  */
-                if (parent.authorId !== actor.id && !actor.isAdmin) {
-                    throw new HTTP403Error('Not authorized');
+                if (
+                    !(
+                        parent.document.authorId === actor.id ||
+                        actor.isAdmin ||
+                        parent.highestPermission === Access.RW
+                    )
+                ) {
+                    throw new HTTP403Error('Insufficient access permission');
                 }
             }
             const model = await db
@@ -155,7 +167,7 @@ function Document(db: PrismaClient['document']) {
                 })
                 .then((doc) => prepareDocument(actor, doc)!);
             return {
-                model: model,
+                model: model.document,
                 permissions: {
                     access: documentRoot.access,
                     group: documentRoot.groupPermissions,
@@ -165,12 +177,11 @@ function Document(db: PrismaClient['document']) {
         },
 
         async updateModel(actor: User, id: string, docData: JsonObject) {
-            // TODO: Only allow updates if the user has RW access on the document's root.
             const record = await this.findModel(actor, id);
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            const canWrite = record.authorId === actor.id || actor.isAdmin; // TODO: Do we want admins to be able to make changes to non-owned documents?
+            const canWrite = record.document.authorId === actor.id || record.highestPermission === Access.RW;
             if (!canWrite) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -207,14 +218,16 @@ function Document(db: PrismaClient['document']) {
         },
 
         async deleteModel(actor: User, id: string): Promise<DbDocument> {
-            // TODO: Only allow deletion if the user has RW access on the document's root.
-            const record = await db.findUnique({ where: { id: id } });
+            const record = await this.findModel(actor, id);
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            if (record.authorId !== actor.id && !actor.isAdmin) {
+            if (!(record.document.authorId === actor.id && record.highestPermission === Access.RW)) {
                 throw new HTTP403Error('Not authorized');
             }
+
+            // TODO: Notify connected clients.
+
             return db.delete({
                 where: {
                     id: id

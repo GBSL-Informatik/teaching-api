@@ -15,7 +15,7 @@ generator docs {
 }
 
 generator dbml {
-  provider = "prisma-dbml-generator"  
+  provider = "prisma-dbml-generator"
 }
 
 // generator erd {
@@ -84,9 +84,10 @@ model Document {
 }
 
 model DocumentRoot {
-  id        String     @id @db.Uuid
-  access    Access     @default(RW)
-  documents Document[] @relation("documents")
+  id           String     @id @db.Uuid
+  access       Access     @default(RW)
+  sharedAccess Access     @default(None) @map("shared_access")
+  documents    Document[] @relation("documents")
 
   rootGroupPermissions RootGroupPermission[] @relation("root_group_to_document_root_permission")
   rootUserPermissions  RootUserPermission[]  @relation("root_user_to_document_root_permission")
