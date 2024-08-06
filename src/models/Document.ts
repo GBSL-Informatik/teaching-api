@@ -105,7 +105,6 @@ function Document(db: PrismaClient['document']) {
             data: any,
             parentId?: string
         ): Promise<Response<ApiDocument>> {
-            // TODO: Create document root if it doesn't exist and the user is admin or has RW access on it.
             //       --> since more documents are created with an existing document root, this would be
             //           a overhead to always send the initial data of the document root.
             //           Currently, we handle this client side...
