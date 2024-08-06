@@ -210,3 +210,9 @@ git push dokku
 dokku letsencrypt:enable dev-teaching-api
 ## when it succeeds, re-enable the cloudflare proxy for domain.tld...
 ```
+
+## Troubleshooting
+
+#### Authentication Error: When your API can not authenticate requests
+  - set the debug level in authConfig to 'info' and check the logs
+  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! not in the APP manifest, there it shall be `null` !!)
