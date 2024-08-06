@@ -41,7 +41,7 @@ export type AccessCheckableDocumentRootWithDocuments = AccessCheckableDocumentRo
 };
 
 export interface Config {
-    access?: Access;
+    access?: Access; // Access level of document root
     userPermissions?: {
         userId: string;
         access: Access;
