@@ -163,7 +163,6 @@ export const configure = (_app: typeof app) => {
                         .emit(notification.event, notification.message as any);
                 });
             }
-            res.locals.notifications = res.notifications;
         });
         next();
     });
