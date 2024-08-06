@@ -108,6 +108,15 @@ const authConfig: Config = {
                     adminOnly: false
                 }
             ]
+        },
+        documentRoots: {
+            path: '/documentRoots',
+            access: [
+                {
+                    methods: ['GET', 'POST'],
+                    adminOnly: false
+                }
+            ]
         }
     }
 };

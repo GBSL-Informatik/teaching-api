@@ -1,10 +1,12 @@
-import { Document, User } from '@prisma/client';
+import { Document, Prisma, User } from '@prisma/client';
+import { ApiDocument } from '../models/Document';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
     CHANGED_RECORD = 'CHANGED_RECORD',
+    CHANGED_DOCUMENT = 'CHANGED_DOCUMENT',
     DELETED_RECORD = 'DELETED_RECORD',
-    PING = 'PING'
+    CONNECTED_CLIENTS = 'CONNECTED_CLIENTS'
 }
 
 export enum RecordType {
@@ -13,7 +15,7 @@ export enum RecordType {
 }
 
 type TypeRecordMap = {
-    [RecordType.Document]: Document;
+    [RecordType.Document]: ApiDocument;
     [RecordType.User]: User;
 };
 
@@ -27,13 +29,24 @@ export interface ChangedRecord<T extends RecordType> {
     record: TypeRecordMap[T];
 }
 
+export interface ChangedDocument {
+    id: string;
+    data: Prisma.JsonValue;
+    updatedAt: Date;
+}
+
+export interface ConnectedClients {
+    room: string;
+    count: number;
+}
+
 export interface DeletedRecord {
     type: RecordType;
     id: string;
 }
 
 interface NotificationBase {
-    to: string;
+    to: string | string[];
     toSelf?: true | boolean;
 }
 
@@ -51,8 +64,16 @@ interface NotificationDeletedRecord extends NotificationBase {
     event: IoEvent.DELETED_RECORD;
     message: DeletedRecord;
 }
+interface NotificationChangedDocument extends NotificationBase {
+    event: IoEvent.CHANGED_DOCUMENT;
+    message: ChangedDocument;
+}
 
-export type Notification = NotificationNewRecord | NotificationChangedRecord | NotificationDeletedRecord;
+export type Notification =
+    | NotificationNewRecord
+    | NotificationChangedRecord
+    | NotificationDeletedRecord
+    | NotificationChangedDocument;
 
 /**
  * client side initiated events
@@ -63,7 +84,8 @@ export type ServerToClientEvents = {
     [IoEvent.NEW_RECORD]: (message: NewRecord<RecordType>) => void;
     [IoEvent.CHANGED_RECORD]: (message: ChangedRecord<RecordType>) => void;
     [IoEvent.DELETED_RECORD]: (message: DeletedRecord) => void;
-    [IoEvent.PING]: (message: { time: number }) => void;
+    [IoEvent.CHANGED_DOCUMENT]: (message: ChangedDocument) => void;
+    [IoEvent.CONNECTED_CLIENTS]: (message: ConnectedClients) => void;
 };
 
 export interface ClientToServerEvents {}

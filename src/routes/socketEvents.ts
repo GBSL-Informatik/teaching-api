@@ -3,7 +3,8 @@
 import type { User } from '@prisma/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
-import { ClientToServerEvents, IoEvents, ServerToClientEvents } from './socketEventTypes';
+import { ClientToServerEvents, IoEvent, ServerToClientEvents } from './socketEventTypes';
+import StudentGroup from '../models/StudentGroup';
 
 export enum IoRoom {
     ADMIN = 'admin',
@@ -11,22 +12,22 @@ export enum IoRoom {
 }
 
 const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => {
-    io.on('connection', (socket) => {
+    io.on('connection', async (socket) => {
         const user = (socket.request as { user?: User }).user;
         if (!user) {
             return socket.disconnect();
         }
-        const sid = (socket.request as { sessionID?: string }).sessionID;
-        if (sid) {
-            socket.join(sid);
-        }
+        socket.join(user.id);
+
         if (user.isAdmin) {
             socket.join(IoRoom.ADMIN);
         }
         socket.join(IoRoom.ALL);
-        /**
-         * TODO: Join the user's studentGroups?
-         */
+        const groups = await StudentGroup.all(user);
+        const groupIds = groups.map((group) => group.id);
+        if (groupIds.length > 0) {
+            socket.join(groupIds);
+        }
     });
 
     io.on('disconnect', (socket) => {
@@ -41,6 +42,14 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
     io.on('reconnect', (socket) => {
         const { user } = socket.request as { user?: User };
         Logger.info(`Socket.io reconnect ${user?.email}`);
+    });
+    io.of('/').adapter.on('join-room', (room, id) => {
+        const size = io.sockets.adapter.rooms.get(room)?.size || 0;
+        io.to(room).emit(IoEvent.CONNECTED_CLIENTS, { room, count: size });
+    });
+    io.of('/').adapter.on('leave-room', (room, id) => {
+        const size = io.sockets.adapter.rooms.get(room)?.size || 0;
+        io.to(room).except(id).emit(IoEvent.CONNECTED_CLIENTS, { room, count: size });
     });
 };
 

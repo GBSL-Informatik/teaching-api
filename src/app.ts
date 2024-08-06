@@ -15,6 +15,8 @@ import { HTTP401Error } from './utils/errors/Errors';
 import connectPgSimple from 'connect-pg-simple';
 import { request } from 'https';
 import Logger from './utils/logger';
+import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
+import type { Server } from 'socket.io';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 
@@ -144,7 +146,7 @@ export const configure = (_app: typeof app) => {
             if (res.statusCode >= 400) {
                 return;
             }
-            const io = req.io;
+            const io = req.io as Server<ClientToServerEvents, ServerToClientEvents>;
 
             if (res.notifications && io) {
                 res.notifications.forEach((notification) => {

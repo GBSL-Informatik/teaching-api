@@ -43,13 +43,6 @@ io.use((socket, next) => {
     }
 });
 
-/** TODO: Remove
- * this is only! to demonstrate that everything is working
- */
-setInterval(() => {
-    io.emit(IoEvent.PING, { time: Date.now() });
-}, 1000);
-
 // Make io accessible to our router
 app.use((req: Request, res, next) => {
     req.io = io;

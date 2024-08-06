@@ -29,7 +29,6 @@
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.5",
     "socket.io": "^4.7.5",
-    "typescript": "^5.4.5",
     "winston": "^3.13.0"
   },
   "prisma": {
@@ -53,6 +52,7 @@
     "prisma-dbml-generator": "^0.12.0",
     "prisma-docs-generator": "^0.8.0",
     "prisma-erd-generator": "^1.11.2",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   }
 }
