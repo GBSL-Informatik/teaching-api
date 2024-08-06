@@ -188,12 +188,14 @@ dokku config:set dev-teaching-api CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXX
 dokku config:set dev-teaching-api TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 dokku config:set --no-restart dev-teaching-api DOKKU_LETSENCRYPT_EMAIL="foo@bar.ch"
 dokku config:set dev-teaching-api SESSION_SECRET="$(openssl rand -base64 32)"
+dokku config:set dev-teaching-api FRONTEND_URL="https://..."
 
 dokku nginx:set dev-teaching-api client-max-body-size 5m
 
 dokku nginx:set dev-teaching-api x-forwarded-proto-value '$http_x_forwarded_proto'
 dokku nginx:set dev-teaching-api x-forwarded-for-value '$http_x_forwarded_for'
 dokku nginx:set dev-teaching-api x-forwarded-port-value '$http_x_forwarded_port'
+
 
 ######### on local machine #########
 # 1. add the remote to your project:

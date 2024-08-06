@@ -28,6 +28,7 @@
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.5",
+    "socket.io": "^4.7.5",
     "typescript": "^5.4.5",
     "winston": "^3.13.0"
   },
