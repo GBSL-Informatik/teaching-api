@@ -1,7 +1,18 @@
-import { Access } from '@prisma/client';
-import { RequestHandler } from 'express';
+import {Access} from '@prisma/client';
+import {RequestHandler} from 'express';
 import RootGroupPermission from '../models/RootGroupPermission';
 import {HTTP400Error} from "../utils/errors/Errors";
+import {IoEvent, RecordType} from "../routes/socketEventTypes";
+import {ApiGroupPermission} from "../models/DocumentRoot";
+import {RootGroupPermission as DbRootGroupPermission} from "@prisma/client";
+
+const asApiRecord = (dbResult: DbRootGroupPermission): ApiGroupPermission => {
+    return {
+        id: dbResult.id,
+        groupId: dbResult.studentGroupId,
+        access: dbResult.access,
+    };
+}
 
 export const create: RequestHandler<
     any,
@@ -15,9 +26,17 @@ export const create: RequestHandler<
             throw new HTTP400Error('Missing documentRootId, studentGroupId or access');
         }
 
-        const model = await RootGroupPermission.createModel(documentRootId, studentGroupId, access);
+        const model: DbRootGroupPermission = await RootGroupPermission.createModel(documentRootId, studentGroupId, access);
+        const apiRecord = asApiRecord(model);
 
-        res.status(200).json(model);
+        res.notifications = [
+            {
+                event: IoEvent.NEW_RECORD,
+                message: { type: RecordType.GroupPermission, record: apiRecord },
+                to: model.studentGroupId
+            }
+        ]
+        res.status(200).json(apiRecord);
     } catch (error) {
         next(error);
     }
@@ -26,7 +45,16 @@ export const create: RequestHandler<
 export const update: RequestHandler<{ id: string }, any, { access: Access }> = async (req, res, next) => {
     try {
         const model = await RootGroupPermission.updateModel(req.params.id, req.body.access);
-        res.status(200).send(model);
+        const apiRecord = asApiRecord(model);
+
+        res.notifications = [
+            {
+                event: IoEvent.CHANGED_RECORD,
+                message: { type: RecordType.GroupPermission, record: apiRecord },
+                to: model.studentGroupId
+            }
+        ]
+        res.status(200).send(apiRecord);
     } catch (error) {
         next(error);
     }
@@ -34,8 +62,17 @@ export const update: RequestHandler<{ id: string }, any, { access: Access }> = a
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const permission = await RootGroupPermission.deleteModel(req.params.id);
-        res.json(permission);
+        const model = await RootGroupPermission.deleteModel(req.params.id);
+        const apiRecord = asApiRecord(model);
+
+        res.notifications = [
+            {
+                event: IoEvent.DELETED_RECORD,
+                message: { type: RecordType.GroupPermission, id: model.id },
+                to: model.studentGroupId
+            }
+        ]
+        res.json(apiRecord);
     } catch (error) {
         next(error);
     }
