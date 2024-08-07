@@ -9,7 +9,6 @@ import {
     User
 } from '@prisma/client';
 import { ApiDocument, prepareDocument } from './Document';
-import { highestAccess } from '../helpers/accessPolicy';
 
 export type ApiGroupPermission = {
     id: string;
@@ -40,14 +39,8 @@ export type AccessCheckableDocumentRootWithDocuments = AccessCheckableDocumentRo
 
 export interface Config {
     access?: Access; // Access level of document root
-    userPermissions?: {
-        userId: string;
-        access: Access;
-    }[];
-    groupPermissions?: {
-        groupId: string;
-        access: Access;
-    }[];
+    userPermissions?: Omit<ApiUserPermission, 'id'>[];
+    groupPermissions?: Omit<ApiGroupPermission, 'id'>[];
 }
 
 const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermission => {
