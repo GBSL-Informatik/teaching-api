@@ -64,7 +64,7 @@ export const update: RequestHandler<{ id: string }, any, { data: JsonObject }> =
         const userIds = model.documentRoot.rootUserPermissions
             .filter((p) => p.access !== Access.None)
             .map((p) => p.userId);
-        
+
         res.notifications = [
             {
                 event: IoEvent.CHANGED_DOCUMENT,

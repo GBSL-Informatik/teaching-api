@@ -24,7 +24,7 @@ const extractPermission = (actor: User, document: AccessCheckableDocument) => {
     if (document.documentRoot.sharedAccess === Access.None && document.authorId !== actor.id) {
         return null;
     }
-    
+
     const permissions = new Set([
         document.documentRoot.access,
         ...document.documentRoot.rootGroupPermissions.map((p) => p.access),
