@@ -66,7 +66,8 @@ const SESSION_MAX_AGE = 2592000000 as const; // 1000 * 60 * 60 * 24 * 30 = 25920
  */
 app.set('trust proxy', 1);
 
-const SESSION_KEY = process.env.APP_NAME ? `${process.env.APP_NAME}ApiKey` : 'twaApiKey';
+const SESSION_KEY = `${process.env.APP_NAME || 'twa'}ApiKey`;
+
 /** https://medium.com/developer-rants/how-to-handle-sessions-properly-in-express-js-with-heroku-c35ea8c0e500 */
 export const sessionMiddleware = session({
     name: SESSION_KEY /** twa stands for "TeachingWebsiteApi" */,

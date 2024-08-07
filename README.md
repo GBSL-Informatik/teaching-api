@@ -31,7 +31,7 @@ to format all typescript files.
 | `SESSION_SECRET` | The secret for the session cookie.\*\*                                  | `secret`                                            |
 | `MSAL_CLIENT_ID` | The client id for the web api from Azure.                               |                                                     |
 | `MSAL_TENANT_ID` | The Tenant ID from your Azure instance                                  |                                                     |
-| `APP_NAME`       | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey` | `xyzTeaching`                                       |
+| `APP_NAME`       | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey` | `xyzTeaching`, default: `twa`                       |
 
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).
