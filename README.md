@@ -21,16 +21,17 @@ to format all typescript files.
 
 ## Environment Variables
 
-| Variable         | Description                                       | Example                                             |
-|:-----------------|:--------------------------------------------------|:----------------------------------------------------|
-| `DATABASE_URL`   | The URL to connect to the PostgreSQL database.    | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
-| `USER_EMAIL`     | The email of the user to be created on seeding.   | `reto.holz@gbsl.ch`                                 |
-| `USER_ID`        | The UUID of the user to be created on seeding. \* | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
-| `PORT`           | (optional) The port the server should listen on.  | `3002` (default)                                    |
-| `FRONTEND_URL`   | The URL of the frontend.                          | `http://localhost:3000`                             |
-| `SESSION_SECRET` | The secret for the session cookie.\*\*            | `secret`                                            |
-| `MSAL_CLIENT_ID` | The client id for the web api from Azure.         |                                                     |
-| `MSAL_TENANT_ID` | The Tenant ID from your Azure instance            |                                                     |
+| Variable         | Description                                                             | Example                                             |
+|:-----------------|:------------------------------------------------------------------------|:----------------------------------------------------|
+| `DATABASE_URL`   | The URL to connect to the PostgreSQL database.                          | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
+| `USER_EMAIL`     | The email of the user to be created on seeding.                         | `reto.holz@gbsl.ch`                                 |
+| `USER_ID`        | The UUID of the user to be created on seeding. \*                       | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
+| `PORT`           | (optional) The port the server should listen on.                        | `3002` (default)                                    |
+| `FRONTEND_URL`   | The URL of the frontend.                                                | `http://localhost:3000`                             |
+| `SESSION_SECRET` | The secret for the session cookie.\*\*                                  | `secret`                                            |
+| `MSAL_CLIENT_ID` | The client id for the web api from Azure.                               |                                                     |
+| `MSAL_TENANT_ID` | The Tenant ID from your Azure instance                                  |                                                     |
+| `APP_NAME`       | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey` | `xyzTeaching`, default: `twa`                       |
 
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).
@@ -209,3 +210,10 @@ git push dokku
 dokku letsencrypt:enable dev-teaching-api
 ## when it succeeds, re-enable the cloudflare proxy for domain.tld...
 ```
+
+## Troubleshooting
+
+> [!Caution]
+> Authentication Error: When your API can not authenticate requests
+>  - set the debug level in authConfig to 'info' and check the logs
+>  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! **not** in the Frontend's manifest, there it must still be `null` !!)
