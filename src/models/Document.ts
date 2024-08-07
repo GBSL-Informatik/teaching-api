@@ -24,26 +24,19 @@ const extractPermission = (actor: User, document: AccessCheckableDocument) => {
     if (document.documentRoot.sharedAccess === Access.None && document.authorId !== actor.id) {
         return null;
     }
+    
     const permissions = new Set([
+        document.documentRoot.access,
         ...document.documentRoot.rootGroupPermissions.map((p) => p.access),
         ...document.documentRoot.rootUserPermissions.map((p) => p.access)
     ]);
-    if (permissions.size === 0) {
-        /**
-         * - in case the actor is the author, allow root documents permission
-         */
-        if (actor.id === document.authorId) {
-            return document.documentRoot.access;
-        }
-    }
-
-    permissions.add(document.documentRoot.access);
 
     return highestAccess(
         permissions,
         document.authorId === actor.id ? undefined : document.documentRoot.sharedAccess
     );
 };
+
 export const prepareDocument = (actor: User, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
