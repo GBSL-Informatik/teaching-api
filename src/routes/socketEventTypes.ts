@@ -1,6 +1,6 @@
-import {Prisma, User} from '@prisma/client';
-import {ApiDocument} from '../models/Document';
-import {ApiGroupPermission, ApiUserPermission} from "../models/DocumentRoot";
+import { Prisma, User } from '@prisma/client';
+import { ApiDocument } from '../models/Document';
+import { ApiGroupPermission, ApiUserPermission } from '../models/DocumentRoot';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
@@ -14,7 +14,7 @@ export enum RecordType {
     Document = 'Document',
     User = 'User',
     UserPermission = 'UserPermission',
-    GroupPermission = 'GroupPermission',
+    GroupPermission = 'GroupPermission'
 }
 
 type TypeRecordMap = {
