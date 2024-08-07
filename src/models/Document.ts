@@ -31,12 +31,10 @@ export const extractPermission = (actor: User, document: AccessCheckableDocument
     if (permissions.size === 0) {
         /**
          * - in case the actor is the author, allow root documents permission
-         * - otherwise none
          */
         if (actor.id === document.authorId) {
             return document.documentRoot.access;
         }
-        return Access.None;
     }
 
     permissions.add(document.documentRoot.access);
