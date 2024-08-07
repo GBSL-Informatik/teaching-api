@@ -48,9 +48,9 @@ router.post('/permissions/user', createUserPermission);
 router.put('/permissions/user/:id', updateUserPermission);
 router.delete('/permissions/user/:id', deleteUserPermission);
 
-router.post('/permissions/studentGroup', createStudentGroupPermission);
-router.put('/permissions/studentGroup/:id', updateStudentGroupPermission);
-router.delete('/permissions/studentGroup/:id', deleteStudentGroupPermission);
+router.post('/permissions/group', createStudentGroupPermission);
+router.put('/permissions/group/:id', updateStudentGroupPermission);
+router.delete('/permissions/group/:id', deleteStudentGroupPermission);
 
 // TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
 router.get('/documentRoots/:id', findDocumentRoot);
