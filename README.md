@@ -31,7 +31,7 @@ to format all typescript files.
 | `SESSION_SECRET` | The secret for the session cookie.\*\*                                  | `secret`                                            |
 | `MSAL_CLIENT_ID` | The client id for the web api from Azure.                               |                                                     |
 | `MSAL_TENANT_ID` | The Tenant ID from your Azure instance                                  |                                                     |
-| `APP_NAME`       | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey` | `teaching-api`                                      |
+| `APP_NAME`       | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey` | `xyzTeaching`                                       |
 
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).
@@ -213,6 +213,7 @@ dokku letsencrypt:enable dev-teaching-api
 
 ## Troubleshooting
 
-#### Authentication Error: When your API can not authenticate requests
-  - set the debug level in authConfig to 'info' and check the logs
-  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! not in the APP manifest, there it shall be `null` !!)
+> [!Caution]
+> Authentication Error: When your API can not authenticate requests
+>  - set the debug level in authConfig to 'info' and check the logs
+>  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! **not** in the Frontend's manifest, there it must still be `null` !!)
