@@ -1,6 +1,7 @@
 import { Prisma, User } from '@prisma/client';
 import { ApiDocument } from '../models/Document';
-import { ApiGroupPermission, ApiUserPermission } from '../models/DocumentRoot';
+import {ApiUserPermission} from "../models/RootUserPermission";
+import {ApiGroupPermission} from "../models/RootGroupPermission";
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',

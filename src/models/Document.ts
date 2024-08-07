@@ -4,10 +4,10 @@ import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
 import DocumentRoot, {
     AccessCheckableDocumentRoot,
-    ApiGroupPermission,
-    ApiUserPermission
 } from './DocumentRoot';
 import { highestAccess } from '../helpers/accessPolicy';
+import {ApiGroupPermission} from "./RootGroupPermission";
+import {ApiUserPermission} from "./RootUserPermission";
 
 type AccessCheckableDocument = DbDocument & {
     documentRoot: AccessCheckableDocumentRoot;

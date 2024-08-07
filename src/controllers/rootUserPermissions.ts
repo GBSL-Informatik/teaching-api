@@ -1,18 +1,8 @@
-import { Access } from '@prisma/client';
-import { RequestHandler } from 'express';
+import {Access} from '@prisma/client';
+import {RequestHandler} from 'express';
 import RootUserPermission from '../models/RootUserPermission';
-import { HTTP400Error } from '../utils/errors/Errors';
-import { RootUserPermission as DbRootUserPermission } from '.prisma/client';
-import { ApiUserPermission } from '../models/DocumentRoot';
-import { IoEvent, RecordType } from '../routes/socketEventTypes';
-
-const asApiRecord = (dbResult: DbRootUserPermission): ApiUserPermission => {
-    return {
-        id: dbResult.id,
-        userId: dbResult.userId,
-        access: dbResult.access
-    };
-};
+import {HTTP400Error} from '../utils/errors/Errors';
+import {IoEvent, RecordType} from '../routes/socketEventTypes';
 
 export const create: RequestHandler<
     any,
@@ -27,16 +17,15 @@ export const create: RequestHandler<
         }
 
         const model = await RootUserPermission.createModel(documentRootId, userId, access);
-        const apiRecord = asApiRecord(model);
 
         res.notifications = [
             {
                 event: IoEvent.NEW_RECORD,
-                message: { type: RecordType.UserPermission, record: apiRecord },
+                message: { type: RecordType.UserPermission, record: model },
                 to: model.userId
             }
         ];
-        res.status(200).json(apiRecord);
+        res.status(200).json(model);
     } catch (error) {
         next(error);
     }
@@ -45,16 +34,15 @@ export const create: RequestHandler<
 export const update: RequestHandler<{ id: string }, any, { access: Access }> = async (req, res, next) => {
     try {
         const model = await RootUserPermission.updateModel(req.params.id, req.body.access);
-        const apiRecord = asApiRecord(model);
 
         res.notifications = [
             {
                 event: IoEvent.CHANGED_RECORD,
-                message: { type: RecordType.UserPermission, record: apiRecord },
+                message: { type: RecordType.UserPermission, record: model },
                 to: model.userId
             }
         ];
-        res.status(200).send(apiRecord);
+        res.status(200).send(model);
     } catch (error) {
         next(error);
     }
@@ -63,7 +51,6 @@ export const update: RequestHandler<{ id: string }, any, { access: Access }> = a
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
         const model = await RootUserPermission.deleteModel(req.params.id);
-        const apiRecord = asApiRecord(model);
 
         res.notifications = [
             {
@@ -72,7 +59,7 @@ export const destroy: RequestHandler<{ id: string }> = async (req, res, next) =>
                 to: model.userId
             }
         ];
-        res.json(apiRecord);
+        res.json(model);
     } catch (error) {
         next(error);
     }
