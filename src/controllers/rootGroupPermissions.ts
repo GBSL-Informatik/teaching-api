@@ -1,6 +1,7 @@
 import { Access } from '@prisma/client';
 import { RequestHandler } from 'express';
 import RootGroupPermission from '../models/RootGroupPermission';
+import {HTTP400Error} from "../utils/errors/Errors";
 
 export const create: RequestHandler<
     any,
@@ -11,8 +12,7 @@ export const create: RequestHandler<
         const { documentRootId, studentGroupId, access } = req.body;
 
         if (!(documentRootId && studentGroupId && access)) {
-            res.status(400).send('Missing documentRootId, studentGroupId or access');
-            return;
+            throw new HTTP400Error('Missing documentRootId, studentGroupId or access');
         }
 
         const model = await RootGroupPermission.createModel(documentRootId, studentGroupId, access);
