@@ -13,13 +13,17 @@ function asApiRecord(dbResult: DbGroupPermission): ApiGroupPermission {
     return {
         id: dbResult.id,
         groupId: dbResult.studentGroupId,
-        access: dbResult.access,
+        access: dbResult.access
     };
 }
 
 function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
     return Object.assign(db, {
-        async createModel(documentRootId: string, studentGroupId: string, access: Access): Promise<ApiGroupPermission> {
+        async createModel(
+            documentRootId: string,
+            studentGroupId: string,
+            access: Access
+        ): Promise<ApiGroupPermission> {
             const result = await db.create({
                 data: {
                     documentRootId: documentRootId,

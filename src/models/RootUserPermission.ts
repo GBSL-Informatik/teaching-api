@@ -1,6 +1,6 @@
 import { Access, PrismaClient } from '@prisma/client';
 import prisma from '../prisma';
-import {RootUserPermission as DbRootUserPermission} from ".prisma/client";
+import { RootUserPermission as DbRootUserPermission } from '.prisma/client';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 
@@ -20,7 +20,11 @@ function asApiRecord(dbResult: DbRootUserPermission): ApiUserPermission {
 
 function RootUserPermission(db: PrismaClient['rootUserPermission']) {
     return Object.assign(db, {
-        async createModel(documentRootId: string, userId: string, access: Access): Promise<ApiUserPermission> {
+        async createModel(
+            documentRootId: string,
+            userId: string,
+            access: Access
+        ): Promise<ApiUserPermission> {
             const result = await db.create({
                 data: {
                     documentRootId: documentRootId,

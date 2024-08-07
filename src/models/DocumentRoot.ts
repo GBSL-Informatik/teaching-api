@@ -9,8 +9,8 @@ import {
     User
 } from '@prisma/client';
 import { ApiDocument, prepareDocument } from './Document';
-import {ApiUserPermission} from "./RootUserPermission";
-import {ApiGroupPermission} from "./RootGroupPermission";
+import { ApiUserPermission } from './RootUserPermission';
+import { ApiGroupPermission } from './RootGroupPermission';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];

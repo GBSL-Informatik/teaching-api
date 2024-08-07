@@ -16,11 +16,7 @@ export const create: RequestHandler<
             throw new HTTP400Error('Missing documentRootId, studentGroupId or access');
         }
 
-        const model = await RootGroupPermission.createModel(
-            documentRootId,
-            studentGroupId,
-            access
-        );
+        const model = await RootGroupPermission.createModel(documentRootId, studentGroupId, access);
 
         res.notifications = [
             {
