@@ -101,13 +101,13 @@ const authConfig: Config = {
             ]
         },
         permissions: {
-          path: '/permissions',
-          access: [
-              {
-                  methods: ['POST', 'PUT', 'DELETE'],
-                  adminOnly: true,
-              }
-          ]
+            path: '/permissions',
+            access: [
+                {
+                    methods: ['POST', 'PUT', 'DELETE'],
+                    adminOnly: true
+                }
+            ]
         },
         documents: {
             path: '/documents',
