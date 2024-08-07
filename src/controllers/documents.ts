@@ -3,7 +3,6 @@ import { RequestHandler } from 'express';
 import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes';
-import { IoRoom } from '../routes/socketEvents';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -65,6 +64,7 @@ export const update: RequestHandler<{ id: string }, any, { data: JsonObject }> =
         const userIds = model.documentRoot.rootUserPermissions
             .filter((p) => p.access !== Access.None)
             .map((p) => p.userId);
+
         res.notifications = [
             {
                 event: IoEvent.CHANGED_DOCUMENT,

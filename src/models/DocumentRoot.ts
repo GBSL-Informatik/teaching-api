@@ -50,15 +50,6 @@ export interface Config {
     }[];
 }
 
-export const extractPermission = (documentRoot: AccessCheckableDocumentRoot) => {
-    const permissions = new Set([
-        documentRoot.access,
-        ...documentRoot.rootGroupPermissions.map((p) => p.access),
-        ...documentRoot.rootUserPermissions.map((p) => p.access)
-    ]);
-    return highestAccess(permissions);
-};
-
 const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermission => {
     return {
         id: permission.id,

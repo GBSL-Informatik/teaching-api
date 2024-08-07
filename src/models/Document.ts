@@ -20,32 +20,24 @@ interface DocumentWithPermission {
     highestPermission: Access;
 }
 
-export const extractPermission = (actor: User, document: AccessCheckableDocument) => {
+const extractPermission = (actor: User, document: AccessCheckableDocument) => {
     if (document.documentRoot.sharedAccess === Access.None && document.authorId !== actor.id) {
         return null;
     }
+
     const permissions = new Set([
+        document.documentRoot.access,
         ...document.documentRoot.rootGroupPermissions.map((p) => p.access),
         ...document.documentRoot.rootUserPermissions.map((p) => p.access)
     ]);
-    if (permissions.size === 0) {
-        /**
-         * - in case the actor is the author, allow root documents permission
-         * - otherwise none
-         */
-        if (actor.id === document.authorId) {
-            return document.documentRoot.access;
-        }
-        return Access.None;
+    const usersPermission = highestAccess(permissions);
+    if (document.authorId === actor.id) {
+        return usersPermission;
     }
 
-    permissions.add(document.documentRoot.access);
-
-    return highestAccess(
-        permissions,
-        document.authorId === actor.id ? undefined : document.documentRoot.sharedAccess
-    );
+    return highestAccess(new Set([document.documentRoot.sharedAccess]), usersPermission);
 };
+
 export const prepareDocument = (actor: User, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
