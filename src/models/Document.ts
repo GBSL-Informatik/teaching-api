@@ -30,11 +30,12 @@ const extractPermission = (actor: User, document: AccessCheckableDocument) => {
         ...document.documentRoot.rootGroupPermissions.map((p) => p.access),
         ...document.documentRoot.rootUserPermissions.map((p) => p.access)
     ]);
+    const usersPermission = highestAccess(permissions);
+    if (document.authorId === actor.id) {
+        return usersPermission;
+    }
 
-    return highestAccess(
-        permissions,
-        document.authorId === actor.id ? undefined : document.documentRoot.sharedAccess
-    );
+    return highestAccess(new Set([document.documentRoot.sharedAccess]), usersPermission);
 };
 
 export const prepareDocument = (actor: User, document: AccessCheckableDocument | null) => {

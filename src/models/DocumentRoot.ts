@@ -102,38 +102,27 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 },
                                 {
                                     documentRoot: {
+                                        sharedAccess: { in: [Access.RO, Access.RW] },
                                         OR: [
-                                            /** either RO or RW access on the document root (without further permissions) */
-                                            { sharedAccess: { in: [Access.RO, Access.RW] } },
-                                            /** or RO/RW permission + a user/group permission */
                                             {
-                                                AND: [
-                                                    { sharedAccess: { in: [Access.RO, Access.RW] } },
-                                                    {
-                                                        OR: [
-                                                            {
-                                                                rootGroupPermissions: {
-                                                                    some: {
-                                                                        studentGroup: {
-                                                                            users: {
-                                                                                some: {
-                                                                                    id: actor.id
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            },
-                                                            {
-                                                                rootUserPermissions: {
-                                                                    some: {
-                                                                        userId: actor.id
-                                                                    }
+                                                rootGroupPermissions: {
+                                                    some: {
+                                                        studentGroup: {
+                                                            users: {
+                                                                some: {
+                                                                    id: actor.id
                                                                 }
                                                             }
-                                                        ]
+                                                        }
                                                     }
-                                                ]
+                                                }
+                                            },
+                                            {
+                                                rootUserPermissions: {
+                                                    some: {
+                                                        userId: actor.id
+                                                    }
+                                                }
                                             }
                                         ]
                                     }
