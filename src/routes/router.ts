@@ -8,6 +8,11 @@ import {
     update as updateStudentGroup
 } from '../controllers/studentGroups';
 import {
+    create as createUserPermission,
+    destroy as deleteUserPermission,
+    update as updateUserPermission
+} from '../controllers/userPermissions';
+import {
     create as createDocument,
     destroy as deleteDocument,
     find as findDocument,
@@ -33,6 +38,11 @@ router.get('/studentGroups/:id', findStudentGroup);
 
 router.put('/studentGroups/:id', updateStudentGroup);
 router.delete('/studentGroups/:id', deleteStudentGroup);
+
+// TODO: Copy/paste for student groups.
+router.post('/permissions/user', createUserPermission);
+router.put('/permissions/user/:id', updateUserPermission);
+router.delete('/permissions/user/:id', deleteUserPermission);
 
 // TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
 router.get('/documentRoots/:id', findDocumentRoot);
