@@ -81,7 +81,7 @@ export const sessionMiddleware = session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: process.env.WITH_DEPLOY_PREVIEW ? 'none' : 'strict',
         domain: domain.length > 0 ? domain : undefined,
         maxAge: SESSION_MAX_AGE // 30 days
     }
