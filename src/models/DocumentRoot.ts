@@ -18,6 +18,11 @@ export type ApiDocumentRoot = DbDocumentRoot & {
     groupPermissions: ApiGroupPermission[];
 };
 
+export type ApiDocumentRootUpdate = DbDocumentRoot & {
+    userPermissions: ApiUserPermission[];
+    groupPermissions: ApiGroupPermission[];
+};
+
 export type AccessCheckableDocumentRoot = DbDocumentRoot & {
     rootGroupPermissions: RootGroupPermission[];
     rootUserPermissions: RootUserPermission[];
@@ -31,6 +36,11 @@ export interface Config {
     access?: Access; // Access level of document root
     userPermissions?: Omit<ApiUserPermission, 'id'>[];
     groupPermissions?: Omit<ApiGroupPermission, 'id'>[];
+}
+
+export interface UpdateConfig {
+    access?: Access;
+    sharedAccess?: Access;
 }
 
 const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermission => {
@@ -71,7 +81,7 @@ const prepareDocumentRoot = (
 
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
-        async findModel(actor: User, id: string) {
+        async findModel(actor: User, id: string): Promise<ApiDocumentRoot | null> {
             const documentRoot = await db.findUnique({
                 where: {
                     id: id
@@ -180,6 +190,29 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                         : undefined
                 }
             });
+        },
+        async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootUpdate> {
+            const model = await db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    access: data.access,
+                    sharedAccess: data.sharedAccess
+                },
+                include: {
+                    rootGroupPermissions: true,
+                    rootUserPermissions: true
+                }
+            });
+
+            return {
+                id: model.id,
+                access: model.access,
+                sharedAccess: model.sharedAccess,
+                userPermissions: model.rootUserPermissions.map((p) => prepareUserPermission(p)),
+                groupPermissions: model.rootGroupPermissions.map((p) => prepareGroupPermission(p))
+            };
         }
     });
 }
