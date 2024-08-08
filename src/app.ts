@@ -40,13 +40,15 @@ export const API_URL = `/api/${API_VERSION}`;
 app.use(
     cors({
         credentials: true,
-        origin: process.env.FRONTEND_URL || true /* true = strict origin */,
+        origin: process.env.WITH_DEPLOY_PREVIEW
+            ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
+            : process.env.FRONTEND_URL || true /* true = strict origin */,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
     })
 );
 
 // received packages should be presented in the JSON format
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 app.use(morganMiddleware);
 
@@ -79,7 +81,7 @@ export const sessionMiddleware = session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: process.env.WITH_DEPLOY_PREVIEW ? 'none' : 'strict',
         domain: domain.length > 0 ? domain : undefined,
         maxAge: SESSION_MAX_AGE // 30 days
     }
