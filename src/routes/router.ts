@@ -23,7 +23,11 @@ import {
     find as findDocument,
     update as updateDocument
 } from '../controllers/documents';
-import { create as createDocumentRoot, find as findDocumentRoot } from '../controllers/documentRoots';
+import {
+    create as createDocumentRoot,
+    find as findDocumentRoot,
+    update as updateDocumentRoot
+} from '../controllers/documentRoots';
 
 // initialize router
 const router = express.Router();
@@ -55,6 +59,7 @@ router.delete('/permissions/group/:id', deleteStudentGroupPermission);
 // TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
 router.get('/documentRoots/:id', findDocumentRoot);
 router.post('/documentRoots/:id', createDocumentRoot);
+router.put('/documentRoots/:id', updateDocumentRoot);
 
 /**
  * TODO: Reactivate once the controller's permissions are updated.

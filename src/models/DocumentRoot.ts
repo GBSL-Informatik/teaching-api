@@ -33,6 +33,11 @@ export interface Config {
     groupPermissions?: Omit<ApiGroupPermission, 'id'>[];
 }
 
+export interface UpdateConfig {
+    access?: Access;
+    sharedAccess?: Access;
+}
+
 const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermission => {
     return {
         id: permission.id,
@@ -178,6 +183,17 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                               }
                           }
                         : undefined
+                }
+            });
+        },
+        async updateModel(id: string, data: UpdateConfig): Promise<DbDocumentRoot> {
+            return db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    access: data.access,
+                    sharedAccess: data.sharedAccess
                 }
             });
         }

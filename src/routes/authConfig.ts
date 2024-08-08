@@ -124,6 +124,10 @@ const authConfig: Config = {
                 {
                     methods: ['GET', 'POST'],
                     adminOnly: false
+                },
+                {
+                    methods: ['PUT'],
+                    adminOnly: true
                 }
             ]
         }
