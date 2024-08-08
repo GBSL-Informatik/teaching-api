@@ -40,7 +40,9 @@ export const API_URL = `/api/${API_VERSION}`;
 app.use(
     cors({
         credentials: true,
-        origin: process.env.FRONTEND_URL || true /* true = strict origin */,
+        origin: process.env.WITH_DEPLOY_PREVIEW
+                    ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
+                    : process.env.FRONTEND_URL || true /* true = strict origin */,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
     })
 );
