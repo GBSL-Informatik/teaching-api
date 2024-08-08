@@ -81,7 +81,7 @@ const prepareDocumentRoot = (
 
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
-        async findModel(actor: User, id: string) {
+        async findModel(actor: User, id: string): Promise<ApiDocumentRoot | null> {
             const documentRoot = await db.findUnique({
                 where: {
                     id: id
