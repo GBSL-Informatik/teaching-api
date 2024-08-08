@@ -10,7 +10,9 @@ import { NextFunction, Request, Response } from 'express';
 const PORT = process.env.PORT || 3002;
 
 const server = http.createServer(app);
-const corsOrigin = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL /** additonal? */] : true;
+const corsOrigin = process.env.WITH_DEPLOY_PREVIEW
+    ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
+    : process.env.FRONTEND_URL || true; /* true = strict origin */
 
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
     cors: {
