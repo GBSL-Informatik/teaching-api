@@ -18,6 +18,11 @@ export type ApiDocumentRoot = DbDocumentRoot & {
     groupPermissions: ApiGroupPermission[];
 };
 
+export type ApiDocumentRootUpdate = DbDocumentRoot & {
+    userPermissions: ApiUserPermission[];
+    groupPermissions: ApiGroupPermission[];
+};
+
 export type AccessCheckableDocumentRoot = DbDocumentRoot & {
     rootGroupPermissions: RootGroupPermission[];
     rootUserPermissions: RootUserPermission[];
@@ -186,16 +191,28 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 }
             });
         },
-        async updateModel(id: string, data: UpdateConfig): Promise<DbDocumentRoot> {
-            return db.update({
+        async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootUpdate> {
+            const model = await db.update({
                 where: {
                     id: id
                 },
                 data: {
                     access: data.access,
                     sharedAccess: data.sharedAccess
+                },
+                include: {
+                    rootGroupPermissions: true,
+                    rootUserPermissions: true
                 }
             });
+
+            return {
+                id: model.id,
+                access: model.access,
+                sharedAccess: model.sharedAccess,
+                userPermissions: model.rootUserPermissions.map((p) => prepareUserPermission(p)),
+                groupPermissions: model.rootGroupPermissions.map((p) => prepareGroupPermission(p))
+            };
         }
     });
 }

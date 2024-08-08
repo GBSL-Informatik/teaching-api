@@ -1,5 +1,7 @@
 import { RequestHandler } from 'express';
 import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot';
+import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
+import { Access } from '@prisma/client';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -28,32 +30,25 @@ export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (
         const model = await DocumentRoot.updateModel(req.params.id, req.body);
 
         /**
-         * TODO: Notifications.
          * Notifications to
-         * - the user who updated the document
+         * - the (admin) user who updated the document root
          * - users with ro/rw access to the document root
          * - student groups with ro/rw access to the document root
-
-        const change: ChangedDocument = {
-            id: model.id,
-            data: model.data,
-            updatedAt: model.updatedAt
+         */
+        const change: ChangedRecord<RecordType.DocumentRoot> = {
+            type: RecordType.DocumentRoot,
+            record: model
         };
-        const groupIds = model.documentRoot.rootGroupPermissions
-          .filter((p) => p.access !== Access.None)
-          .map((p) => p.studentGroupId);
-        const userIds = model.documentRoot.rootUserPermissions
-          .filter((p) => p.access !== Access.None)
-          .map((p) => p.userId);
+        const groupIds = model.groupPermissions.filter((p) => p.access !== Access.None).map((p) => p.groupId);
+        const userIds = model.userPermissions.filter((p) => p.access !== Access.None).map((p) => p.userId);
 
         res.notifications = [
             {
-                event: IoEvent.CHANGED_DOCUMENT,
+                event: IoEvent.CHANGED_RECORD,
                 message: change,
                 to: [...groupIds, ...userIds, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
             }
         ];
-         */
 
         res.status(204).send();
     } catch (error) {
