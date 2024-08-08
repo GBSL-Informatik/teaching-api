@@ -41,14 +41,14 @@ app.use(
     cors({
         credentials: true,
         origin: process.env.WITH_DEPLOY_PREVIEW
-                    ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
-                    : process.env.FRONTEND_URL || true /* true = strict origin */,
+            ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
+            : process.env.FRONTEND_URL || true /* true = strict origin */,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
     })
 );
 
 // received packages should be presented in the JSON format
-app.use(express.json({limit: '5mb'}));
+app.use(express.json({ limit: '5mb' }));
 
 app.use(morganMiddleware);
 
