@@ -60,43 +60,51 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
     };
 };
 
+const asApiRecord = (
+    dbResult:
+        | (DbDocumentRoot & {
+              view_DocumentUserPermissions: (view_DocumentUserPermissions & { document: Document })[];
+          })
+        | null
+): ApiDocumentRoot | null => {
+    if (!dbResult) {
+        return null;
+    }
+
+    return {
+        ...dbResult,
+        userPermissions: dbResult.view_DocumentUserPermissions
+            .filter((d) => !!d.rootUserPermissionId)
+            .map((d) => ({ access: d.access, userId: d.userId, id: d.rootUserPermissionId! })),
+        groupPermissions: dbResult.view_DocumentUserPermissions
+            .filter((d) => !!d.rootGroupPermissionId)
+            .map((d) => ({ access: d.access, groupId: d.groupId!, id: d.rootGroupPermissionId! })),
+        documents: dbResult.view_DocumentUserPermissions.map((d) =>
+            d.access === Access.None ? { ...d.document, data: null } : d.document
+        )
+    };
+};
+
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
         async findModel(actor: User, id: string): Promise<ApiDocumentRoot | null> {
             const documentRoot = await db.findUnique({
                 where: {
                     id: id
-                }
-            });
-            if (!documentRoot) {
-                return null;
-            }
-
-            const documents = await prisma.view_DocumentUserPermissions.findMany({
-                where: {
-                    userId: actor.id,
-                    documentRoot: {
-                        id: id
-                    }
                 },
                 include: {
-                    document: true
+                    view_DocumentUserPermissions: {
+                        where: {
+                            userId: actor.id
+                        },
+                        include: {
+                            document: true
+                        }
+                    }
                 },
                 relationLoadStrategy: 'query'
             });
-
-            return {
-                ...documentRoot,
-                userPermissions: documents
-                    .filter((d) => !!d.rootUserPermissionId)
-                    .map((d) => ({ access: d.access, userId: d.userId, id: d.rootUserPermissionId! })),
-                groupPermissions: documents
-                    .filter((d) => !!d.rootGroupPermissionId)
-                    .map((d) => ({ access: d.access, groupId: d.groupId!, id: d.rootGroupPermissionId! })),
-                documents: documents.map((d) =>
-                    d.access === Access.None ? { ...d.document, data: null } : d.document
-                )
-            };
+            return asApiRecord(documentRoot);
         },
         async createModel(id: string, config: Config = {}): Promise<DbDocumentRoot> {
             return db.create({
