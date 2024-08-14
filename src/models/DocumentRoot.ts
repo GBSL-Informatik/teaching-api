@@ -6,7 +6,8 @@ import {
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
-    User
+    User,
+    view_DocumentUserPermissions
 } from '@prisma/client';
 import { ApiDocument, prepareDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
@@ -59,24 +60,29 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
     };
 };
 
-const prepareDocumentRoot = (
-    actor: User,
-    documentRoot: AccessCheckableDocumentRootWithDocuments | null
+const asApiRecord = (
+    dbResult:
+        | (DbDocumentRoot & {
+              view_DocumentUserPermissions: (view_DocumentUserPermissions & { document: Document })[];
+          })
+        | null
 ): ApiDocumentRoot | null => {
-    if (!documentRoot) {
+    if (!dbResult) {
         return null;
     }
-    const model: ApiDocumentRoot = {
-        ...documentRoot,
-        userPermissions: documentRoot.rootUserPermissions.map(prepareUserPermission),
-        groupPermissions: documentRoot.rootGroupPermissions.map(prepareGroupPermission),
-        documents: documentRoot.documents
-            .map((d) => prepareDocument(actor, { ...d, documentRoot: documentRoot })?.document)
-            .filter((d) => !!d)
+
+    return {
+        ...dbResult,
+        userPermissions: dbResult.view_DocumentUserPermissions
+            .filter((d) => !!d.rootUserPermissionId)
+            .map((d) => ({ access: d.access, userId: d.userId, id: d.rootUserPermissionId! })),
+        groupPermissions: dbResult.view_DocumentUserPermissions
+            .filter((d) => !!d.rootGroupPermissionId)
+            .map((d) => ({ access: d.access, groupId: d.groupId!, id: d.rootGroupPermissionId! })),
+        documents: dbResult.view_DocumentUserPermissions.map((d) =>
+            d.access === Access.None ? { ...d.document, data: null } : d.document
+        )
     };
-    delete (model as Partial<AccessCheckableDocumentRootWithDocuments>).rootGroupPermissions;
-    delete (model as Partial<AccessCheckableDocumentRootWithDocuments>).rootUserPermissions;
-    return model;
 };
 
 function DocumentRoot(db: PrismaClient['documentRoot']) {
@@ -87,83 +93,17 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                     id: id
                 },
                 include: {
-                    documents: {
+                    view_DocumentUserPermissions: {
                         where: {
-                            OR: [
-                                {
-                                    author: actor
-                                },
-                                {
-                                    documentRoot: {
-                                        sharedAccess: { in: [Access.RO, Access.RW] },
-                                        OR: [
-                                            {
-                                                rootGroupPermissions: {
-                                                    some: {
-                                                        studentGroup: {
-                                                            users: {
-                                                                some: {
-                                                                    id: actor.id
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                rootUserPermissions: {
-                                                    some: {
-                                                        userId: actor.id
-                                                    }
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
+                            userId: actor.id
                         },
                         include: {
-                            documentRoot: {
-                                include: {
-                                    rootGroupPermissions: {
-                                        where: {
-                                            studentGroup: {
-                                                users: {
-                                                    some: {
-                                                        id: actor.id
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    rootUserPermissions: {
-                                        where: {
-                                            user: actor
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    rootGroupPermissions: {
-                        where: {
-                            studentGroup: {
-                                users: {
-                                    some: {
-                                        id: actor.id
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    rootUserPermissions: {
-                        where: {
-                            user: actor
+                            document: true
                         }
                     }
                 }
             });
-            return prepareDocumentRoot(actor, documentRoot);
+            return asApiRecord(documentRoot);
         },
         async createModel(id: string, config: Config = {}): Promise<DbDocumentRoot> {
             return db.create({

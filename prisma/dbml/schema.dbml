@@ -8,39 +8,42 @@ Table users {
   firstName String [not null]
   lastName String [not null]
   isAdmin Boolean [not null, default: false]
-  documents documents [not null]
-  studentGroups student_groups [not null]
-  rootUserPermissions root_user_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  documents documents [not null]
+  rootUserPermissions root_user_permissions [not null]
+  studentGroups student_groups [not null]
+  view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
 Table student_groups {
   id String [pk]
   name String [not null, default: '']
   description String [not null, default: '']
-  users users [not null]
   parentId String
-  parent student_groups
-  children student_groups [not null]
-  rootGroupPermissions root_group_permissions [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  rootGroupPermissions root_group_permissions [not null]
+  parent student_groups
+  children student_groups [not null]
+  users users [not null]
+  view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
 Table documents {
   id String [pk]
-  author users [not null]
   authorId String [not null]
   type String [not null]
   data Json [not null]
   parentId String
-  parent documents
-  children documents [not null]
-  documentRoot document_roots [not null]
   documentRootId String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  author users [not null]
+  documentRoot document_roots [not null]
+  parent documents
+  children documents [not null]
+  view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
 Table document_roots {
@@ -50,30 +53,55 @@ Table document_roots {
   documents documents [not null]
   rootGroupPermissions root_group_permissions [not null]
   rootUserPermissions root_user_permissions [not null]
+  view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
 Table root_group_permissions {
   id String [pk]
   access Access [not null]
-  studentGroup student_groups [not null]
   studentGroupId String [not null]
-  documentRoot document_roots [not null]
   documentRootId String [not null]
+  documentRoot document_roots [not null]
+  studentGroup student_groups [not null]
+  view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
 Table root_user_permissions {
   id String [pk]
   access Access [not null]
-  user users [not null]
   userId String [not null]
-  documentRoot document_roots [not null]
   documentRootId String [not null]
+  documentRoot document_roots [not null]
+  user users [not null]
+  view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
 Table sessions {
   sid String [pk]
   sess Json [not null]
   expire DateTime [not null]
+}
+
+Table view__document_user_permissions {
+  documentRootId String [not null]
+  userId String [not null]
+  access Access [not null]
+  documentId String [not null]
+  rootUserPermissionId String
+  rootGroupPermissionId String
+  groupId String
+  documentRoot document_roots [not null]
+  user users [not null]
+  document documents [not null]
+  rootUserPermission root_user_permissions
+  rootGroupPermission root_group_permissions
+  group student_groups
+
+  indexes {
+    (documentRootId, userId, access, documentId) [unique]
+  }
+
+  Note: 'The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.'
 }
 
 Table documents {
@@ -96,14 +124,26 @@ Ref: student_groups.parentId - student_groups.id [delete: Cascade]
 
 Ref: documents.authorId > users.id [delete: Cascade]
 
-Ref: documents.parentId - documents.id [delete: Cascade]
-
 Ref: documents.documentRootId > document_roots.id [delete: Cascade]
 
-Ref: root_group_permissions.studentGroupId > student_groups.id [delete: Cascade]
+Ref: documents.parentId - documents.id [delete: Cascade]
 
 Ref: root_group_permissions.documentRootId > document_roots.id [delete: Cascade]
 
-Ref: root_user_permissions.userId > users.id [delete: Cascade]
+Ref: root_group_permissions.studentGroupId > student_groups.id [delete: Cascade]
 
 Ref: root_user_permissions.documentRootId > document_roots.id [delete: Cascade]
+
+Ref: root_user_permissions.userId > users.id [delete: Cascade]
+
+Ref: view__document_user_permissions.documentRootId > document_roots.id
+
+Ref: view__document_user_permissions.userId > users.id
+
+Ref: view__document_user_permissions.documentId > documents.id
+
+Ref: view__document_user_permissions.rootUserPermissionId > root_user_permissions.id
+
+Ref: view__document_user_permissions.rootGroupPermissionId > root_group_permissions.id
+
+Ref: view__document_user_permissions.groupId > student_groups.id
