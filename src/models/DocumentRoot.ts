@@ -6,7 +6,8 @@ import {
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
-    User
+    User,
+    view_DocumentUserPermissions
 } from '@prisma/client';
 import { ApiDocument, prepareDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
@@ -70,6 +71,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             if (!documentRoot) {
                 return null;
             }
+
             const documents = await prisma.view_DocumentUserPermissions.findMany({
                 where: {
                     userId: actor.id,
@@ -79,7 +81,8 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 },
                 include: {
                     document: true
-                }
+                },
+                relationLoadStrategy: 'query'
             });
 
             return {
