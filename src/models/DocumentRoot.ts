@@ -60,18 +60,16 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
     };
 };
 
-const asApiRecord = (
-    dbResult:
-        | (DbDocumentRoot & {
-              view_DocumentUserPermissions: (view_DocumentUserPermissions & { document: Document })[];
-          })
-        | null
-): ApiDocumentRoot | null => {
+type DocumentRootWithDocuments = DbDocumentRoot & {
+    view_DocumentUserPermissions: (view_DocumentUserPermissions & { document: Document })[];
+};
+
+const asApiRecord = (dbResult: DocumentRootWithDocuments | null): ApiDocumentRoot | null => {
     if (!dbResult) {
         return null;
     }
 
-    return {
+    const result: ApiDocumentRoot = {
         ...dbResult,
         userPermissions: dbResult.view_DocumentUserPermissions
             .filter((d) => !!d.rootUserPermissionId)
@@ -83,6 +81,8 @@ const asApiRecord = (
             d.access === Access.None ? { ...d.document, data: null } : d.document
         )
     };
+    delete (result as Partial<DocumentRootWithDocuments>).view_DocumentUserPermissions;
+    return result;
 };
 
 function DocumentRoot(db: PrismaClient['documentRoot']) {
