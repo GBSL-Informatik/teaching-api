@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.16.1",
-    "connect-pg-simple": "^9.0.1",
+    "@quixo3/prisma-session-store": "^3.1.13",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
@@ -38,9 +38,9 @@
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^10.9.1",
-    "@types/connect-pg-simple": "^7.0.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/express-session": "^1.18.0",
     "@types/lodash": "^4.17.5",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.14.6",

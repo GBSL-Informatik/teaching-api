@@ -76,10 +76,11 @@ Table root_user_permissions {
   view_DocumentUserPermissions view__document_user_permissions [not null]
 }
 
-Table sessions {
-  sid String [pk]
-  sess Json [not null]
-  expire DateTime [not null]
+Table Session {
+  id String [pk]
+  sid String [unique, not null]
+  data String [not null]
+  expiresAt DateTime [not null]
 }
 
 Table view__document_user_permissions {
