@@ -24,6 +24,7 @@ if (process.env.LOG) {
     ];
 }
 const prisma = new PrismaClient(options);
+prisma.$connect();
 
 if (process.env.LOG) {
     prisma.$on('query', (e) => {
