@@ -34,15 +34,22 @@ function User(db: PrismaClient['user']) {
             }
             return db.findMany({
                 where: {
-                    studentGroups: {
-                        some: {
-                            users: {
+                    OR: [
+                        {
+                            id: actor.id
+                        },
+                        {
+                            studentGroups: {
                                 some: {
-                                    id: actor.id
+                                    users: {
+                                        some: {
+                                            id: actor.id
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
+                    ]
                 },
                 distinct: ['id']
             });
