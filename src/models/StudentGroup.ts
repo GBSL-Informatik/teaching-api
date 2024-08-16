@@ -59,6 +59,53 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
         },
 
+        async addUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const record = await this.findModel(id);
+            if (!record) {
+                throw new HTTP404Error('Group not found');
+            }
+            /** remove fields not updatable*/
+            return db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    users: {
+                        connect: {
+                            id: userId
+                        }
+                    }
+                }
+            });
+        },
+
+        async removeUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const record = await this.findModel(id);
+            if (!record) {
+                throw new HTTP404Error('Group not found');
+            }
+            /** remove fields not updatable*/
+            return db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    users: {
+                        disconnect: {
+                            id: userId
+                        }
+                    }
+                }
+            });
+        },
+
+
         async all(actor: User): Promise<ApiStudentGroup[]> {
             // TODO: Does this behaviour make sense?
             //  Yes, it might be useful (a) for an admin to get all groups, and (b) for a user or admin to get all

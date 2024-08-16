@@ -36,6 +36,32 @@ export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup 
     }
 };
 
+export const addUser: RequestHandler<{ id: string, userId: string }, any, any> = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const model = await StudentGroup.addUser(req.user!, req.params.id, req.params.userId);
+        res.status(200).json(model);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const removeUser: RequestHandler<{ id: string, userId: string }, any, any> = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const model = await StudentGroup.removeUser(req.user!, req.params.id, req.params.userId);
+        res.status(200).json(model);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const all: RequestHandler = async (req, res, next) => {
     try {
         const users = await StudentGroup.all(req.user!);
