@@ -102,7 +102,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                         }
                     }
                 },
-                relationLoadStrategy: 'query'
+                relationLoadStrategy: 'join'
             });
             return asApiRecord(documentRoot);
         },
