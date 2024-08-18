@@ -105,7 +105,6 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
         },
 
-
         async all(actor: User): Promise<ApiStudentGroup[]> {
             // TODO: Does this behaviour make sense?
             //  Yes, it might be useful (a) for an admin to get all groups, and (b) for a user or admin to get all

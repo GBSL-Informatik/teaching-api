@@ -36,11 +36,7 @@ export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup 
     }
 };
 
-export const addUser: RequestHandler<{ id: string, userId: string }, any, any> = async (
-    req,
-    res,
-    next
-) => {
+export const addUser: RequestHandler<{ id: string; userId: string }, any, any> = async (req, res, next) => {
     try {
         const model = await StudentGroup.addUser(req.user!, req.params.id, req.params.userId);
         res.status(200).json(model);
@@ -49,7 +45,7 @@ export const addUser: RequestHandler<{ id: string, userId: string }, any, any> =
     }
 };
 
-export const removeUser: RequestHandler<{ id: string, userId: string }, any, any> = async (
+export const removeUser: RequestHandler<{ id: string; userId: string }, any, any> = async (
     req,
     res,
     next
