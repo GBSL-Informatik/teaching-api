@@ -12,10 +12,10 @@ import authConfig from './routes/authConfig';
 import { type User } from '@prisma/client';
 import { HttpStatusCode } from './utils/errors/BaseError';
 import { HTTP401Error } from './utils/errors/Errors';
+import connectPgSimple from 'connect-pg-simple';
 import Logger from './utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
 import type { Server } from 'socket.io';
-import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 
@@ -51,6 +51,11 @@ app.use(express.json({ limit: '5mb' }));
 
 app.use(morganMiddleware);
 
+const store = new (connectPgSimple(session))({
+    conString: process.env.DATABASE_URL,
+    tableName: 'sessions'
+});
+
 const HOSTNAME = new URL(process.env.FRONTEND_URL || 'http://localhost:3000').hostname;
 const domainParts = HOSTNAME.split('.');
 const domain = domainParts.slice(domainParts.length - 2).join('.'); /** foo.bar.ch --> domain is bar.ch */
@@ -63,14 +68,6 @@ const SESSION_MAX_AGE = 2592000000 as const; // 1000 * 60 * 60 * 24 * 30 = 25920
 app.set('trust proxy', 1);
 
 const SESSION_KEY = `${process.env.APP_NAME || 'twa'}ApiKey`;
-
-const store = new PrismaSessionStore(prisma, {
-    checkPeriod: 1000 * 60 * 60, // prune expired sessions every hour
-    dbRecordIdIsSessionId: true,
-    dbRecordIdFunction: undefined,
-    enableConcurrentSetInvocationsForSameSessionID: true,
-    enableConcurrentTouchInvocationsForSameSessionID: true
-});
 
 /** https://medium.com/developer-rants/how-to-handle-sessions-properly-in-express-js-with-heroku-c35ea8c0e500 */
 export const sessionMiddleware = session({
@@ -134,12 +131,15 @@ app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) =>
 });
 
 app.post(`${API_URL}/logout`, async (req, res, next) => {
-    await req.logout((err) => {
+    req.logout({ keepSessionInfo: false }, (err) => {
         if (err) {
             Logger.error(err);
             return next(err);
         }
     });
+    Logger.info(req.user);
+    Logger.info(req.session);
+    // await prisma.sessions.delete({ where: { sid: req.session.id } });
     res.clearCookie(SESSION_KEY).send();
 });
 
