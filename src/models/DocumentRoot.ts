@@ -72,6 +72,22 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                     }
                 }
             })) as ApiDocumentRoot | null;
+            if (!documentRoot) {
+                const docRoot = await db.findUnique({
+                    where: {
+                        id: id
+                    }
+                });
+                if (!docRoot) {
+                    return null;
+                }
+                return {
+                    ...docRoot,
+                    documents: [],
+                    userPermissions: [],
+                    groupPermissions: []
+                };
+            }
             if (documentRoot) {
                 delete (documentRoot as any).userId;
             }
