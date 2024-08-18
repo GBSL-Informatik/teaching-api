@@ -104,6 +104,22 @@ Table view__document_user_permissions {
   Note: 'The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.'
 }
 
+Table view__users_documents {
+  userId String [not null]
+  id String [not null]
+  access Access [not null]
+  sharedAccess Access [not null]
+  groupPermissions Json [not null]
+  userPermissions Json [not null]
+  documents Json [not null]
+
+  indexes {
+    (id, userId) [unique]
+  }
+
+  Note: 'The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.'
+}
+
 Table documents {
   documentsId String [ref: > documents.id]
   documentsId String [ref: > documents.id]

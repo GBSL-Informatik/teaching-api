@@ -137,6 +137,20 @@ view view_DocumentUserPermissions {
   @@map("view__document_user_permissions")
 }
 
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view view_UsersDocuments {
+  userId           String @map("user_id") @db.Uuid
+  id               String @db.Uuid
+  access           Access
+  sharedAccess     Access @map("shared_access")
+  groupPermissions Json
+  userPermissions  Json
+  documents        Json
+
+  @@unique([id, userId])
+  @@map("view__users_documents")
+}
+
 enum Access {
   RO
   RW

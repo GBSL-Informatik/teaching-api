@@ -7,7 +7,8 @@ import {
     RootGroupPermission,
     RootUserPermission,
     User,
-    view_DocumentUserPermissions
+    view_DocumentUserPermissions,
+    view_UsersDocuments
 } from '@prisma/client';
 import { ApiDocument, prepareDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
@@ -60,51 +61,21 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
     };
 };
 
-type DocumentRootWithDocuments = DbDocumentRoot & {
-    view_DocumentUserPermissions: (view_DocumentUserPermissions & { document: Document })[];
-};
-
-const asApiRecord = (dbResult: DocumentRootWithDocuments | null): ApiDocumentRoot | null => {
-    if (!dbResult) {
-        return null;
-    }
-
-    const result: ApiDocumentRoot = {
-        ...dbResult,
-        userPermissions: dbResult.view_DocumentUserPermissions
-            .filter((d) => !!d.rootUserPermissionId)
-            .map((d) => ({ access: d.access, userId: d.userId, id: d.rootUserPermissionId! })),
-        groupPermissions: dbResult.view_DocumentUserPermissions
-            .filter((d) => !!d.rootGroupPermissionId)
-            .map((d) => ({ access: d.access, groupId: d.groupId!, id: d.rootGroupPermissionId! })),
-        documents: dbResult.view_DocumentUserPermissions.map((d) =>
-            d.access === Access.None ? { ...d.document, data: null } : d.document
-        )
-    };
-    delete (result as Partial<DocumentRootWithDocuments>).view_DocumentUserPermissions;
-    return result;
-};
-
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
         async findModel(actor: User, id: string): Promise<ApiDocumentRoot | null> {
-            const documentRoot = await db.findUnique({
+            const documentRoot = (await prisma.view_UsersDocuments.findUnique({
                 where: {
-                    id: id
-                },
-                include: {
-                    view_DocumentUserPermissions: {
-                        where: {
-                            userId: actor.id
-                        },
-                        include: {
-                            document: true
-                        }
+                    id_userId: {
+                        id: id,
+                        userId: actor.id
                     }
-                },
-                relationLoadStrategy: 'join'
-            });
-            return asApiRecord(documentRoot);
+                }
+            })) as ApiDocumentRoot | null;
+            if (documentRoot) {
+                delete (documentRoot as any).userId;
+            }
+            return documentRoot;
         },
         async createModel(id: string, config: Config = {}): Promise<DbDocumentRoot> {
             return db.create({
