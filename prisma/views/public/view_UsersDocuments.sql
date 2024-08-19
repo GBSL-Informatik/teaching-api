@@ -5,7 +5,7 @@ SELECT
   document_roots.shared_access,
   COALESCE(
     jsonb_agg(
-      jsonb_build_object(
+      DISTINCT jsonb_build_object(
         'id',
         view__document_user_permissions.root_group_permission_id,
         'access',
@@ -23,7 +23,7 @@ SELECT
   ) AS "groupPermissions",
   COALESCE(
     jsonb_agg(
-      jsonb_build_object(
+      DISTINCT jsonb_build_object(
         'id',
         view__document_user_permissions.root_user_permission_id,
         'access',

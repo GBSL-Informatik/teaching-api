@@ -18,6 +18,7 @@ FROM
       document_user_permissions.group_id,
       row_number() OVER (
         PARTITION BY document_user_permissions.document_root_id,
+        document_user_permissions.document_id,
         document_user_permissions.user_id
         ORDER BY
           document_user_permissions.access DESC
