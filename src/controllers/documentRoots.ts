@@ -12,6 +12,19 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     }
 };
 
+export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async (req, res, next) => {
+    try {
+        const ids = Array.isArray(req.query.ids) ? req.query.ids : [req.query.ids];
+        if (ids.length === 0) {
+            return res.json([]);
+        }
+        const documents = await DocumentRoot.findManyModels(req.user!, ids);
+        res.json(documents);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const create: RequestHandler<{ id: string }, any, CreateConfig | undefined> = async (
     req,
     res,

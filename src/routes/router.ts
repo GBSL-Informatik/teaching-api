@@ -28,6 +28,7 @@ import {
 import {
     create as createDocumentRoot,
     find as findDocumentRoot,
+    findMany as findManyDocumentRoots,
     update as updateDocumentRoot
 } from '../controllers/documentRoots';
 
@@ -61,6 +62,7 @@ router.put('/permissions/group/:id', updateStudentGroupPermission);
 router.delete('/permissions/group/:id', deleteStudentGroupPermission);
 
 // TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
+router.get('/documentRoots', findManyDocumentRoots);
 router.get('/documentRoots/:id', findDocumentRoot);
 router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
