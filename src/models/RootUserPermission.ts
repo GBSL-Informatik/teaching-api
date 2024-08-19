@@ -24,7 +24,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             documentRootId: string,
             userId: string,
             access: Access
-        ): Promise<ApiUserPermission> {
+        ): Promise<DbRootUserPermission> {
             const result = await db.create({
                 data: {
                     documentRootId: documentRootId,
@@ -32,10 +32,10 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                     access: access
                 }
             });
-            return asApiRecord(result);
+            return result;
         },
 
-        async updateModel(id: string, access: Access): Promise<ApiUserPermission> {
+        async updateModel(id: string, access: Access): Promise<DbRootUserPermission> {
             const result = await db.update({
                 where: {
                     id: id
@@ -44,7 +44,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                     access: access
                 }
             });
-            return asApiRecord(result);
+            return result;
         },
 
         async deleteModel(id: string): Promise<ApiUserPermission> {
@@ -53,7 +53,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                     id: id
                 }
             });
-            return asApiRecord(result);
+            return result;
         }
     });
 }

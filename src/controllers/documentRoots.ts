@@ -68,3 +68,12 @@ export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (
         next(error);
     }
 };
+
+export const permissions: RequestHandler<{ id: string }> = async (req, res, next) => {
+    try {
+        const permissions = await DocumentRoot.getPermissions(req.user!, req.params.id);
+        res.json(permissions);
+    } catch (error) {
+        next(error);
+    }
+};

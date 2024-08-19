@@ -6,13 +6,12 @@ import {
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
-    User,
-    view_DocumentUserPermissions,
-    view_UsersDocuments
+    User
 } from '@prisma/client';
 import { ApiDocument, prepareDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
+import { HTTP403Error } from '../utils/errors/Errors';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -20,10 +19,13 @@ export type ApiDocumentRoot = DbDocumentRoot & {
     groupPermissions: ApiGroupPermission[];
 };
 
-export type ApiDocumentRootUpdate = DbDocumentRoot & {
+type Permissions = {
+    id: string;
     userPermissions: ApiUserPermission[];
     groupPermissions: ApiGroupPermission[];
 };
+
+export type ApiDocumentRootUpdate = DbDocumentRoot & Permissions;
 
 export type AccessCheckableDocumentRoot = DbDocumentRoot & {
     rootGroupPermissions: RootGroupPermission[];
@@ -182,6 +184,26 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 sharedAccess: model.sharedAccess,
                 userPermissions: model.rootUserPermissions.map((p) => prepareUserPermission(p)),
                 groupPermissions: model.rootGroupPermissions.map((p) => prepareGroupPermission(p))
+            };
+        },
+        async getPermissions(actor: User, id: string): Promise<Permissions> {
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const userPermissions = await prisma.rootUserPermission.findMany({
+                where: {
+                    documentRootId: id
+                }
+            });
+            const groupPermissions = await prisma.rootGroupPermission.findMany({
+                where: {
+                    documentRootId: id
+                }
+            });
+            return {
+                id: id,
+                userPermissions: userPermissions.map(prepareUserPermission),
+                groupPermissions: groupPermissions.map(prepareGroupPermission)
             };
         }
     });

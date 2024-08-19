@@ -9,10 +9,26 @@ export type ApiGroupPermission = {
     access: Access;
 };
 
+export type CompleteApiGroupPermission = {
+    id: string;
+    groupId: string;
+    documentRootId: string;
+    access: Access;
+};
+
 function asApiRecord(dbResult: DbGroupPermission): ApiGroupPermission {
     return {
         id: dbResult.id,
         groupId: dbResult.studentGroupId,
+        access: dbResult.access
+    };
+}
+
+function asCompleteApiRecord(dbResult: DbGroupPermission): CompleteApiGroupPermission {
+    return {
+        id: dbResult.id,
+        groupId: dbResult.studentGroupId,
+        documentRootId: dbResult.documentRootId,
         access: dbResult.access
     };
 }
@@ -23,7 +39,7 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
             documentRootId: string,
             studentGroupId: string,
             access: Access
-        ): Promise<ApiGroupPermission> {
+        ): Promise<CompleteApiGroupPermission> {
             const result = await db.create({
                 data: {
                     documentRootId: documentRootId,
@@ -31,10 +47,10 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
                     access: access
                 }
             });
-            return asApiRecord(result);
+            return asCompleteApiRecord(result);
         },
 
-        async updateModel(id: string, access: Access): Promise<ApiGroupPermission> {
+        async updateModel(id: string, access: Access): Promise<CompleteApiGroupPermission> {
             const result = await db.update({
                 where: {
                     id: id
@@ -43,16 +59,16 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
                     access: access
                 }
             });
-            return asApiRecord(result);
+            return asCompleteApiRecord(result);
         },
 
-        async deleteModel(id: string): Promise<ApiGroupPermission> {
+        async deleteModel(id: string): Promise<CompleteApiGroupPermission> {
             const result = await db.delete({
                 where: {
                     id: id
                 }
             });
-            return asApiRecord(result);
+            return asCompleteApiRecord(result);
         }
     });
 }

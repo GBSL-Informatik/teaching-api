@@ -130,6 +130,15 @@ const authConfig: Config = {
                     adminOnly: true
                 }
             ]
+        },
+        documentRootPermissions: {
+            path: '/documentRoots/:id/permissions',
+            access: [
+                {
+                    methods: ['GET'],
+                    adminOnly: true
+                }
+            ]
         }
     }
 };
