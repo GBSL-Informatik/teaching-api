@@ -89,6 +89,10 @@ FROM
       )
     )
   )
+WHERE
+  (
+    view__document_user_permissions.user_id IS NOT NULL
+  )
 GROUP BY
   document_roots.id,
   view__document_user_permissions.user_id;
