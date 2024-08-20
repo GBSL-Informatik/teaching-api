@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot';
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { Access } from '@prisma/client';
+import { IoRoom } from '../routes/socketEvents';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -43,23 +44,18 @@ export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (
         const model = await DocumentRoot.updateModel(req.params.id, req.body);
 
         /**
-         * Notifications to
-         * - the (admin) user who updated the document root
-         * - users with ro/rw access to the document root
-         * - student groups with ro/rw access to the document root
+         * Notifications to All users since the document root is a global entity.
+         * --> even with restricted access, the document root can be seen by all users.
          */
         const change: ChangedRecord<RecordType.DocumentRoot> = {
             type: RecordType.DocumentRoot,
             record: model
         };
-        const groupIds = model.groupPermissions.filter((p) => p.access !== Access.None).map((p) => p.groupId);
-        const userIds = model.userPermissions.filter((p) => p.access !== Access.None).map((p) => p.userId);
-
         res.notifications = [
             {
                 event: IoEvent.CHANGED_RECORD,
                 message: change,
-                to: [...groupIds, ...userIds, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [IoRoom.ALL]
             }
         ];
 
