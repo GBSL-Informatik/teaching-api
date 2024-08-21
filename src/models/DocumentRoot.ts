@@ -95,13 +95,17 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             }
             return documentRoot;
         },
-        async findManyModels(actor: User, ids: string[]): Promise<ApiDocumentRoot[] | null> {
+        async findManyModels(
+            actorId: string,
+            ids: string[],
+            ignoreMissingRoots: boolean = false
+        ): Promise<ApiDocumentRoot[] | null> {
             const documentRoots = (await prisma.view_UsersDocuments.findMany({
                 where: {
                     id: {
                         in: ids
                     },
-                    userId: actor.id
+                    userId: actorId
                 },
                 relationLoadStrategy: 'query'
             })) as unknown as ApiDocumentRoot[];
@@ -118,7 +122,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
              * Possibly the user does not have documents in the requested document roots (and thus no docRoot is returned above).
              * In this case, we have to load these document roots without the document roots.
              */
-            if (missingDocumentRoots.length > 0) {
+            if (missingDocumentRoots.length > 0 && !ignoreMissingRoots) {
                 const docRoots = await db.findMany({
                     where: {
                         id: {

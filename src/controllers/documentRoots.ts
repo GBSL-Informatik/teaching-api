@@ -3,6 +3,7 @@ import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/Do
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { Access } from '@prisma/client';
 import { IoRoom } from '../routes/socketEvents';
+import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -19,7 +20,31 @@ export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async 
         if (ids.length === 0) {
             return res.json([]);
         }
-        const documents = await DocumentRoot.findManyModels(req.user!, ids);
+        const documents = await DocumentRoot.findManyModels(req.user!.id, ids);
+        res.json(documents);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const findManyFor: RequestHandler<{ id: string }, any, any, { ids: string[] }> = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        if (!req.params.id) {
+            throw new HTTP400Error('Missing user id');
+        }
+        const canLoad = req.user!.id === req.params.id || req.user?.isAdmin;
+        if (!canLoad) {
+            throw new HTTP403Error('Not Authorized');
+        }
+        const ids = Array.isArray(req.query.ids) ? req.query.ids : [req.query.ids];
+        if (ids.length === 0) {
+            return res.json([]);
+        }
+        const documents = await DocumentRoot.findManyModels(req.params.id, ids, true);
         res.json(documents);
     } catch (error) {
         next(error);
