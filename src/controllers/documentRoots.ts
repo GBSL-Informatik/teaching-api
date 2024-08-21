@@ -27,11 +27,12 @@ export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async 
     }
 };
 
-export const findManyFor: RequestHandler<{ id: string }, any, any, { ids: string[] }> = async (
-    req,
-    res,
-    next
-) => {
+export const findManyFor: RequestHandler<
+    { id: string },
+    any,
+    any,
+    { ignoreMissingRoots?: boolean; ids: string[] }
+> = async (req, res, next) => {
     try {
         if (!req.params.id) {
             throw new HTTP400Error('Missing user id');
@@ -44,7 +45,11 @@ export const findManyFor: RequestHandler<{ id: string }, any, any, { ids: string
         if (ids.length === 0) {
             return res.json([]);
         }
-        const documents = await DocumentRoot.findManyModels(req.params.id, ids, true);
+        const documents = await DocumentRoot.findManyModels(
+            req.params.id,
+            ids,
+            !!req.query.ignoreMissingRoots
+        );
         res.json(documents);
     } catch (error) {
         next(error);

@@ -42,6 +42,10 @@ router.get('/user', user);
 router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
+/**
+ * @optional ?ignoreMissingRoots: boolean
+ * @requires ?ids: string[]
+ */
 router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
 
 router.get('/studentGroups', allStudentGroups);
