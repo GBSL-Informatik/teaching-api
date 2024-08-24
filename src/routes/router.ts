@@ -31,7 +31,8 @@ import {
     findMany as findManyDocumentRoots,
     update as updateDocumentRoot,
     permissions as allPermissions,
-    findManyFor as findManyDocumentRootsFor
+    findManyFor as findManyDocumentRootsFor,
+    allDocuments
 } from '../controllers/documentRoots';
 
 // initialize router
@@ -78,6 +79,13 @@ router.get('/documentRoots/:id/permissions', allPermissions);
  * router.get('/documents', allDocuments);
  */
 router.post('/documents', createDocument);
+
+/**
+ * @adminOnly --> handle in controller
+ * Returns all documents which are linked to the **document roots**.
+ * @requires ?rids: string[] -> the document root ids
+ */
+router.get('/documents', allDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
 router.delete('/documents/:id', deleteDocument);

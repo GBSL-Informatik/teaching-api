@@ -4,6 +4,7 @@ import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { Access } from '@prisma/client';
 import { IoRoom } from '../routes/socketEvents';
 import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
+import Document from '../models/Document';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -28,7 +29,7 @@ export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async 
 };
 
 export const findManyFor: RequestHandler<
-    { id: string },
+    { id: string /** userId */ },
     any,
     any,
     { ignoreMissingRoots?: boolean; ids: string[] }
@@ -50,6 +51,22 @@ export const findManyFor: RequestHandler<
             ids,
             !!req.query.ignoreMissingRoots
         );
+        res.json(documents);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const allDocuments: RequestHandler<any, any, any, { rids: string[] }> = async (req, res, next) => {
+    try {
+        if (!req.user!.isAdmin) {
+            throw new HTTP403Error('Not Authorized');
+        }
+        const ids = Array.isArray(req.query.rids) ? req.query.rids : [req.query.rids];
+        if (ids.length === 0) {
+            return res.json([]);
+        }
+        const documents = await Document.allOfDocumentRoots(req.user!, ids);
         res.json(documents);
     } catch (error) {
         next(error);

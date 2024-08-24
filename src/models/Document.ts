@@ -239,6 +239,20 @@ function Document(db: PrismaClient['document']) {
                     children: true
                 }
             });
+        },
+
+        async allOfDocumentRoots(actor: User, documentRootIds: string[]): Promise<DbDocument[]> {
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const documents = await db.findMany({
+                where: {
+                    documentRootId: {
+                        in: documentRootIds
+                    }
+                }
+            });
+            return documents;
         }
     });
 }
