@@ -12,6 +12,7 @@ import { ApiDocument, prepareDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { HTTP403Error } from '../utils/errors/Errors';
+import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -145,13 +146,13 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             return db.create({
                 data: {
                     id: id,
-                    access: config.access ?? Access.RW,
+                    access: asDocumentRootAccess(config.access),
                     /* 0 is falsey in JS (since TS strictNullChecks is on, `grouPermissions?.length > 0` is not valid) */
                     rootGroupPermissions: config.groupPermissions?.length
                         ? {
                               createMany: {
                                   data: config.groupPermissions.map((p) => ({
-                                      access: p.access,
+                                      access: asGroupAccess(p.access),
                                       studentGroupId: p.groupId
                                   }))
                               }
@@ -160,7 +161,10 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                     rootUserPermissions: config.userPermissions?.length
                         ? {
                               createMany: {
-                                  data: config.userPermissions
+                                  data: config.userPermissions.map((p) => ({
+                                      ...p,
+                                      access: asUserAccess(p.access)
+                                  }))
                               }
                           }
                         : undefined
@@ -173,7 +177,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                     id: id
                 },
                 data: {
-                    access: data.access,
+                    access: asDocumentRootAccess(data.access),
                     sharedAccess: data.sharedAccess
                 },
                 include: {

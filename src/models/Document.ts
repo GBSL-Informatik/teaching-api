@@ -3,7 +3,7 @@ import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
 import DocumentRoot, { AccessCheckableDocumentRoot } from './DocumentRoot';
-import { highestAccess } from '../helpers/accessPolicy';
+import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { ApiUserPermission } from './RootUserPermission';
 
@@ -18,8 +18,8 @@ interface DocumentWithPermission {
     highestPermission: Access;
 }
 
-const extractPermission = (actor: User, document: AccessCheckableDocument) => {
-    if (document.documentRoot.sharedAccess === Access.None && document.authorId !== actor.id) {
+const extractPermission = (actor: User, document: AccessCheckableDocument): Access | null => {
+    if (NoneAccess.has(document.documentRoot.sharedAccess) && document.authorId !== actor.id) {
         return null;
     }
 
@@ -46,7 +46,7 @@ export const prepareDocument = (actor: User, document: AccessCheckableDocument |
     }
     const model: ApiDocument = { ...document };
     delete (model as Partial<AccessCheckableDocument>).documentRoot;
-    if (permission === Access.None) {
+    if (NoneAccess.has(permission)) {
         model.data = null;
     }
     return { document: model, highestPermission: permission };
@@ -117,7 +117,7 @@ function Document(db: PrismaClient['document']) {
                     !(
                         parent.document.authorId === actor.id ||
                         actor.isAdmin ||
-                        parent.highestPermission === Access.RW
+                        RWAccess.has(parent.highestPermission)
                     )
                 ) {
                     throw new HTTP403Error('Insufficient access permission');
@@ -171,7 +171,7 @@ function Document(db: PrismaClient['document']) {
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            const canWrite = record.document.authorId === actor.id || record.highestPermission === Access.RW;
+            const canWrite = record.document.authorId === actor.id || RWAccess.has(record.highestPermission);
             if (!canWrite) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -212,7 +212,7 @@ function Document(db: PrismaClient['document']) {
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            if (!(record.document.authorId === actor.id && record.highestPermission === Access.RW)) {
+            if (!(record.document.authorId === actor.id && RWAccess.has(record.highestPermission))) {
                 throw new HTTP403Error('Not authorized');
             }
 

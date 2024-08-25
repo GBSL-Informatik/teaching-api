@@ -51,7 +51,15 @@ SELECT
         'data',
         CASE
           WHEN (
-            view__document_user_permissions.access = 'None' :: "Access"
+            (
+              view__document_user_permissions.access = 'None_DocumentRoot' :: "Access"
+            )
+            OR (
+              view__document_user_permissions.access = 'None_StudentGroup' :: "Access"
+            )
+            OR (
+              view__document_user_permissions.access = 'None_User' :: "Access"
+            )
           ) THEN NULL :: jsonb
           ELSE d.data
         END,

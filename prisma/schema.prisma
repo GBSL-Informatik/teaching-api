@@ -71,8 +71,8 @@ model Document {
 
 model DocumentRoot {
   id                           String                         @id @db.Uuid
-  access                       Access                         @default(RW)
-  sharedAccess                 Access                         @default(None) @map("shared_access")
+  access                       Access                         @default(RW_DocumentRoot)
+  sharedAccess                 Access                         @default(None_DocumentRoot) @map("shared_access")
   documents                    Document[]                     @relation("documents")
   rootGroupPermissions         RootGroupPermission[]          @relation("root_group_to_document_root_permission")
   rootUserPermissions          RootUserPermission[]           @relation("root_user_to_document_root_permission")
@@ -152,7 +152,13 @@ view view_UsersDocuments {
 }
 
 enum Access {
-  RO
-  RW
-  None
+  RO_DocumentRoot
+  RW_DocumentRoot
+  None_DocumentRoot
+  RO_StudentGroup
+  RW_StudentGroup
+  None_StudentGroup
+  RO_User
+  RW_User
+  None_User
 }

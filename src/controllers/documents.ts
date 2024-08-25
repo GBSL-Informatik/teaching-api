@@ -4,6 +4,7 @@ import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { IoRoom } from '../routes/socketEvents';
+import { NoneAccess } from '../helpers/accessPolicy';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -30,8 +31,8 @@ export const create: RequestHandler<any, any, DbDocument> = async (req, res, nex
          * - users with ro/rw access to the document root
          * - student groups with ro/rw access to the document root
          */
-        const groupIds = permissions.group.filter((p) => p.access !== Access.None).map((p) => p.groupId);
-        const userIds = permissions.user.filter((p) => p.access !== Access.None).map((p) => p.userId);
+        const groupIds = permissions.group.filter((p) => !NoneAccess.has(p.access)).map((p) => p.groupId);
+        const userIds = permissions.user.filter((p) => !NoneAccess.has(p.access)).map((p) => p.userId);
         res.notifications = [
             {
                 event: IoEvent.NEW_RECORD,
@@ -60,10 +61,10 @@ export const update: RequestHandler<{ id: string }, any, { data: JsonObject }> =
             updatedAt: model.updatedAt
         };
         const groupIds = model.documentRoot.rootGroupPermissions
-            .filter((p) => p.access !== Access.None)
+            .filter((p) => !NoneAccess.has(p.access))
             .map((p) => p.studentGroupId);
         const userIds = model.documentRoot.rootUserPermissions
-            .filter((p) => p.access !== Access.None)
+            .filter((p) => !NoneAccess.has(p.access))
             .map((p) => p.userId);
 
         res.notifications = [

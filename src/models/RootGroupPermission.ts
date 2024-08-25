@@ -1,5 +1,6 @@
 import { Access, PrismaClient, RootGroupPermission as DbGroupPermission } from '@prisma/client';
 import prisma from '../prisma';
+import { asGroupAccess } from '../helpers/accessPolicy';
 
 // TODO: Consider checking existence of documentRoot / studentGroup to provide better error messages / exceptions.
 
@@ -44,7 +45,7 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
                 data: {
                     documentRootId: documentRootId,
                     studentGroupId: studentGroupId,
-                    access: access
+                    access: asGroupAccess(access)
                 }
             });
             return asCompleteApiRecord(result);
@@ -56,7 +57,7 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
                     id: id
                 },
                 data: {
-                    access: access
+                    access: asGroupAccess(access)
                 }
             });
             return asCompleteApiRecord(result);

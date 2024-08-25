@@ -48,8 +48,8 @@ Table documents {
 
 Table document_roots {
   id String [pk]
-  access Access [not null, default: 'RW']
-  sharedAccess Access [not null, default: 'None']
+  access Access [not null, default: 'RW_DocumentRoot']
+  sharedAccess Access [not null, default: 'None_DocumentRoot']
   documents documents [not null]
   rootGroupPermissions root_group_permissions [not null]
   rootUserPermissions root_user_permissions [not null]
@@ -131,9 +131,15 @@ Table StudentGroupToUser {
 }
 
 Enum Access {
-  RO
-  RW
-  None
+  RO_DocumentRoot
+  RW_DocumentRoot
+  None_DocumentRoot
+  RO_StudentGroup
+  RW_StudentGroup
+  None_StudentGroup
+  RO_User
+  RW_User
+  None_User
 }
 
 Ref: student_groups.parentId - student_groups.id [delete: Cascade]

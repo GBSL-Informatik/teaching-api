@@ -1,6 +1,7 @@
 import { Access, PrismaClient } from '@prisma/client';
 import prisma from '../prisma';
 import { RootUserPermission as DbRootUserPermission } from '.prisma/client';
+import { asUserAccess } from '../helpers/accessPolicy';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 
@@ -29,7 +30,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                 data: {
                     documentRootId: documentRootId,
                     userId: userId,
-                    access: access
+                    access: asUserAccess(access)
                 }
             });
             return result;
@@ -41,7 +42,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                     id: id
                 },
                 data: {
-                    access: access
+                    access: asUserAccess(access)
                 }
             });
             return result;

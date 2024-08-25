@@ -13,12 +13,12 @@ const rootUserPermissions: Prisma.RootUserPermissionCreateManyInput[] = [
     {
         documentRootId: RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID,
         userId: TEST_USER_ID,
-        access: Access.RO
+        access: Access.RO_DocumentRoot
     },
     {
         documentRootId: NONE_EXAM_DOCUMENT_ID,
         userId: TEST_USER_ID,
-        access: Access.None
+        access: Access.None_DocumentRoot
     }
 ];
 
@@ -26,17 +26,17 @@ const rootGroupPermissions: Prisma.RootGroupPermissionCreateManyInput[] = [
     {
         documentRootId: RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
         studentGroupId: CLASS_GROUP_ID,
-        access: Access.RO
+        access: Access.RO_DocumentRoot
     },
     {
         documentRootId: NONE_EXAM_DOCUMENT_ID,
         studentGroupId: CLASS_GROUP_ID,
-        access: Access.RW
+        access: Access.RW_DocumentRoot
     },
     {
         documentRootId: RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
         studentGroupId: PROJECT_GROUP_ID,
-        access: Access.None
+        access: Access.None_DocumentRoot
     }
 ];
 
