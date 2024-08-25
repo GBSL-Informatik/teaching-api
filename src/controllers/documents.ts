@@ -3,6 +3,7 @@ import { RequestHandler } from 'express';
 import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes';
+import { IoRoom } from '../routes/socketEvents';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -35,7 +36,7 @@ export const create: RequestHandler<any, any, DbDocument> = async (req, res, nex
             {
                 event: IoEvent.NEW_RECORD,
                 message: { type: RecordType.Document, record: model },
-                to: [...groupIds, ...userIds, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [...groupIds, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
             }
         ];
         res.status(200).json(model);
@@ -69,7 +70,7 @@ export const update: RequestHandler<{ id: string }, any, { data: JsonObject }> =
             {
                 event: IoEvent.CHANGED_DOCUMENT,
                 message: change,
-                to: [...groupIds, ...userIds, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [...groupIds, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
             }
         ];
 
