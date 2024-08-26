@@ -3,7 +3,10 @@ import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
 
-const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(['description', 'name']);
+const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
+    ['description', 'name'],
+    ['parentId']
+);
 
 type ApiStudentGroup = DbStudentGroup & {
     userIds: string[];
@@ -46,11 +49,11 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             if (!record) {
                 throw new HTTP404Error('Group not found');
             }
-            if (!(record.id === actor.id || actor.isAdmin)) {
+            if (!actor.isAdmin) {
                 throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
-            const sanitized = getData(data);
+            const sanitized = getData(data, false, actor.isAdmin);
             return db.update({
                 where: {
                     id: id
