@@ -2,7 +2,7 @@ import { Prisma, PrismaClient, User as DbUser } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
-const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName']);
+const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName'], ['isAdmin']);
 
 function User(db: PrismaClient['user']) {
     return Object.assign(db, {
@@ -19,7 +19,7 @@ function User(db: PrismaClient['user']) {
                 throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
-            const sanitized = getData(data);
+            const sanitized = getData(data, false, record.id === actor.id ? false : actor.isAdmin);
             return db.update({
                 where: {
                     id: id
@@ -34,15 +34,22 @@ function User(db: PrismaClient['user']) {
             }
             return db.findMany({
                 where: {
-                    studentGroups: {
-                        some: {
-                            users: {
+                    OR: [
+                        {
+                            id: actor.id
+                        },
+                        {
+                            studentGroups: {
                                 some: {
-                                    id: actor.id
+                                    users: {
+                                        some: {
+                                            id: actor.id
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
+                    ]
                 },
                 distinct: ['id']
             });

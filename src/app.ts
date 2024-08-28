@@ -9,11 +9,10 @@ import passport from 'passport';
 import router from './routes/router';
 import routeGuard, { PUBLIC_GET_ACCESS, PUBLIC_GET_ACCESS_REGEX, createAccessRules } from './auth/guard';
 import authConfig from './routes/authConfig';
-import type { User } from '@prisma/client';
+import { type User } from '@prisma/client';
 import { HttpStatusCode } from './utils/errors/BaseError';
 import { HTTP401Error } from './utils/errors/Errors';
 import connectPgSimple from 'connect-pg-simple';
-import { request } from 'https';
 import Logger from './utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
 import type { Server } from 'socket.io';
@@ -131,11 +130,17 @@ app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) =>
     }
 });
 
-app.post(`${API_URL}/logout`, SessionOauthStrategy, async (req, res) => {
+app.post(`${API_URL}/logout`, async (req, res, next) => {
+    req.logout({ keepSessionInfo: false }, (err) => {
+        if (err) {
+            Logger.error(err);
+            return next(err);
+        }
+    });
     Logger.info(req.user);
     Logger.info(req.session);
-    await prisma.sessions.delete({ where: { sid: req.session.id } });
-    res.clearCookie(SESSION_KEY).status(200).send('OK');
+    // await prisma.sessions.delete({ where: { sid: req.session.id } });
+    res.clearCookie(SESSION_KEY).send();
 });
 
 export const configure = (_app: typeof app) => {

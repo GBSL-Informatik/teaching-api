@@ -3,12 +3,33 @@ import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
 
-const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(['description', 'name']);
+const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
+    ['description', 'name'],
+    ['parentId']
+);
+
+type ApiStudentGroup = DbStudentGroup & {
+    userIds: string[];
+};
+
+const asApiRecord = (
+    record: (DbStudentGroup & { users: { id: string }[] }) | null
+): ApiStudentGroup | null => {
+    if (!record) {
+        return null;
+    }
+    const group = {
+        ...record,
+        userIds: record.users.map((user) => user.id)
+    };
+    delete (group as any).users;
+    return group;
+};
 
 function StudentGroup(db: PrismaClient['studentGroup']) {
     return Object.assign(db, {
-        async findModel(id: string): Promise<DbStudentGroup | null> {
-            return db.findUnique({
+        async findModel(id: string): Promise<ApiStudentGroup | null> {
+            const model = await db.findUnique({
                 where: {
                     id: id
                 },
@@ -20,6 +41,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     }
                 }
             });
+            return asApiRecord(model);
         },
 
         async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<DbStudentGroup> {
@@ -27,11 +49,11 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             if (!record) {
                 throw new HTTP404Error('Group not found');
             }
-            if (!(record.id === actor.id || actor.isAdmin)) {
+            if (!actor.isAdmin) {
                 throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
-            const sanitized = getData(data);
+            const sanitized = getData(data, false, actor.isAdmin);
             return db.update({
                 where: {
                     id: id
@@ -40,23 +62,70 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
         },
 
-        async all(actor: User): Promise<DbStudentGroup[]> {
+        async addUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const record = await this.findModel(id);
+            if (!record) {
+                throw new HTTP404Error('Group not found');
+            }
+            /** remove fields not updatable*/
+            return db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    users: {
+                        connect: {
+                            id: userId
+                        }
+                    }
+                }
+            });
+        },
+
+        async removeUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const record = await this.findModel(id);
+            if (!record) {
+                throw new HTTP404Error('Group not found');
+            }
+            /** remove fields not updatable*/
+            return db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    users: {
+                        disconnect: {
+                            id: userId
+                        }
+                    }
+                }
+            });
+        },
+
+        async all(actor: User): Promise<ApiStudentGroup[]> {
             // TODO: Does this behaviour make sense?
             //  Yes, it might be useful (a) for an admin to get all groups, and (b) for a user or admin to get all
             //  groups containing a specific user. However, this method now combines two separate behaviors and can't
             //  be used to get the groups that an admin is part of (which may not be required, but the behavior is still
             //  somewhat unexpected). Also, do we want to return the user IDs or not?
-            if (actor.isAdmin) {
-                return db.findMany({});
-            }
-            return db.findMany({
-                where: {
-                    users: {
-                        some: {
-                            id: actor.id
-                        }
-                    }
-                },
+            //
+            // user IDs should be provided, otherwise the frontend will not be able to relate the groups to the users
+            const all = await db.findMany({
+                where: actor.isAdmin
+                    ? undefined
+                    : {
+                          users: {
+                              some: {
+                                  id: actor.id
+                              }
+                          }
+                      },
                 include: {
                     users: {
                         select: {
@@ -65,6 +134,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     }
                 }
             });
+            return all.map((group) => asApiRecord(group)!);
         },
 
         async createModel(

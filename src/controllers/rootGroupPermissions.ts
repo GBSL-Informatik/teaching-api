@@ -7,16 +7,16 @@ import { IoEvent, RecordType } from '../routes/socketEventTypes';
 export const create: RequestHandler<
     any,
     any,
-    { documentRootId: string; studentGroupId: string; access: Access }
+    { documentRootId: string; groupId: string; access: Access }
 > = async (req, res, next) => {
     try {
-        const { documentRootId, studentGroupId, access } = req.body;
+        const { documentRootId, groupId, access } = req.body;
 
-        if (!(documentRootId && studentGroupId && access)) {
-            throw new HTTP400Error('Missing documentRootId, studentGroupId or access');
+        if (!(documentRootId && groupId && access)) {
+            throw new HTTP400Error('Missing documentRootId, groupId or access');
         }
 
-        const model = await RootGroupPermission.createModel(documentRootId, studentGroupId, access);
+        const model = await RootGroupPermission.createModel(documentRootId, groupId, access);
 
         res.notifications = [
             {

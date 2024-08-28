@@ -1,6 +1,7 @@
 import { Access, PrismaClient } from '@prisma/client';
 import prisma from '../prisma';
 import { RootUserPermission as DbRootUserPermission } from '.prisma/client';
+import { asUserAccess } from '../helpers/accessPolicy';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 
@@ -24,27 +25,27 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             documentRootId: string,
             userId: string,
             access: Access
-        ): Promise<ApiUserPermission> {
+        ): Promise<DbRootUserPermission> {
             const result = await db.create({
                 data: {
                     documentRootId: documentRootId,
                     userId: userId,
-                    access: access
+                    access: asUserAccess(access)
                 }
             });
-            return asApiRecord(result);
+            return result;
         },
 
-        async updateModel(id: string, access: Access): Promise<ApiUserPermission> {
+        async updateModel(id: string, access: Access): Promise<DbRootUserPermission> {
             const result = await db.update({
                 where: {
                     id: id
                 },
                 data: {
-                    access: access
+                    access: asUserAccess(access)
                 }
             });
-            return asApiRecord(result);
+            return result;
         },
 
         async deleteModel(id: string): Promise<ApiUserPermission> {
@@ -53,7 +54,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                     id: id
                 }
             });
-            return asApiRecord(result);
+            return result;
         }
     });
 }

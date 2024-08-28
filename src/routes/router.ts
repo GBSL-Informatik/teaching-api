@@ -5,7 +5,9 @@ import {
     create as createStudentGroup,
     destroy as deleteStudentGroup,
     find as findStudentGroup,
-    update as updateStudentGroup
+    update as updateStudentGroup,
+    addUser as addStudentGroupUser,
+    removeUser as removeStudentGroupUser
 } from '../controllers/studentGroups';
 import {
     create as createUserPermission,
@@ -26,7 +28,11 @@ import {
 import {
     create as createDocumentRoot,
     find as findDocumentRoot,
-    update as updateDocumentRoot
+    findMany as findManyDocumentRoots,
+    update as updateDocumentRoot,
+    permissions as allPermissions,
+    findManyFor as findManyDocumentRootsFor,
+    allDocuments
 } from '../controllers/documentRoots';
 
 // initialize router
@@ -37,6 +43,11 @@ router.get('/user', user);
 router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
+/**
+ * @optional ?ignoreMissingRoots: boolean
+ * @requires ?ids: string[]
+ */
+router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
 
 router.get('/studentGroups', allStudentGroups);
 router.post('/studentGroups', createStudentGroup);
@@ -47,6 +58,8 @@ router.get('/studentGroups/:id', findStudentGroup);
 
 router.put('/studentGroups/:id', updateStudentGroup);
 router.delete('/studentGroups/:id', deleteStudentGroup);
+router.post('/studentGroups/:id/members/:userId', addStudentGroupUser);
+router.delete('/studentGroups/:id/members/:userId', removeStudentGroupUser);
 
 router.post('/permissions/user', createUserPermission);
 router.put('/permissions/user/:id', updateUserPermission);
@@ -56,16 +69,23 @@ router.post('/permissions/group', createStudentGroupPermission);
 router.put('/permissions/group/:id', updateStudentGroupPermission);
 router.delete('/permissions/group/:id', deleteStudentGroupPermission);
 
-// TODO: Do we need this endpoint? Is there a particular use case to exposing document roots?
+router.get('/documentRoots', findManyDocumentRoots);
 router.get('/documentRoots/:id', findDocumentRoot);
 router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
-
+router.get('/documentRoots/:id/permissions', allPermissions);
 /**
  * TODO: Reactivate once the controller's permissions are updated.
  * router.get('/documents', allDocuments);
  */
 router.post('/documents', createDocument);
+
+/**
+ * @adminOnly --> handle in controller
+ * Returns all documents which are linked to the **document roots**.
+ * @requires ?rids: string[] -> the document root ids
+ */
+router.get('/documents', allDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
 router.delete('/documents/:id', deleteDocument);

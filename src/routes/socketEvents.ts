@@ -3,7 +3,7 @@
 import type { User } from '@prisma/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
-import { ClientToServerEvents, IoEvent, ServerToClientEvents } from './socketEventTypes';
+import { ClientToServerEvents, IoEvent, IoClientEvent, ServerToClientEvents } from './socketEventTypes';
 import StudentGroup from '../models/StudentGroup';
 
 export enum IoRoom {
@@ -21,6 +21,14 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
 
         if (user.isAdmin) {
             socket.join(IoRoom.ADMIN);
+            socket.on(IoClientEvent.JOIN_ROOM, (roomId: string, callback: () => void) => {
+                socket.join(roomId);
+                callback();
+            });
+            socket.on(IoClientEvent.LEAVE_ROOM, (roomId: string, callback: () => void) => {
+                socket.leave(roomId);
+                callback();
+            });
         }
         socket.join(IoRoom.ALL);
         const groups = await StudentGroup.all(user);
@@ -43,6 +51,7 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         const { user } = socket.request as { user?: User };
         Logger.info(`Socket.io reconnect ${user?.email}`);
     });
+
     io.of('/').adapter.on('join-room', (room, id) => {
         const size = io.sockets.adapter.rooms.get(room)?.size || 0;
         io.to(room).emit(IoEvent.CONNECTED_CLIENTS, { room, count: size });

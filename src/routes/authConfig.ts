@@ -87,6 +87,15 @@ const authConfig: Config = {
                 }
             ]
         },
+        usersDocumentRoots: {
+            path: '/users/:id/documentRoots',
+            access: [
+                {
+                    methods: ['GET'],
+                    adminOnly: false
+                }
+            ]
+        },
         studentGroups: {
             path: '/studentGroups',
             access: [
@@ -127,6 +136,15 @@ const authConfig: Config = {
                 },
                 {
                     methods: ['PUT'],
+                    adminOnly: true
+                }
+            ]
+        },
+        documentRootPermissions: {
+            path: '/documentRoots/:id/permissions',
+            access: [
+                {
+                    methods: ['GET'],
                     adminOnly: true
                 }
             ]

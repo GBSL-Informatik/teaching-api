@@ -8,19 +8,19 @@ export const RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID = '2b7c4da1-b909-4990-a13a-5
 const documentRoots: Prisma.DocumentRootCreateInput[] = [
     {
         id: RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID,
-        access: Access.RW
+        access: Access.RW_DocumentRoot
     },
     {
         id: RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
-        access: Access.RW
+        access: Access.RW_DocumentRoot
     },
     {
         id: NONE_EXAM_DOCUMENT_ID,
-        access: Access.None
+        access: Access.None_DocumentRoot
     },
     {
         id: RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
-        access: Access.RO
+        access: Access.RO_DocumentRoot
     }
 ];
 

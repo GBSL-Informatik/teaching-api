@@ -87,7 +87,10 @@ export type Notification =
 /**
  * client side initiated events
  */
-export enum IoEvents {}
+export enum IoClientEvent {
+    JOIN_ROOM = 'JOIN_ROOM',
+    LEAVE_ROOM = 'LEAVE_ROOM'
+}
 
 export type ServerToClientEvents = {
     [IoEvent.NEW_RECORD]: (message: NewRecord<RecordType>) => void;
@@ -97,4 +100,7 @@ export type ServerToClientEvents = {
     [IoEvent.CONNECTED_CLIENTS]: (message: ConnectedClients) => void;
 };
 
-export interface ClientToServerEvents {}
+export interface ClientToServerEvents {
+    [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: () => void) => void;
+    [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: () => void) => void;
+}
