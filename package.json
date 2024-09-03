@@ -9,6 +9,7 @@
     "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
     "start": "node -r dotenv/config ./dist/src/server.js",
     "dev": "dotenv -- nodemon src/server.ts",
+    "dummy:run": "ts-node -r dotenv/config ./bin/dummy.ts",
     "db:migrate": "yarn prisma migrate deploy",
     "db:migrate:dev": "yarn prisma migrate dev",
     "db:seed": "yarn prisma db seed",
