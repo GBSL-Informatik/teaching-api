@@ -92,8 +92,22 @@ export const all: RequestHandler = async (req, res, next) => {
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const document = await Document.deleteModel(req.user!, req.params.id);
-        res.json(document);
+        const model = await Document.deleteModel(req.user!, req.params.id);
+
+        const groupIds = model.documentRoot.rootGroupPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.studentGroupId);
+        const userIds = model.documentRoot.rootUserPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.userId);
+        res.notifications = [
+            {
+                event: IoEvent.DELETED_RECORD,
+                message: { type: RecordType.Document, id: model.id },
+                to: [...groupIds, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            }
+        ];
+        res.status(204).send();
     } catch (error) {
         next(error);
     }

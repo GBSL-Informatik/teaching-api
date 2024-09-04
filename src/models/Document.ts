@@ -207,7 +207,7 @@ function Document(db: PrismaClient['document']) {
             return model;
         },
 
-        async deleteModel(actor: User, id: string): Promise<DbDocument> {
+        async deleteModel(actor: User, id: string) {
             const record = await this.findModel(actor, id);
             if (!record) {
                 throw new HTTP404Error('Document not found');
@@ -216,13 +216,30 @@ function Document(db: PrismaClient['document']) {
                 throw new HTTP403Error('Not authorized');
             }
 
-            // TODO: Notify connected clients.
-
-            return db.delete({
+            const model = (await db.delete({
                 where: {
                     id: id
+                },
+                include: {
+                    documentRoot: {
+                        include: {
+                            rootGroupPermissions: {
+                                select: {
+                                    access: true,
+                                    studentGroupId: true
+                                }
+                            },
+                            rootUserPermissions: {
+                                select: {
+                                    access: true,
+                                    userId: true
+                                }
+                            }
+                        }
+                    }
                 }
-            });
+            })) satisfies DbDocument;
+            return model;
         },
 
         async all(actor: User): Promise<DbDocument[]> {
