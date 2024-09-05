@@ -33,7 +33,7 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
             const rooms = [...io.sockets.adapter.rooms.keys()].map(
                 (id) => [id, io.sockets.adapter.rooms.get(id)?.size || 0] as [string, number]
             );
-            io.to(IoRoom.ADMIN).emit(IoEvent.ROOMS, { rooms: rooms, type: 'full' });
+            io.to(IoRoom.ADMIN).emit(IoEvent.CONNECTED_CLIENTS, { rooms: rooms, type: 'full' });
         }
         socket.join(IoRoom.ALL);
         const groups = await StudentGroup.all(user);
@@ -59,13 +59,17 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
 
     io.of('/').adapter.on('join-room', (room, id) => {
         const size = io.sockets.adapter.rooms.get(room)?.size || 0;
-        io.to(room).emit(IoEvent.CONNECTED_CLIENTS, { room, count: size });
-        io.to(IoRoom.ADMIN).emit(IoEvent.ROOMS, { rooms: [[room, size]], type: 'update' });
+        io.to([room, IoRoom.ADMIN]).emit(IoEvent.CONNECTED_CLIENTS, {
+            rooms: [[room, size]],
+            type: 'update'
+        });
     });
     io.of('/').adapter.on('leave-room', (room, id) => {
         const size = io.sockets.adapter.rooms.get(room)?.size || 0;
-        io.to(room).except(id).emit(IoEvent.CONNECTED_CLIENTS, { room, count: size });
-        io.to(IoRoom.ADMIN).emit(IoEvent.ROOMS, { rooms: [[room, size]], type: 'update' });
+        io.to([room, IoRoom.ADMIN]).emit(IoEvent.CONNECTED_CLIENTS, {
+            rooms: [[room, size]],
+            type: 'update'
+        });
     });
 };
 
