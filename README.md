@@ -58,7 +58,7 @@ docker compose --file dev_services.compose.yml up
 to start the dev services.
 
 #### Postgres
-`docker-compose` rebuilds the container PostgreSQL container on restart. When building the container, all files in `db/docker/sql` are copied to `/docker-entrypoint-initdb.d/`. They are executed by PostgreSQL **only** if **no volume exists** yet. These init files reflect the expected database setup for a production deployment, including a dedicated user for the backend.
+`docker compose` rebuilds the container PostgreSQL container on restart. When building the container, all files in `db/docker/sql` are copied to `/docker-entrypoint-initdb.d/`. They are executed by PostgreSQL **only** if **no volume exists** yet. These init files reflect the expected database setup for a production deployment, including a dedicated user for the backend.
 
 The `db/scripts` directory contains files for purging the DB. Volumes stay intact, which means that the aforementioned init scripts will not be run again. 
 
