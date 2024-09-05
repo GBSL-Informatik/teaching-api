@@ -45,8 +45,8 @@ export interface ChangedDocument {
 }
 
 export interface ConnectedClients {
-    room: string;
-    count: number;
+    rooms: [string, number][];
+    type: 'full' | 'update';
 }
 
 export interface DeletedRecord {
