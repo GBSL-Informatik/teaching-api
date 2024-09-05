@@ -6,9 +6,7 @@
       <script value="dev" />
     </scripts>
     <node-interpreter value="project" />
-    <envs>
-      <env name="DATABASE_URL" value="postgresql://teaching_website_backend:zW4SMEXLHpXXxxk@localhost:5432/teaching_website?schema=public" />
-    </envs>
+    <envs />
     <method v="2" />
   </configuration>
 </component>
