@@ -17,7 +17,6 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         if (!user) {
             return socket.disconnect();
         }
-
         socket.join(user.id);
 
         if (user.isAdmin) {
