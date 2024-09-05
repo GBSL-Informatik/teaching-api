@@ -9,7 +9,8 @@ export enum IoEvent {
     CHANGED_RECORD = 'CHANGED_RECORD',
     CHANGED_DOCUMENT = 'CHANGED_DOCUMENT',
     DELETED_RECORD = 'DELETED_RECORD',
-    CONNECTED_CLIENTS = 'CONNECTED_CLIENTS'
+    CONNECTED_CLIENTS = 'CONNECTED_CLIENTS',
+    ROOMS = 'ROOMS'
 }
 
 export enum RecordType {
@@ -47,6 +48,11 @@ export interface ChangedDocument {
 export interface ConnectedClients {
     room: string;
     count: number;
+}
+
+export interface IoRooms {
+    rooms: [string, number][];
+    type: 'full' | 'update';
 }
 
 export interface DeletedRecord {
@@ -98,6 +104,7 @@ export type ServerToClientEvents = {
     [IoEvent.DELETED_RECORD]: (message: DeletedRecord) => void;
     [IoEvent.CHANGED_DOCUMENT]: (message: ChangedDocument) => void;
     [IoEvent.CONNECTED_CLIENTS]: (message: ConnectedClients) => void;
+    [IoEvent.ROOMS]: (message: IoRooms) => void;
 };
 
 export interface ClientToServerEvents {
