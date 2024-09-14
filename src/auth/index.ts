@@ -2,7 +2,10 @@ import Logger from '../utils/logger';
 import { getStrategy as mockStrategy } from './mock';
 import { getStrategy } from './azureAD';
 export const strategyForEnvironment = () => {
-    if (process.env.NODE_ENV === 'test' || (process.env.NO_AUTH === 'true' && process.env.NODE_ENV !== 'production')) {
+    if (
+        process.env.NODE_ENV === 'test' ||
+        (process.env.NO_AUTH === 'true' && process.env.NODE_ENV !== 'production')
+    ) {
         if (process.env.NO_AUTH) {
             if (process.env.NODE_ENV !== 'test') {
                 Logger.info(
