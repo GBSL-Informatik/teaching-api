@@ -100,8 +100,6 @@ Table view__document_user_permissions {
   indexes {
     (documentRootId, userId, access, documentId) [unique]
   }
-
-  Note: 'The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.'
 }
 
 Table view__users_documents {
@@ -116,8 +114,6 @@ Table view__users_documents {
   indexes {
     (id, userId) [unique]
   }
-
-  Note: 'The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.'
 }
 
 Table documents {

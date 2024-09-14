@@ -117,7 +117,6 @@ model Sessions {
   @@map("sessions")
 }
 
-/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 view view_DocumentUserPermissions {
   documentRootId        String               @map("document_root_id") @db.Uuid
   userId                String               @map("user_id") @db.Uuid
@@ -137,7 +136,7 @@ view view_DocumentUserPermissions {
   @@map("view__document_user_permissions")
 }
 
-/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+
 view view_UsersDocuments {
   userId           String @map("user_id") @db.Uuid
   id               String @db.Uuid
