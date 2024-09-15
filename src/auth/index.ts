@@ -2,10 +2,8 @@ import Logger from '../utils/logger';
 import { getStrategy as mockStrategy } from './mock';
 import { getStrategy } from './azureAD';
 export const strategyForEnvironment = () => {
-    if (process.env.NODE_ENV === 'test' || (process.env.USER_ID && process.env.NODE_ENV !== 'production')) {
-        if (process.env.USER_ID) {
-            const tid = process.env.USER_ID;
-            const n = tid.length >= 46 ? 0 : 46 - tid.length;
+    if (process.env.NODE_ENV === 'test' || (process.env.NO_AUTH && process.env.NODE_ENV !== 'production')) {
+        if (process.env.NO_AUTH) {
             if (process.env.NODE_ENV !== 'test') {
                 Logger.info(
                     [
@@ -20,10 +18,9 @@ export const strategyForEnvironment = () => {
                         '│  |_| \\_|\\___/  /_/    \\_\\__,_|\\__|_| |_|                 │',
                         '│                                                          │',
                         '│                                                          │',
-                        `│   USER_ID: ${tid + ' '.repeat(n)}│`,
                         '│                                                          │',
                         '│                                                          │',
-                        '│   --> enable authentication by removing "USER_ID"        │',
+                        '│   --> enable authentication by removing "NO_AUTH"        │',
                         '│       from the environment (or the .env file)            │',
                         '│                                                          │',
                         '└──────────────────────────────────────────────────────────┘'
