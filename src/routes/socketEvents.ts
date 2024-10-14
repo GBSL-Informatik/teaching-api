@@ -3,7 +3,13 @@
 import type { User } from '@prisma/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
-import { ClientToServerEvents, IoEvent, IoClientEvent, ServerToClientEvents } from './socketEventTypes';
+import {
+    ClientToServerEvents,
+    IoEvent,
+    IoClientEvent,
+    ServerToClientEvents,
+    iMessage
+} from './socketEventTypes';
 import StudentGroup from '../models/StudentGroup';
 
 export enum IoRoom {
@@ -40,6 +46,39 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         if (groupIds.length > 0) {
             socket.join(groupIds);
         }
+        socket.on(IoClientEvent.USER_JOIN_ROOM, (roomName: string, callback: (roomId: string) => void) => {
+            if (roomName) {
+                const roomId = roomName.startsWith('user:') ? roomName : `user:${roomName}`;
+                io.sockets.in(user.id).socketsJoin(roomId);
+                callback(roomId);
+            }
+        });
+        socket.on(IoClientEvent.USER_LEAVE_ROOM, (roomName: string, callback: () => void) => {
+            if (roomName) {
+                const roomId = roomName.startsWith('user:') ? roomName : `user:${roomName}`;
+                io.sockets.in(user.id).socketsLeave(roomId);
+                callback();
+            }
+        });
+        socket.on(
+            IoClientEvent.USER_MESSAGE,
+            async (to: string, message: iMessage, callback: (serverSentAt: Date | null) => void) => {
+                if (to && message) {
+                    const roomId = to.startsWith('user:') ? to : `user:${to}`;
+                    const room = io.sockets.adapter.rooms.get(roomId);
+                    const isJoined = room?.has(socket.id);
+                    if (isJoined) {
+                        const serverSentAt = new Date();
+                        io.to(roomId).emit(IoEvent.USER_MESSAGE, roomId, {
+                            ...message,
+                            serverSentAt: serverSentAt
+                        });
+                        return callback(serverSentAt);
+                    }
+                    callback(null);
+                }
+            }
+        );
     });
 
     io.on('disconnect', (socket) => {
@@ -65,6 +104,9 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
     });
     io.of('/').adapter.on('leave-room', (room, id) => {
         const size = io.sockets.adapter.rooms.get(room)?.size || 0;
+        if (size === 0) {
+            io.sockets.adapter.rooms.delete(room);
+        }
         io.to([room, IoRoom.ADMIN]).emit(IoEvent.CONNECTED_CLIENTS, {
             rooms: [[room, size]],
             type: 'update'
