@@ -71,7 +71,8 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
                         const serverSentAt = new Date();
                         io.to(roomId).emit(IoEvent.USER_MESSAGE, roomId, {
                             ...message,
-                            serverSentAt: serverSentAt
+                            serverSentAt: serverSentAt,
+                            senderId: user.id
                         });
                         return callback(serverSentAt);
                     }

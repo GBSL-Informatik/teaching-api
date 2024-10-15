@@ -102,6 +102,7 @@ export interface iMessage<T = any> {
 }
 
 export interface iDeliveredMessage<T = any> extends iMessage<T> {
+    senderId: string;
     serverSentAt: Date;
 }
 
