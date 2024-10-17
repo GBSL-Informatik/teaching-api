@@ -57,7 +57,8 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         socket.on(IoClientEvent.USER_LEAVE_ROOM, (roomName: string, callback: () => void) => {
             if (roomName) {
                 const roomId = roomName.startsWith('user:') ? roomName : `user:${roomName}`;
-                io.sockets.in(user.id).socketsLeave(roomId);
+                // io.sockets.in(user.id).socketsLeave(roomId);
+                socket.leave(roomId);
                 callback();
             }
         });
@@ -71,11 +72,13 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
                     const isJoined = room?.has(socket.id);
                     if (isJoined) {
                         const serverSentAt = new Date();
-                        io.to(roomId).emit(IoEvent.USER_MESSAGE, roomName, {
-                            ...message,
-                            serverSentAt: serverSentAt,
-                            senderId: user.id
-                        });
+                        io.to(roomId)
+                            .except(socket.id)
+                            .emit(IoEvent.USER_MESSAGE, roomName, {
+                                ...message,
+                                serverSentAt: serverSentAt,
+                                senderId: user.id
+                            });
                         return callback(serverSentAt);
                     }
                     callback(null);

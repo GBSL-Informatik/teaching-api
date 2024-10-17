@@ -116,8 +116,8 @@ export type ServerToClientEvents = {
 };
 
 export interface ClientToServerEvents {
-    [IoClientEvent.JOIN_ROOM]: (room: string, callback: () => void) => void;
-    [IoClientEvent.LEAVE_ROOM]: (room: string, callback: () => void) => void;
+    [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: () => void) => void;
+    [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: () => void) => void;
     [IoClientEvent.USER_JOIN_ROOM]: (roomName: string, callback: (roomName: string) => void) => void;
     [IoClientEvent.USER_LEAVE_ROOM]: (roomName: string, callback: () => void) => void;
     [IoClientEvent.USER_MESSAGE]: (
