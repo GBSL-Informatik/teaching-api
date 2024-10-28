@@ -21,6 +21,7 @@ Table local_user_credentials {
   id String [pk]
   userId String [unique, not null]
   passwordHash String [not null]
+  active Boolean [not null, default: true]
   user users [not null]
 }
 

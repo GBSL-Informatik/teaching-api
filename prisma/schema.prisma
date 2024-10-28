@@ -36,10 +36,11 @@ model User {
 }
 
 model LocalUserCredential {
-  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String @unique @map("user_id") @db.Uuid
-  passwordHash String @map("password_hash")
-  user         User   @relation(fields: [userId], references: [id])
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String  @unique @map("user_id") @db.Uuid
+  passwordHash String  @map("password_hash")
+  active       Boolean @default(true)
+  user         User    @relation(fields: [userId], references: [id])
 
   @@map("local_user_credentials")
 }
