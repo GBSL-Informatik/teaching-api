@@ -27,7 +27,7 @@ const users: Prisma.UserCreateInput[] = [
         localUserCredential: {
             create: {
                 /* password123 (bcrypt, 12 rounds) */
-                passwordHash: '$2a$12$N7SXui1WlITJRABmXG.fre0QLWr9KF7eyZlhY.Q0friIXYnuW/uCi'
+                passwordHash: '$2b$12$fbeSEfyl8iFfwzinlyrPDuHh0e2RxRi.71EyQGZgegWe8jUcI8Iw6'
             }
         }
     }

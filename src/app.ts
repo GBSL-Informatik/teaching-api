@@ -1,4 +1,5 @@
 import { strategyForEnvironment } from './auth/index';
+import { getStrategy as localStrategy } from './auth/local';
 import express, { NextFunction, Request, Response } from 'express';
 import session from 'express-session';
 import prisma from './prisma';
@@ -94,6 +95,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(strategyForEnvironment());
+passport.use(localStrategy()); // TODO: Only enable with ENV flag.
 
 passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -116,7 +118,9 @@ const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) =
     if (req.isAuthenticated()) {
         return next();
     }
-    passport.authenticate('oauth-bearer', { session: true })(req, res, next);
+    // TODO: Find a way to have both strats in sequential use.
+    // passport.authenticate('oauth-bearer', { session: true })(req, res, next);
+    passport.authenticate('local', { session: true })(req, res, next);
 };
 
 app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) => {

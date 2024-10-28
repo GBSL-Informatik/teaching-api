@@ -1,13 +1,13 @@
-import {PrismaClient} from '@prisma/client';
-import {FOO_BAR_ID, LANA_LOCAL_ID, TEST_USER_ID, users as seedUsers} from './seed-files/users';
-import {documents as seedDocuments} from './seed-files/documents';
+import { PrismaClient } from '@prisma/client';
+import { FOO_BAR_ID, LANA_LOCAL_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
+import { documents as seedDocuments } from './seed-files/documents';
 import {
     ALL_USERS_GROUP_ID,
     CLASS_GROUP_ID,
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
 } from './seed-files/student-groups';
-import {documentRoots as seedDocumentRoots} from './seed-files/document-roots';
+import { documentRoots as seedDocumentRoots } from './seed-files/document-roots';
 import {
     rootGroupPermissions as seedRootGroupPermissions,
     rootUserPermissions as seedRootUserPermissions
@@ -24,7 +24,7 @@ async function main() {
 
     console.log(seedUsers);
     for (const seedUser of seedUsers) {
-        await prisma.user.create({data: seedUser});
+        await prisma.user.create({ data: seedUser });
     }
 
     const documentRoots = await prisma.documentRoot.createMany({
