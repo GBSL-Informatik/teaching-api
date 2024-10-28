@@ -6,7 +6,14 @@ import { ParsedQs } from 'qs';
 import prisma from '../prisma';
 import Logger from '../utils/logger';
 import bcrypt from 'bcrypt';
-import { Prisma } from '@prisma/client';
+import { LocalUserCredential, Prisma, User } from '@prisma/client';
+
+type UserWithLocalCredential = User & { localUserCredential: LocalUserCredential };
+
+interface AuthHeaders {
+    email: string;
+    password: string;
+}
 
 class LocalStrat extends Strategy {
     name = 'local';
@@ -22,18 +29,10 @@ class LocalStrat extends Strategy {
             return this.fail('Missing authorization header');
         }
 
-        let auth: { email: string; password: string };
+        let auth: AuthHeaders;
         let query: Prisma.UserFindUniqueArgs | undefined;
         try {
-            auth = JSON.parse(req.headers.authorization) as { email: string; password: string };
-            query = {
-                where: {
-                    email: auth.email
-                },
-                include: {
-                    localUserCredential: true
-                }
-            };
+            auth = JSON.parse(req.headers.authorization) as AuthHeaders;
         } catch (err) {
             Logger.warn('Bearer Verify Error', err);
             return this.fail('Could not parse authorization header');
@@ -42,13 +41,22 @@ class LocalStrat extends Strategy {
         if (!query) {
             return this.fail('No User provided in request');
         }
+
         try {
-            const user = await prisma.user.findUnique(query);
+            query = {
+                where: {
+                    email: auth.email
+                },
+                include: {
+                    localUserCredential: true
+                }
+            };
+            const user = (await prisma.user.findUnique(query)) as UserWithLocalCredential;
             if (!user) {
                 return this.fail(`No User found for ${query}`);
             }
 
-            const passwordHash = (user as any).localUserCredential?.passwordHash; // TODO: Typing...
+            const passwordHash = user.localUserCredential?.passwordHash;
 
             if (!passwordHash) {
                 return this.fail(`No local credential for user ${user}`);
