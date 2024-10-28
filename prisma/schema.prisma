@@ -29,9 +29,19 @@ model User {
   documents                    Document[]                     @relation("documents")
   rootUserPermissions          RootUserPermission[]           @relation("root_user_to_user_permission")
   studentGroups                StudentGroup[]                 @relation("StudentGroupToUser")
+  localUserCredential          LocalUserCredential?
   view_DocumentUserPermissions view_DocumentUserPermissions[]
 
   @@map("users")
+}
+
+model LocalUserCredential {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String @unique @map("user_id") @db.Uuid
+  passwordHash String @map("password_hash")
+  user         User   @relation(fields: [userId], references: [id])
+
+  @@map("local_user_credentials")
 }
 
 model StudentGroup {
@@ -135,7 +145,6 @@ view view_DocumentUserPermissions {
   @@unique([documentRootId, userId, access, documentId])
   @@map("view__document_user_permissions")
 }
-
 
 view view_UsersDocuments {
   userId           String @map("user_id") @db.Uuid

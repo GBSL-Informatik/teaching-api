@@ -1,22 +1,16 @@
-import { Access, PrismaClient, User } from '@prisma/client';
-import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
-import { documents as seedDocuments } from './seed-files/documents';
+import {PrismaClient} from '@prisma/client';
+import {FOO_BAR_ID, LANA_LOCAL_ID, TEST_USER_ID, users as seedUsers} from './seed-files/users';
+import {documents as seedDocuments} from './seed-files/documents';
 import {
     ALL_USERS_GROUP_ID,
     CLASS_GROUP_ID,
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
 } from './seed-files/student-groups';
+import {documentRoots as seedDocumentRoots} from './seed-files/document-roots';
 import {
-    documentRoots as seedDocumentRoots,
-    NONE_EXAM_DOCUMENT_ID,
-    RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
-    RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
-    RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
-} from './seed-files/document-roots';
-import {
-    rootUserPermissions as seedRootUserPermissions,
-    rootGroupPermissions as seedRootGroupPermissions
+    rootGroupPermissions as seedRootGroupPermissions,
+    rootUserPermissions as seedRootUserPermissions
 } from './seed-files/document-root-permissions';
 
 const prisma = new PrismaClient();
@@ -29,9 +23,9 @@ async function main() {
     }
 
     console.log(seedUsers);
-    const users = await prisma.user.createMany({
-        data: seedUsers
-    });
+    for (const seedUser of seedUsers) {
+        await prisma.user.create({data: seedUser});
+    }
 
     const documentRoots = await prisma.documentRoot.createMany({
         data: seedDocumentRoots
@@ -47,7 +41,7 @@ async function main() {
 
     /** Connect users and student groups. */
     // TODO: Is there a more elegant way to add entries to the implicit _StudentGroupToUser join table?
-    const allUsersGroupMembers = [{ id: FOO_BAR_ID }, { id: TEST_USER_ID }];
+    const allUsersGroupMembers = [{ id: FOO_BAR_ID }, { id: TEST_USER_ID }, { id: LANA_LOCAL_ID }];
     if (USER_EMAIL && USER_ID) {
         allUsersGroupMembers.push({ id: USER_ID });
     }

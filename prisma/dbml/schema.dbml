@@ -13,7 +13,15 @@ Table users {
   documents documents [not null]
   rootUserPermissions root_user_permissions [not null]
   studentGroups student_groups [not null]
+  localUserCredential local_user_credentials
   view_DocumentUserPermissions view__document_user_permissions [not null]
+}
+
+Table local_user_credentials {
+  id String [pk]
+  userId String [unique, not null]
+  passwordHash String [not null]
+  user users [not null]
 }
 
 Table student_groups {
@@ -137,6 +145,8 @@ Enum Access {
   RW_User
   None_User
 }
+
+Ref: local_user_credentials.userId - users.id
 
 Ref: student_groups.parentId - student_groups.id [delete: Cascade]
 

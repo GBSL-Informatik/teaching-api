@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 
 export const FOO_BAR_ID = '96651c13-3af6-4cc0-b242-ea38d438dc41';
 export const TEST_USER_ID = '4b6d8b5d-3b6c-4c8b-8d3c-6f2c3f6e2b4b';
+export const LANA_LOCAL_ID = '13f651e0-3bc0-4f05-b5cd-dfed19a03404';
 
 const { USER_EMAIL, USER_ID } = process.env;
 
@@ -17,6 +18,18 @@ const users: Prisma.UserCreateInput[] = [
         id: TEST_USER_ID,
         firstName: 'Test',
         lastName: 'User'
+    },
+    {
+        email: 'lana@local.ch',
+        id: LANA_LOCAL_ID,
+        firstName: 'Lana',
+        lastName: 'Local',
+        localUserCredential: {
+            create: {
+                /* password123 (bcrypt, 12 rounds) */
+                passwordHash: '$2a$12$N7SXui1WlITJRABmXG.fre0QLWr9KF7eyZlhY.Q0friIXYnuW/uCi'
+            }
+        }
     }
 ];
 
