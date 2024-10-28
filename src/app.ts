@@ -95,7 +95,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(strategyForEnvironment());
-passport.use(localStrategy()); // TODO: Only enable with ENV flag.
+const authStrategies = ['oauth-bearer'];
+
+if (process.env.ALLOW_LOCAL_ACCOUNTS) {
+    passport.use(localStrategy());
+    authStrategies.push('local');
+}
 
 passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -114,14 +119,14 @@ app.get(`${API_URL}`, (req, res) => {
     return res.status(200).send('Welcome to the TEACHING-WEBSITE-API V1.0');
 });
 
-const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) => {
+const AuthStrategy = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
         return next();
     }
-    passport.authenticate(['oauth-bearer', 'local'], { session: true })(req, res, next);
+    passport.authenticate(authStrategies, { session: true })(req, res, next);
 };
 
-app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) => {
+app.get(`${API_URL}/checklogin`, AuthStrategy, async (req, res, next) => {
     try {
         if (req.user) {
             return res.status(200).send('OK');
