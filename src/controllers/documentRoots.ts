@@ -1,10 +1,10 @@
 import { RequestHandler } from 'express';
 import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot';
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
-import { Access } from '@prisma/client';
 import { IoRoom } from '../routes/socketEvents';
 import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
 import Document from '../models/Document';
+import { RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -116,6 +116,27 @@ export const permissions: RequestHandler<{ id: string }> = async (req, res, next
     try {
         const permissions = await DocumentRoot.getPermissions(req.user!, req.params.id);
         res.json(permissions);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
+    try {
+        const model = await DocumentRoot.deleteModel(req.user!, req.params.id);
+
+        res.notifications = [
+            {
+                event: IoEvent.DELETED_RECORD,
+                message: { type: RecordType.DocumentRoot, id: model.id },
+                to: [
+                    ...model.rootGroupPermissions.map((p) => p.studentGroupId),
+                    ...model.rootUserPermissions.map((u) => u.userId),
+                    RO_RW_DocumentRootAccess.has(model.sharedAccess) ? IoRoom.ALL : IoRoom.ADMIN
+                ]
+            }
+        ];
+        res.json(model);
     } catch (error) {
         next(error);
     }

@@ -8,10 +8,10 @@ import {
     RootUserPermission,
     User
 } from '@prisma/client';
-import { ApiDocument, prepareDocument } from './Document';
+import { ApiDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
-import { HTTP403Error } from '../utils/errors/Errors';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
@@ -215,6 +215,36 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 userPermissions: userPermissions.map(prepareUserPermission),
                 groupPermissions: groupPermissions.map(prepareGroupPermission)
             };
+        },
+        async deleteModel(actor: User, id: string) {
+            const record = await this.findModel(actor, id);
+            if (!record) {
+                throw new HTTP404Error('DocumentRoot not found');
+            }
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+
+            const model = await db.delete({
+                where: {
+                    id: id
+                },
+                include: {
+                    rootGroupPermissions: {
+                        select: {
+                            access: true,
+                            studentGroupId: true
+                        }
+                    },
+                    rootUserPermissions: {
+                        select: {
+                            access: true,
+                            userId: true
+                        }
+                    }
+                }
+            });
+            return model;
         }
     });
 }
