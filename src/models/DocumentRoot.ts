@@ -39,6 +39,7 @@ export type AccessCheckableDocumentRootWithDocuments = AccessCheckableDocumentRo
 
 export interface Config {
     access?: Access; // Access level of document root
+    sharedAccess?: Access; // Access level of shared documents
     userPermissions?: Omit<ApiUserPermission, 'id'>[];
     groupPermissions?: Omit<ApiGroupPermission, 'id'>[];
 }
@@ -147,6 +148,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 data: {
                     id: id,
                     access: asDocumentRootAccess(config.access),
+                    sharedAccess: config.sharedAccess || Access.None_DocumentRoot,
                     /* 0 is falsey in JS (since TS strictNullChecks is on, `grouPermissions?.length > 0` is not valid) */
                     rootGroupPermissions: config.groupPermissions?.length
                         ? {
