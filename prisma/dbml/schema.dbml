@@ -14,6 +14,7 @@ Table users {
   rootUserPermissions root_user_permissions [not null]
   studentGroups student_groups [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
+  view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
 Table student_groups {
@@ -28,6 +29,7 @@ Table student_groups {
   children student_groups [not null]
   users users [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
+  view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
 Table documents {
@@ -44,6 +46,7 @@ Table documents {
   parent documents
   children documents [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
+  view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
 Table document_roots {
@@ -54,6 +57,7 @@ Table document_roots {
   rootGroupPermissions root_group_permissions [not null]
   rootUserPermissions root_user_permissions [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
+  view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
 Table root_group_permissions {
@@ -64,6 +68,7 @@ Table root_group_permissions {
   documentRoot document_roots [not null]
   studentGroup student_groups [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
+  view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
 Table root_user_permissions {
@@ -74,12 +79,34 @@ Table root_user_permissions {
   documentRoot document_roots [not null]
   user users [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
+  view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
 Table sessions {
   sid String [pk]
   sess Json [not null]
   expire DateTime [not null]
+}
+
+Table view__all_document_user_permissions {
+  documentRootId String [not null]
+  userId String [not null]
+  access Access [not null]
+  documentId String [not null]
+  rootUserPermissionId String
+  rootGroupPermissionId String
+  groupId String
+  accessRank Int [not null]
+  documentRoot document_roots [not null]
+  user users [not null]
+  document documents [not null]
+  rootUserPermission root_user_permissions
+  rootGroupPermission root_group_permissions
+  group student_groups
+
+  indexes {
+    (documentRootId, userId, documentId, accessRank) [unique]
+  }
 }
 
 Table view__document_user_permissions {
@@ -153,6 +180,18 @@ Ref: root_group_permissions.studentGroupId > student_groups.id [delete: Cascade]
 Ref: root_user_permissions.documentRootId > document_roots.id [delete: Cascade]
 
 Ref: root_user_permissions.userId > users.id [delete: Cascade]
+
+Ref: view__all_document_user_permissions.documentRootId > document_roots.id
+
+Ref: view__all_document_user_permissions.userId > users.id
+
+Ref: view__all_document_user_permissions.documentId > documents.id
+
+Ref: view__all_document_user_permissions.rootUserPermissionId > root_user_permissions.id
+
+Ref: view__all_document_user_permissions.rootGroupPermissionId > root_group_permissions.id
+
+Ref: view__all_document_user_permissions.groupId > student_groups.id
 
 Ref: view__document_user_permissions.documentRootId > document_roots.id
 
