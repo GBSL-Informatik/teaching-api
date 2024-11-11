@@ -4,7 +4,7 @@ import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { IoRoom } from '../routes/socketEvents';
-import { NoneAccess } from '../helpers/accessPolicy';
+import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -33,11 +33,12 @@ export const create: RequestHandler<any, any, DbDocument> = async (req, res, nex
          */
         const groupIds = permissions.group.filter((p) => !NoneAccess.has(p.access)).map((p) => p.groupId);
         const userIds = permissions.user.filter((p) => !NoneAccess.has(p.access)).map((p) => p.userId);
+        const sharedAccess = RO_RW_DocumentRootAccess.has(permissions.sharedAccess) ? [IoRoom.ALL] : [];
         res.notifications = [
             {
                 event: IoEvent.NEW_RECORD,
                 message: { type: RecordType.Document, record: model },
-                to: [...groupIds, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [...groupIds, ...userIds, ...sharedAccess, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
             }
         ];
         res.status(200).json(model);
@@ -66,12 +67,15 @@ export const update: RequestHandler<{ id: string }, any, { data: JsonObject }> =
         const userIds = model.documentRoot.rootUserPermissions
             .filter((p) => !NoneAccess.has(p.access))
             .map((p) => p.userId);
+        const sharedAccess = RO_RW_DocumentRootAccess.has(model.documentRoot.sharedAccess)
+            ? [IoRoom.ALL]
+            : [];
 
         res.notifications = [
             {
                 event: IoEvent.CHANGED_DOCUMENT,
                 message: change,
-                to: [...groupIds, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
             }
         ];
 
@@ -100,11 +104,14 @@ export const destroy: RequestHandler<{ id: string }> = async (req, res, next) =>
         const userIds = model.documentRoot.rootUserPermissions
             .filter((p) => !NoneAccess.has(p.access))
             .map((p) => p.userId);
+        const sharedAccess = RO_RW_DocumentRootAccess.has(model.documentRoot.sharedAccess)
+            ? [IoRoom.ALL]
+            : [];
         res.notifications = [
             {
                 event: IoEvent.DELETED_RECORD,
                 message: { type: RecordType.Document, id: model.id },
-                to: [...groupIds, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [...groupIds, ...userIds, ...sharedAccess, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
             }
         ];
         res.status(204).send();
