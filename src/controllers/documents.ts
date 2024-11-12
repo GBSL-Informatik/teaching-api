@@ -33,12 +33,14 @@ export const create: RequestHandler<any, any, DbDocument> = async (req, res, nex
          */
         const groupIds = permissions.group.filter((p) => !NoneAccess.has(p.access)).map((p) => p.groupId);
         const userIds = permissions.user.filter((p) => !NoneAccess.has(p.access)).map((p) => p.userId);
-        const sharedAccess = RO_RW_DocumentRootAccess.has(permissions.sharedAccess) ? [IoRoom.ALL] : [];
+        const sharedAccess = RO_RW_DocumentRootAccess.has(permissions.sharedAccess)
+            ? IoRoom.ALL
+            : IoRoom.ADMIN;
         res.notifications = [
             {
                 event: IoEvent.NEW_RECORD,
                 message: { type: RecordType.Document, record: model },
-                to: [...groupIds, ...userIds, ...sharedAccess, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+                to: [...groupIds, ...userIds, sharedAccess, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving,
             }
         ];
         res.status(200).json(model);

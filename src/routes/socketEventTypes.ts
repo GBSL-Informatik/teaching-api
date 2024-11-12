@@ -2,7 +2,7 @@ import { Prisma, User } from '@prisma/client';
 import { ApiDocument } from '../models/Document';
 import { ApiUserPermission } from '../models/RootUserPermission';
 import { ApiGroupPermission } from '../models/RootGroupPermission';
-import { ApiDocumentRootUpdate } from '../models/DocumentRoot';
+import { ApiDocumentRootWithoutDocuments } from '../models/DocumentRoot';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
@@ -25,7 +25,7 @@ type TypeRecordMap = {
     [RecordType.User]: User;
     [RecordType.UserPermission]: ApiUserPermission;
     [RecordType.GroupPermission]: ApiGroupPermission;
-    [RecordType.DocumentRoot]: ApiDocumentRootUpdate;
+    [RecordType.DocumentRoot]: ApiDocumentRootWithoutDocuments;
 };
 
 export interface NewRecord<T extends RecordType> {

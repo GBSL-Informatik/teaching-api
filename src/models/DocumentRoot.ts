@@ -26,7 +26,7 @@ type Permissions = {
     groupPermissions: ApiGroupPermission[];
 };
 
-export type ApiDocumentRootUpdate = DbDocumentRoot & Permissions;
+export type ApiDocumentRootWithoutDocuments = Omit<ApiDocumentRoot, 'documents'>;
 
 export type AccessCheckableDocumentRoot = DbDocumentRoot & {
     rootGroupPermissions: RootGroupPermission[];
@@ -143,8 +143,8 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             }
             return response;
         },
-        async createModel(id: string, config: Config = {}): Promise<DbDocumentRoot> {
-            return db.create({
+        async createModel(id: string, config: Config = {}): Promise<ApiDocumentRootWithoutDocuments> {
+            const model = await db.create({
                 data: {
                     id: id,
                     access: asDocumentRootAccess(config.access),
@@ -170,10 +170,22 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                               }
                           }
                         : undefined
+                },
+                include: {
+                    rootGroupPermissions: true,
+                    rootUserPermissions: true
                 }
             });
+
+            return {
+                id: model.id,
+                access: model.access,
+                sharedAccess: model.sharedAccess,
+                userPermissions: model.rootUserPermissions.map((p) => prepareUserPermission(p)),
+                groupPermissions: model.rootGroupPermissions.map((p) => prepareGroupPermission(p))
+            };
         },
-        async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootUpdate> {
+        async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootWithoutDocuments> {
             const model = await db.update({
                 where: {
                     id: id

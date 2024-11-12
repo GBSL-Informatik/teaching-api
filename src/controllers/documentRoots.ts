@@ -4,7 +4,7 @@ import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { IoRoom } from '../routes/socketEvents';
 import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
 import Document from '../models/Document';
-import { RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
+import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -80,6 +80,28 @@ export const create: RequestHandler<{ id: string }, any, CreateConfig | undefine
 ) => {
     try {
         const documentRoot = await DocumentRoot.createModel(req.params.id, req.body);
+        /**
+         * Notifications to
+         * - the user who created the document
+         * - users with ro/rw access to the document root
+         * - student groups with ro/rw access to the document root
+         */
+        const groupIds = documentRoot.groupPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.groupId);
+        const userIds = documentRoot.userPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.userId);
+        const sharedAccess = RO_RW_DocumentRootAccess.has(documentRoot.sharedAccess)
+            ? IoRoom.ALL
+            : IoRoom.ADMIN;
+        res.notifications = [
+            {
+                event: IoEvent.NEW_RECORD,
+                message: { type: RecordType.DocumentRoot, record: documentRoot },
+                to: [...groupIds, ...userIds, sharedAccess, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            }
+        ];
         res.json(documentRoot);
     } catch (error) {
         next(error);
