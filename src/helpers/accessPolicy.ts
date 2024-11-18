@@ -15,6 +15,10 @@ export const ROAccess = new Set<Access | undefined>([
     Access.RO_User,
     Access.RO_StudentGroup
 ]);
+export const RO_RW_DocumentRootAccess = new Set<Access | undefined>([
+    Access.RO_DocumentRoot,
+    Access.RW_DocumentRoot
+]);
 
 export const AccessLevels = new Map<Access, number>([
     [Access.RO_DocumentRoot, 0],

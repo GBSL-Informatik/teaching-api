@@ -56,6 +56,7 @@ type Response<T> = {
     model: T;
     permissions: {
         access: Access;
+        sharedAccess: Access;
         group: ApiGroupPermission[];
         user: ApiUserPermission[];
     };
@@ -160,6 +161,7 @@ function Document(db: PrismaClient['document']) {
                 model: model.document,
                 permissions: {
                     access: documentRoot.access,
+                    sharedAccess: documentRoot.sharedAccess,
                     group: documentRoot.groupPermissions,
                     user: documentRoot.userPermissions
                 }
