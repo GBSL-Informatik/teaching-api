@@ -100,9 +100,6 @@ const requestHasRequiredAttributes = (
     method: string,
     isAdmin: boolean
 ) => {
-    if (isAdmin) {
-        return true;
-    }
     const accessRules = Object.values(accessMatrix);
     const accessRule = accessRules
         .filter((accessRule) => accessRule.regex.test(path))
@@ -111,9 +108,11 @@ const requestHasRequiredAttributes = (
     if (!accessRule) {
         return false;
     }
-    return accessRule.access.some(
-        (rule) => !rule.adminOnly && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
+    const hasAccess = accessRule.access.some(
+        (rule) => (isAdmin || !rule.adminOnly) && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
     );
+    Logger.info(`${hasAccess ? '✅' : '❌'} Access Rule for ${isAdmin ? 'Admin' : 'User'}: [${method}:${path}] ${JSON.stringify(accessRule)}`);
+    return hasAccess;
 };
 
 export default routeGuard;
