@@ -6,6 +6,7 @@ import DocumentRoot, { AccessCheckableDocumentRoot } from './DocumentRoot';
 import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { ApiUserPermission } from './RootUserPermission';
+import Logger from '../utils/logger';
 
 type AccessCheckableDocument = DbDocument & {
     documentRoot: AccessCheckableDocumentRoot;
@@ -19,7 +20,9 @@ interface DocumentWithPermission {
 }
 
 const extractPermission = (actor: User, document: AccessCheckableDocument): Access | null => {
-    if (NoneAccess.has(document.documentRoot.sharedAccess) && document.authorId !== actor.id) {
+    const hasBaseAccess =
+        document.authorId === actor.id || !NoneAccess.has(document.documentRoot.sharedAccess);
+    if (!hasBaseAccess) {
         return null;
     }
 
@@ -106,6 +109,10 @@ function Document(db: PrismaClient['document']) {
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
             }
+            /**
+             * Since it is easyier to check wheter a user has permissions to create a model
+             * when the model actually exists, we create the model first and then check the permissions.
+             */
             if (parentId) {
                 const parent = await this.findModel(actor, parentId);
                 if (!parent) {
@@ -157,6 +164,20 @@ function Document(db: PrismaClient['document']) {
                     }
                 })
                 .then((doc) => prepareDocument(actor, doc)!);
+            /**
+             * Check if the user has the required permissions to create the model.
+             * If not, delete the model and throw an error.
+             */
+            const canCreate = RWAccess.has(model.highestPermission);
+            if (!canCreate) {
+                Logger.info(`❌ New Model [${model.document.id}]: ${model.highestPermission}`);
+                db.delete({
+                    where: {
+                        id: model.document.id
+                    }
+                });
+                throw new HTTP403Error('Insufficient access permission');
+            }
             return {
                 model: model.document,
                 permissions: {
@@ -173,7 +194,10 @@ function Document(db: PrismaClient['document']) {
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            const canWrite = record.document.authorId === actor.id || RWAccess.has(record.highestPermission);
+            /**
+             * models can be updated when the user has RW access
+             */
+            const canWrite = RWAccess.has(record.highestPermission);
             if (!canWrite) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -214,7 +238,11 @@ function Document(db: PrismaClient['document']) {
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            if (!(record.document.authorId === actor.id && RWAccess.has(record.highestPermission))) {
+            /**
+             * models can be deleted when the actor is the author and has RW access.
+             */
+            const canDelete = record.document.authorId === actor.id && RWAccess.has(record.highestPermission);
+            if (!canDelete) {
                 throw new HTTP403Error('Not authorized');
             }
 
