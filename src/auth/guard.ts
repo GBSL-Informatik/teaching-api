@@ -109,9 +109,12 @@ const requestHasRequiredAttributes = (
         return false;
     }
     const hasAccess = accessRule.access.some(
-        (rule) => (isAdmin || !rule.adminOnly) && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
+        (rule) =>
+            (isAdmin || !rule.adminOnly) && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
     );
-    Logger.info(`${hasAccess ? '✅' : '❌'} Access Rule for ${isAdmin ? 'Admin' : 'User'}: [${method}:${path}] ${JSON.stringify(accessRule)}`);
+    Logger.info(
+        `${hasAccess ? '✅' : '❌'} Access Rule for ${isAdmin ? 'Admin' : 'User'}: [${method}:${path}] ${JSON.stringify(accessRule)}`
+    );
     return hasAccess;
 };
 
