@@ -30,6 +30,7 @@ model User {
   rootUserPermissions          RootUserPermission[]           @relation("root_user_to_user_permission")
   studentGroups                StudentGroup[]                 @relation("StudentGroupToUser")
   view_DocumentUserPermissions view_DocumentUserPermissions[]
+  view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@map("users")
 }
@@ -46,6 +47,7 @@ model StudentGroup {
   children                     StudentGroup[]                 @relation("parent_student_group")
   users                        User[]                         @relation("StudentGroupToUser")
   view_DocumentUserPermissions view_DocumentUserPermissions[]
+  view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@map("student_groups")
 }
@@ -64,6 +66,7 @@ model Document {
   parent                       Document?                      @relation("connected_documents", fields: [parentId], references: [id], onDelete: Cascade)
   children                     Document[]                     @relation("connected_documents")
   view_DocumentUserPermissions view_DocumentUserPermissions[]
+  view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@index([authorId], map: "document_author_id_index")
   @@map("documents")
@@ -77,6 +80,7 @@ model DocumentRoot {
   rootGroupPermissions         RootGroupPermission[]          @relation("root_group_to_document_root_permission")
   rootUserPermissions          RootUserPermission[]           @relation("root_user_to_document_root_permission")
   view_DocumentUserPermissions view_DocumentUserPermissions[]
+  view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@index([id], map: "document_root_id_index")
   @@map("document_roots")
@@ -90,6 +94,7 @@ model RootGroupPermission {
   documentRoot                 DocumentRoot                   @relation("root_group_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
   studentGroup                 StudentGroup                   @relation("root_group_to_student_group_permission", fields: [studentGroupId], references: [id], onDelete: Cascade)
   view_DocumentUserPermissions view_DocumentUserPermissions[]
+  view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@map("root_group_permissions")
 }
@@ -102,6 +107,7 @@ model RootUserPermission {
   documentRoot                 DocumentRoot                   @relation("root_user_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
   user                         User                           @relation("root_user_to_user_permission", fields: [userId], references: [id], onDelete: Cascade)
   view_DocumentUserPermissions view_DocumentUserPermissions[]
+  view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@index([documentRootId], map: "root_user_permissions_document_root_id_index")
   @@index([userId], map: "root_user_permissions_user_id_index")
@@ -116,6 +122,31 @@ model Sessions {
   @@index([expire], map: "IDX_session_expire")
   @@map("sessions")
 }
+
+
+// This is a view ranked by the highest access rank.
+// This is used to create the DocumentUserPermissions view and should
+// not be used directly.
+view view_AllDocumentUserPermissions {
+  documentRootId        String               @map("document_root_id") @db.Uuid
+  userId                String               @map("user_id") @db.Uuid
+  access                Access               @map("access")
+  documentId            String               @map("document_id") @db.Uuid
+  rootUserPermissionId  String?              @map("root_user_permission_id") @db.Uuid
+  rootGroupPermissionId String?              @map("root_group_permission_id") @db.Uuid
+  groupId               String?              @map("group_id") @db.Uuid
+  accessRank            Int                  @map("access_rank")
+  documentRoot          DocumentRoot         @relation(fields: [documentRootId], references: [id])
+  user                  User                 @relation(fields: [userId], references: [id])
+  document              Document             @relation(fields: [documentId], references: [id])
+  rootUserPermission    RootUserPermission?  @relation(fields: [rootUserPermissionId], references: [id])
+  rootGroupPermission   RootGroupPermission? @relation(fields: [rootGroupPermissionId], references: [id])
+  group                 StudentGroup?        @relation(fields: [groupId], references: [id])
+
+  @@unique([documentRootId, userId, documentId, accessRank])
+  @@map("view__all_document_user_permissions")
+}
+
 
 view view_DocumentUserPermissions {
   documentRootId        String               @map("document_root_id") @db.Uuid
