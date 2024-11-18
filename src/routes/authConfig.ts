@@ -135,7 +135,7 @@ const authConfig: Config = {
                     adminOnly: false
                 },
                 {
-                    methods: ['PUT'],
+                    methods: ['PUT', 'DELETE'],
                     adminOnly: true
                 }
             ]
