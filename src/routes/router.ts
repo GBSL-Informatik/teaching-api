@@ -32,7 +32,8 @@ import {
     update as updateDocumentRoot,
     permissions as allPermissions,
     findManyFor as findManyDocumentRootsFor,
-    allDocuments
+    allDocuments,
+    destroy as deleteDocumentRoot
 } from '../controllers/documentRoots';
 
 // initialize router
@@ -73,6 +74,7 @@ router.get('/documentRoots', findManyDocumentRoots);
 router.get('/documentRoots/:id', findDocumentRoot);
 router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
+router.delete('/documentRoots/:id', deleteDocumentRoot);
 router.get('/documentRoots/:id/permissions', allPermissions);
 /**
  * TODO: Reactivate once the controller's permissions are updated.

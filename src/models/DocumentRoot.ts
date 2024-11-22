@@ -8,10 +8,10 @@ import {
     RootUserPermission,
     User
 } from '@prisma/client';
-import { ApiDocument, prepareDocument } from './Document';
+import { ApiDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
-import { HTTP403Error } from '../utils/errors/Errors';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
@@ -26,7 +26,7 @@ type Permissions = {
     groupPermissions: ApiGroupPermission[];
 };
 
-export type ApiDocumentRootUpdate = DbDocumentRoot & Permissions;
+export type ApiDocumentRootWithoutDocuments = Omit<ApiDocumentRoot, 'documents'>;
 
 export type AccessCheckableDocumentRoot = DbDocumentRoot & {
     rootGroupPermissions: RootGroupPermission[];
@@ -77,9 +77,31 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 }
             })) as ApiDocumentRoot | null;
             if (!documentRoot) {
+                /**
+                 * The user does not have documents in the requested document root (and thus no docRoot is returned from the view).
+                 * In this case, we have to load the document root directly.
+                 */
                 const docRoot = await db.findUnique({
                     where: {
                         id: id
+                    },
+                    include: {
+                        rootUserPermissions: {
+                            where: {
+                                userId: actor.id
+                            }
+                        },
+                        rootGroupPermissions: {
+                            where: {
+                                studentGroup: {
+                                    users: {
+                                        some: {
+                                            id: actor.id
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
                 if (!docRoot) {
@@ -88,13 +110,11 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 return {
                     ...docRoot,
                     documents: [],
-                    userPermissions: [],
-                    groupPermissions: []
+                    userPermissions: docRoot.rootUserPermissions.map((p) => prepareUserPermission(p)),
+                    groupPermissions: docRoot.rootGroupPermissions.map((p) => prepareGroupPermission(p))
                 };
             }
-            if (documentRoot) {
-                delete (documentRoot as any).userId;
-            }
+            delete (documentRoot as any).userId;
             return documentRoot;
         },
         async findManyModels(
@@ -130,21 +150,40 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                         id: {
                             in: missingDocumentRoots
                         }
+                    },
+                    include: {
+                        rootUserPermissions: {
+                            where: {
+                                userId: actorId
+                            }
+                        },
+                        rootGroupPermissions: {
+                            where: {
+                                studentGroup: {
+                                    users: {
+                                        some: {
+                                            id: actorId
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
                 response.push(
                     ...docRoots.map((docRoot) => ({
                         ...docRoot,
                         documents: [],
-                        userPermissions: [],
-                        groupPermissions: []
+                        userPermissions: docRoot.rootUserPermissions.map((p) => prepareUserPermission(p)),
+                        groupPermissions: docRoot.rootGroupPermissions.map((p) => prepareGroupPermission(p))
                     }))
                 );
             }
             return response;
         },
-        async createModel(id: string, config: Config = {}): Promise<DbDocumentRoot> {
-            return db.create({
+        async createModel(id: string, config: Config = {}): Promise<ApiDocumentRootWithoutDocuments> {
+            // TODO: assign a RW-Access for the admin group for each created doc-root!?
+            const model = await db.create({
                 data: {
                     id: id,
                     access: asDocumentRootAccess(config.access),
@@ -170,10 +209,22 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                               }
                           }
                         : undefined
+                },
+                include: {
+                    rootGroupPermissions: true,
+                    rootUserPermissions: true
                 }
             });
+
+            return {
+                id: model.id,
+                access: model.access,
+                sharedAccess: model.sharedAccess,
+                userPermissions: model.rootUserPermissions.map((p) => prepareUserPermission(p)),
+                groupPermissions: model.rootGroupPermissions.map((p) => prepareGroupPermission(p))
+            };
         },
-        async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootUpdate> {
+        async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootWithoutDocuments> {
             const model = await db.update({
                 where: {
                     id: id
@@ -215,6 +266,36 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 userPermissions: userPermissions.map(prepareUserPermission),
                 groupPermissions: groupPermissions.map(prepareGroupPermission)
             };
+        },
+        async deleteModel(actor: User, id: string) {
+            const record = await this.findModel(actor, id);
+            if (!record) {
+                throw new HTTP404Error('DocumentRoot not found');
+            }
+            if (!actor.isAdmin) {
+                throw new HTTP403Error('Not authorized');
+            }
+
+            const model = await db.delete({
+                where: {
+                    id: id
+                },
+                include: {
+                    rootGroupPermissions: {
+                        select: {
+                            access: true,
+                            studentGroupId: true
+                        }
+                    },
+                    rootUserPermissions: {
+                        select: {
+                            access: true,
+                            userId: true
+                        }
+                    }
+                }
+            });
+            return model;
         }
     });
 }

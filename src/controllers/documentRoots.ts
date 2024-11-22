@@ -1,10 +1,10 @@
 import { RequestHandler } from 'express';
 import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot';
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
-import { Access } from '@prisma/client';
 import { IoRoom } from '../routes/socketEvents';
 import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
 import Document from '../models/Document';
+import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -80,6 +80,28 @@ export const create: RequestHandler<{ id: string }, any, CreateConfig | undefine
 ) => {
     try {
         const documentRoot = await DocumentRoot.createModel(req.params.id, req.body);
+        /**
+         * Notifications to
+         * - the user who created the document
+         * - users with ro/rw access to the document root
+         * - student groups with ro/rw access to the document root
+         */
+        const groupIds = documentRoot.groupPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.groupId);
+        const userIds = documentRoot.userPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.userId);
+        const sharedAccess = RO_RW_DocumentRootAccess.has(documentRoot.sharedAccess)
+            ? IoRoom.ALL
+            : IoRoom.ADMIN;
+        res.notifications = [
+            {
+                event: IoEvent.NEW_RECORD,
+                message: { type: RecordType.DocumentRoot, record: documentRoot },
+                to: [...groupIds, ...userIds, sharedAccess, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            }
+        ];
         res.json(documentRoot);
     } catch (error) {
         next(error);
@@ -116,6 +138,27 @@ export const permissions: RequestHandler<{ id: string }> = async (req, res, next
     try {
         const permissions = await DocumentRoot.getPermissions(req.user!, req.params.id);
         res.json(permissions);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
+    try {
+        const model = await DocumentRoot.deleteModel(req.user!, req.params.id);
+
+        res.notifications = [
+            {
+                event: IoEvent.DELETED_RECORD,
+                message: { type: RecordType.DocumentRoot, id: model.id },
+                to: [
+                    ...model.rootGroupPermissions.map((p) => p.studentGroupId),
+                    ...model.rootUserPermissions.map((u) => u.userId),
+                    RO_RW_DocumentRootAccess.has(model.sharedAccess) ? IoRoom.ALL : IoRoom.ADMIN
+                ]
+            }
+        ];
+        res.json(model);
     } catch (error) {
         next(error);
     }
