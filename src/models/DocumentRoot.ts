@@ -65,7 +65,7 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
     };
 };
 
-const { ADMIN_USER_GROUP_ID } = process.env; 
+const { ADMIN_USER_GROUP_ID } = process.env;
 
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
@@ -185,8 +185,12 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
         },
         async createModel(id: string, config: Config = {}): Promise<ApiDocumentRootWithoutDocuments> {
             const groupPermissions = config.groupPermissions || [];
-            const access = asDocumentRootAccess(config.access); 
-            if (access !== Access.RW_DocumentRoot && ADMIN_USER_GROUP_ID && !groupPermissions.some(gp => gp.groupId === ADMIN_USER_GROUP_ID)) {
+            const access = asDocumentRootAccess(config.access);
+            if (
+                access !== Access.RW_DocumentRoot &&
+                ADMIN_USER_GROUP_ID &&
+                !groupPermissions.some((gp) => gp.groupId === ADMIN_USER_GROUP_ID)
+            ) {
                 groupPermissions.push({
                     groupId: ADMIN_USER_GROUP_ID,
                     access: Access.RW_DocumentRoot
