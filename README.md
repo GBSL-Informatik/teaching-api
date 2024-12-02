@@ -33,7 +33,8 @@ to format all typescript files.
 | `MSAL_CLIENT_ID`      | The client id for the web api from Azure.                                                                                                                                                       |                                                     |
 | `MSAL_TENANT_ID`      | The Tenant ID from your Azure instance                                                                                                                                                          |                                                     |
 | `APP_NAME`            | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey`                                                                                                                         | `xyzTeaching`, default: `twa`                       |
-| `WITH_DEPLOY_PREVIEW` | When set to `true`, the app will allow requests from `https://deploy-preview-\d+--teaching-dev.netlify.app` and use `sameSite=none` instead of strict.                                                                                    |                                                     |
+| `WITH_DEPLOY_PREVIEW` | When set to `true`, the app will allow requests from `https://deploy-preview-\d+--teaching-dev.netlify.app` and use `sameSite=none` instead of strict.                                          |                                                     |
+| `ADMIN_USER_GROUP_ID` | The UUID of the group that should be used as the admin group. For this group a RW-Permission will be always added to a newly created document root when it's access is not RW                   | default: ""                                         |	
 
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).<br/>
