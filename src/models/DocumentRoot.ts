@@ -65,6 +65,8 @@ const prepareUserPermission = (permission: RootUserPermission): ApiUserPermissio
     };
 };
 
+const { ADMIN_USER_GROUP_ID } = process.env;
+
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
         async findModel(actor: User, id: string): Promise<ApiDocumentRoot | null> {
@@ -142,7 +144,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             );
             /**
              * Possibly the user does not have documents in the requested document roots (and thus no docRoot is returned above).
-             * In this case, we have to load these document roots without the document roots.
+             * In this case, we have to load these documentRoots too.
              */
             if (missingDocumentRoots.length > 0 && !ignoreMissingRoots) {
                 const docRoots = await db.findMany({
@@ -182,17 +184,28 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             return response;
         },
         async createModel(id: string, config: Config = {}): Promise<ApiDocumentRootWithoutDocuments> {
-            // TODO: assign a RW-Access for the admin group for each created doc-root!?
+            const groupPermissions = config.groupPermissions || [];
+            const access = asDocumentRootAccess(config.access);
+            if (
+                access !== Access.RW_DocumentRoot &&
+                ADMIN_USER_GROUP_ID &&
+                !groupPermissions.some((gp) => gp.groupId === ADMIN_USER_GROUP_ID)
+            ) {
+                groupPermissions.push({
+                    groupId: ADMIN_USER_GROUP_ID,
+                    access: Access.RW_DocumentRoot
+                });
+            }
             const model = await db.create({
                 data: {
                     id: id,
-                    access: asDocumentRootAccess(config.access),
+                    access: access,
                     sharedAccess: config.sharedAccess || Access.None_DocumentRoot,
                     /* 0 is falsey in JS (since TS strictNullChecks is on, `grouPermissions?.length > 0` is not valid) */
-                    rootGroupPermissions: config.groupPermissions?.length
+                    rootGroupPermissions: groupPermissions.length
                         ? {
                               createMany: {
-                                  data: config.groupPermissions.map((p) => ({
+                                  data: groupPermissions.map((p) => ({
                                       access: asGroupAccess(p.access),
                                       studentGroupId: p.groupId
                                   }))
