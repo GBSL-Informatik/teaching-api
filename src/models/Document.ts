@@ -19,9 +19,9 @@ interface DocumentWithPermission {
     highestPermission: Access;
 }
 
-const extractPermission = (actor: User, document: AccessCheckableDocument): Access | null => {
+const extractPermission = (actorId: string, document: AccessCheckableDocument): Access | null => {
     const hasBaseAccess =
-        document.authorId === actor.id || !NoneAccess.has(document.documentRoot.sharedAccess);
+        document.authorId === actorId || !NoneAccess.has(document.documentRoot.sharedAccess);
     if (!hasBaseAccess) {
         return null;
     }
@@ -32,18 +32,18 @@ const extractPermission = (actor: User, document: AccessCheckableDocument): Acce
         ...document.documentRoot.rootUserPermissions.map((p) => p.access)
     ]);
     const usersPermission = highestAccess(permissions);
-    if (document.authorId === actor.id) {
+    if (document.authorId === actorId) {
         return usersPermission;
     }
 
     return highestAccess(new Set([document.documentRoot.sharedAccess]), usersPermission);
 };
 
-export const prepareDocument = (actor: User, document: AccessCheckableDocument | null) => {
+const prepareDocument = (actorId: string, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
     }
-    const permission = extractPermission(actor, document);
+    const permission = extractPermission(actorId, document);
     if (!permission) {
         return null;
     }
@@ -96,18 +96,32 @@ function Document(db: PrismaClient['document']) {
                         }
                     }
                 })
-                .then((doc) => prepareDocument(actor, doc));
+                .then((doc) => prepareDocument(actor.id, doc));
         },
         async createModel(
             actor: User,
             type: string,
             documentRootId: string,
             data: any,
-            parentId?: string
+            parentId?: string,
+            _onBehalfOfUserId?: string /** this flag enables creation of documents on behalf of another user */
         ): Promise<Response<ApiDocument>> {
             const documentRoot = await DocumentRoot.findModel(actor, documentRootId);
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
+            }
+            const onBehalfOf = !!_onBehalfOfUserId && actor.isAdmin;
+            const authorId = onBehalfOf ? _onBehalfOfUserId : actor.id;
+            if (onBehalfOf && _onBehalfOfUserId !== actor.id) {
+                Logger.info(`🔑 On Behalf Of: ${_onBehalfOfUserId}`);
+                const onBehalfOfUser = await prisma.user.findUnique({
+                    where: {
+                        id: _onBehalfOfUserId
+                    }
+                });
+                if (!onBehalfOfUser) {
+                    throw new HTTP404Error('On Behalf Of user not found');
+                }
             }
             /**
              * Since it is easyier to check wheter a user has permissions to create a model
@@ -138,7 +152,7 @@ function Document(db: PrismaClient['document']) {
                         documentRootId: documentRootId,
                         data: data,
                         parentId: parentId,
-                        authorId: actor.id
+                        authorId: authorId
                     },
                     include: {
                         documentRoot: {
@@ -148,7 +162,7 @@ function Document(db: PrismaClient['document']) {
                                         studentGroup: {
                                             users: {
                                                 some: {
-                                                    id: actor.id
+                                                    id: authorId
                                                 }
                                             }
                                         }
@@ -156,20 +170,22 @@ function Document(db: PrismaClient['document']) {
                                 },
                                 rootUserPermissions: {
                                     where: {
-                                        user: actor
+                                        user: {
+                                            id: authorId
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 })
-                .then((doc) => prepareDocument(actor, doc)!);
+                .then((doc) => prepareDocument(authorId, doc)!);
             /**
              * Check if the user has the required permissions to create the model.
              * If not, delete the model and throw an error.
              */
             const canCreate = RWAccess.has(model.highestPermission);
-            if (!canCreate) {
+            if (!canCreate && !onBehalfOf) {
                 Logger.info(`❌ New Model [${model.document.id}]: ${model.highestPermission}`);
                 db.delete({
                     where: {
@@ -189,17 +205,37 @@ function Document(db: PrismaClient['document']) {
             };
         },
 
-        async updateModel(actor: User, id: string, docData: JsonObject) {
-            const record = await this.findModel(actor, id);
-            if (!record) {
-                throw new HTTP404Error('Document not found');
-            }
-            /**
-             * models can be updated when the user has RW access
-             */
-            const canWrite = RWAccess.has(record.highestPermission);
-            if (!canWrite) {
-                throw new HTTP403Error('Not authorized');
+        async updateModel(
+            actor: User,
+            id: string,
+            docData: JsonObject,
+            _onBehalfOf = false /** this flag enables the modification of documents on behalf of another user */
+        ) {
+            const onBehalfOf = _onBehalfOf && actor.isAdmin;
+            if (onBehalfOf) {
+                /**
+                 * ensure the document exists
+                 */
+                const record = await db.findUnique({
+                    where: {
+                        id: id
+                    }
+                });
+                if (!record) {
+                    throw new HTTP404Error('Document not found');
+                }
+            } else {
+                const record = await this.findModel(actor, id);
+                if (!record) {
+                    throw new HTTP404Error('Document not found');
+                }
+                /**
+                 * models can be updated when the user has RW access
+                 */
+                const canWrite = RWAccess.has(record.highestPermission);
+                if (!canWrite && !onBehalfOf) {
+                    throw new HTTP403Error('Not authorized');
+                }
             }
             /**
              * only the data field is allowed to be updated

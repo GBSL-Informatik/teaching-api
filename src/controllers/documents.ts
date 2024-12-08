@@ -1,4 +1,4 @@
-import { Access, Document as DbDocument } from '@prisma/client';
+import { Document as DbDocument } from '@prisma/client';
 import { RequestHandler } from 'express';
 import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
@@ -15,15 +15,22 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     }
 };
 
-export const create: RequestHandler<any, any, DbDocument> = async (req, res, next) => {
+export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' }> = async (
+    req,
+    res,
+    next
+) => {
     try {
         const { type, documentRootId, data, parentId } = req.body;
+        const { onBehalfOf } = req.query;
+        const onBehalfUser = onBehalfOf === 'true' && req.user!.isAdmin ? req.body.authorId : undefined;
         const { model, permissions } = await Document.createModel(
             req.user!,
             type,
             documentRootId,
             data,
-            !parentId ? undefined : parentId
+            !parentId ? undefined : parentId,
+            onBehalfUser
         );
         /**
          * Notifications to
@@ -49,9 +56,20 @@ export const create: RequestHandler<any, any, DbDocument> = async (req, res, nex
     }
 };
 
-export const update: RequestHandler<{ id: string }, any, { data: JsonObject }> = async (req, res, next) => {
+export const update: RequestHandler<
+    { id: string },
+    any,
+    { data: JsonObject },
+    { onBehalfOf?: 'true' }
+> = async (req, res, next) => {
     try {
-        const model = await Document.updateModel(req.user!, req.params.id, req.body.data);
+        const { onBehalfOf } = req.query;
+        const model = await Document.updateModel(
+            req.user!,
+            req.params.id,
+            req.body.data,
+            onBehalfOf === 'true'
+        );
         /**
          * Notifications to
          * - the user who updated the document
