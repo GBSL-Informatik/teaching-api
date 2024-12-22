@@ -49,7 +49,7 @@ Table documents {
   view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
-Table AllowedAction {
+Table allowed_actions {
   id String [pk]
   documentType String [not null]
   action String [not null]

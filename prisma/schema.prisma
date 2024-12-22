@@ -78,6 +78,7 @@ model AllowedAction {
   action       String
 
   @@unique([documentType, action])
+  @@map("allowed_actions")
 }
 
 model DocumentRoot {
