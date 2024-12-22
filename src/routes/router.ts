@@ -23,7 +23,8 @@ import {
     create as createDocument,
     destroy as deleteDocument,
     find as findDocument,
-    update as updateDocument
+    update as updateDocument,
+    linkTo as linkDocument
 } from '../controllers/documents';
 import {
     create as createDocumentRoot,
@@ -91,10 +92,11 @@ router.post('/documents', createDocument);
 router.get('/documents', allDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
+router.put('/documents/:id/linkTo/:parentId', linkDocument);
 router.delete('/documents/:id', deleteDocument);
 
-router.get('/admin/allowdActions', allowedActions);
-router.post('/admin/allowdActions', createAllowedAction);
-router.delete('/admin/allowdActions/:id', destroyAllowedAction);
+router.get('/admin/allowedActions', allowedActions);
+router.post('/admin/allowedActions', createAllowedAction);
+router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 
 export default router;
