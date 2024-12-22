@@ -35,6 +35,7 @@ import {
     allDocuments,
     destroy as deleteDocumentRoot
 } from '../controllers/documentRoots';
+import { allowedActions, createAllowedAction, destroyAllowedAction } from '../controllers/admins';
 
 // initialize router
 const router = express.Router();
@@ -91,5 +92,9 @@ router.get('/documents', allDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
 router.delete('/documents/:id', deleteDocument);
+
+router.get('/admin/allowdActions', allowedActions);
+router.post('/admin/allowdActions', createAllowedAction);
+router.delete('/admin/allowdActions/:id', destroyAllowedAction);
 
 export default router;

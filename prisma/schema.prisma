@@ -19,67 +19,75 @@ datasource db {
 }
 
 model User {
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                        String                         @unique
-  firstName                    String                         @map("first_name")
-  lastName                     String                         @map("last_name")
-  isAdmin                      Boolean                        @default(false) @map("is_admin")
-  createdAt                    DateTime                       @default(now()) @map("created_at")
-  updatedAt                    DateTime                       @default(now()) @updatedAt @map("updated_at")
-  documents                    Document[]                     @relation("documents")
-  rootUserPermissions          RootUserPermission[]           @relation("root_user_to_user_permission")
-  studentGroups                StudentGroup[]                 @relation("StudentGroupToUser")
-  view_DocumentUserPermissions view_DocumentUserPermissions[]
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                           String                            @unique
+  firstName                       String                            @map("first_name")
+  lastName                        String                            @map("last_name")
+  isAdmin                         Boolean                           @default(false) @map("is_admin")
+  createdAt                       DateTime                          @default(now()) @map("created_at")
+  updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
+  documents                       Document[]                        @relation("documents")
+  rootUserPermissions             RootUserPermission[]              @relation("root_user_to_user_permission")
+  studentGroups                   StudentGroup[]                    @relation("StudentGroupToUser")
+  view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@map("users")
 }
 
 model StudentGroup {
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                         String                         @default("")
-  description                  String                         @default("")
-  parentId                     String?                        @map("parent_id") @db.Uuid
-  createdAt                    DateTime                       @default(now()) @map("created_at")
-  updatedAt                    DateTime                       @default(now()) @updatedAt @map("updated_at")
-  rootGroupPermissions         RootGroupPermission[]          @relation("root_group_to_student_group_permission")
-  parent                       StudentGroup?                  @relation("parent_student_group", fields: [parentId], references: [id], onDelete: Cascade)
-  children                     StudentGroup[]                 @relation("parent_student_group")
-  users                        User[]                         @relation("StudentGroupToUser")
-  view_DocumentUserPermissions view_DocumentUserPermissions[]
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                            String                            @default("")
+  description                     String                            @default("")
+  parentId                        String?                           @map("parent_id") @db.Uuid
+  createdAt                       DateTime                          @default(now()) @map("created_at")
+  updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
+  rootGroupPermissions            RootGroupPermission[]             @relation("root_group_to_student_group_permission")
+  parent                          StudentGroup?                     @relation("parent_student_group", fields: [parentId], references: [id], onDelete: Cascade)
+  children                        StudentGroup[]                    @relation("parent_student_group")
+  users                           User[]                            @relation("StudentGroupToUser")
+  view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@map("student_groups")
 }
 
 model Document {
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  authorId                     String                         @map("author_id") @db.Uuid
-  type                         String
-  data                         Json
-  parentId                     String?                        @map("parent_id") @db.Uuid
-  documentRootId               String                         @map("document_root_id") @db.Uuid
-  createdAt                    DateTime                       @default(now()) @map("created_at")
-  updatedAt                    DateTime                       @default(now()) @updatedAt @map("updated_at")
-  author                       User                           @relation("documents", fields: [authorId], references: [id], onDelete: Cascade)
-  documentRoot                 DocumentRoot                   @relation("documents", fields: [documentRootId], references: [id], onDelete: Cascade)
-  parent                       Document?                      @relation("connected_documents", fields: [parentId], references: [id], onDelete: Cascade)
-  children                     Document[]                     @relation("connected_documents")
-  view_DocumentUserPermissions view_DocumentUserPermissions[]
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId                        String                            @map("author_id") @db.Uuid
+  type                            String
+  data                            Json
+  parentId                        String?                           @map("parent_id") @db.Uuid
+  documentRootId                  String                            @map("document_root_id") @db.Uuid
+  createdAt                       DateTime                          @default(now()) @map("created_at")
+  updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
+  author                          User                              @relation("documents", fields: [authorId], references: [id], onDelete: Cascade)
+  documentRoot                    DocumentRoot                      @relation("documents", fields: [documentRootId], references: [id], onDelete: Cascade)
+  parent                          Document?                         @relation("connected_documents", fields: [parentId], references: [id], onDelete: Cascade)
+  children                        Document[]                        @relation("connected_documents")
+  view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@index([authorId], map: "document_author_id_index")
   @@map("documents")
 }
 
+model AllowedAction {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentType String @map("document_type")
+  action       String
+
+  @@unique([documentType, action])
+}
+
 model DocumentRoot {
-  id                           String                         @id @db.Uuid
-  access                       Access                         @default(RW_DocumentRoot)
-  sharedAccess                 Access                         @default(None_DocumentRoot) @map("shared_access")
-  documents                    Document[]                     @relation("documents")
-  rootGroupPermissions         RootGroupPermission[]          @relation("root_group_to_document_root_permission")
-  rootUserPermissions          RootUserPermission[]           @relation("root_user_to_document_root_permission")
-  view_DocumentUserPermissions view_DocumentUserPermissions[]
+  id                              String                            @id @db.Uuid
+  access                          Access                            @default(RW_DocumentRoot)
+  sharedAccess                    Access                            @default(None_DocumentRoot) @map("shared_access")
+  documents                       Document[]                        @relation("documents")
+  rootGroupPermissions            RootGroupPermission[]             @relation("root_group_to_document_root_permission")
+  rootUserPermissions             RootUserPermission[]              @relation("root_user_to_document_root_permission")
+  view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@index([id], map: "document_root_id_index")
@@ -87,26 +95,26 @@ model DocumentRoot {
 }
 
 model RootGroupPermission {
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  access                       Access
-  studentGroupId               String                         @map("student_group_id") @db.Uuid
-  documentRootId               String                         @map("document_root_id") @db.Uuid
-  documentRoot                 DocumentRoot                   @relation("root_group_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
-  studentGroup                 StudentGroup                   @relation("root_group_to_student_group_permission", fields: [studentGroupId], references: [id], onDelete: Cascade)
-  view_DocumentUserPermissions view_DocumentUserPermissions[]
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  access                          Access
+  studentGroupId                  String                            @map("student_group_id") @db.Uuid
+  documentRootId                  String                            @map("document_root_id") @db.Uuid
+  documentRoot                    DocumentRoot                      @relation("root_group_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
+  studentGroup                    StudentGroup                      @relation("root_group_to_student_group_permission", fields: [studentGroupId], references: [id], onDelete: Cascade)
+  view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@map("root_group_permissions")
 }
 
 model RootUserPermission {
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  access                       Access
-  userId                       String                         @map("user_id") @db.Uuid
-  documentRootId               String                         @map("document_root_id") @db.Uuid
-  documentRoot                 DocumentRoot                   @relation("root_user_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
-  user                         User                           @relation("root_user_to_user_permission", fields: [userId], references: [id], onDelete: Cascade)
-  view_DocumentUserPermissions view_DocumentUserPermissions[]
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  access                          Access
+  userId                          String                            @map("user_id") @db.Uuid
+  documentRootId                  String                            @map("document_root_id") @db.Uuid
+  documentRoot                    DocumentRoot                      @relation("root_user_to_document_root_permission", fields: [documentRootId], references: [id], onDelete: Cascade)
+  user                            User                              @relation("root_user_to_user_permission", fields: [userId], references: [id], onDelete: Cascade)
+  view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
   @@index([documentRootId], map: "root_user_permissions_document_root_id_index")
@@ -122,7 +130,6 @@ model Sessions {
   @@index([expire], map: "IDX_session_expire")
   @@map("sessions")
 }
-
 
 // This is a view ranked by the highest access rank.
 // This is used to create the DocumentUserPermissions view and should
@@ -147,7 +154,6 @@ view view_AllDocumentUserPermissions {
   @@map("view__all_document_user_permissions")
 }
 
-
 view view_DocumentUserPermissions {
   documentRootId        String               @map("document_root_id") @db.Uuid
   userId                String               @map("user_id") @db.Uuid
@@ -166,7 +172,6 @@ view view_DocumentUserPermissions {
   @@unique([documentRootId, userId, access, documentId])
   @@map("view__document_user_permissions")
 }
-
 
 view view_UsersDocuments {
   userId           String @map("user_id") @db.Uuid
