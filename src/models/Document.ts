@@ -39,7 +39,7 @@ const extractPermission = (actorId: string, document: AccessCheckableDocument): 
     return highestAccess(new Set([document.documentRoot.sharedAccess]), usersPermission);
 };
 
-const prepareDocument = (actorId: string, document: AccessCheckableDocument | null) => {
+export const prepareDocument = (actorId: string, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
     }

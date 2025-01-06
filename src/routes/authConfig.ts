@@ -69,6 +69,15 @@ const authConfig: Config = {
                 }
             ]
         },
+        admin: {
+            path: '/admin',
+            access: [
+                {
+                    methods: ['DELETE', 'GET', 'POST', 'PUT'],
+                    adminOnly: true
+                }
+            ]
+        },
         users: {
             path: '/users',
             access: [

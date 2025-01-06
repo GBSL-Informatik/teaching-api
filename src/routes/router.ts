@@ -23,7 +23,8 @@ import {
     create as createDocument,
     destroy as deleteDocument,
     find as findDocument,
-    update as updateDocument
+    update as updateDocument,
+    linkTo as linkDocument
 } from '../controllers/documents';
 import {
     create as createDocumentRoot,
@@ -35,6 +36,7 @@ import {
     allDocuments,
     destroy as deleteDocumentRoot
 } from '../controllers/documentRoots';
+import { allowedActions, createAllowedAction, destroyAllowedAction } from '../controllers/admins';
 
 // initialize router
 const router = express.Router();
@@ -90,6 +92,11 @@ router.post('/documents', createDocument);
 router.get('/documents', allDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
+router.put('/documents/:id/linkTo/:parentId', linkDocument);
 router.delete('/documents/:id', deleteDocument);
+
+router.get('/admin/allowedActions', allowedActions);
+router.post('/admin/allowedActions', createAllowedAction);
+router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 
 export default router;

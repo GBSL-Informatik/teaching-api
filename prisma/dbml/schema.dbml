@@ -49,6 +49,16 @@ Table documents {
   view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
 }
 
+Table allowed_actions {
+  id String [pk]
+  documentType String [not null]
+  action String [not null]
+
+  indexes {
+    (documentType, action) [unique]
+  }
+}
+
 Table document_roots {
   id String [pk]
   access Access [not null, default: 'RW_DocumentRoot']
