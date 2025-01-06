@@ -6,7 +6,7 @@ import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes
 import { IoRoom } from '../routes/socketEvents';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy';
 import prisma from '../prisma';
-import { HTTP401Error, HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
