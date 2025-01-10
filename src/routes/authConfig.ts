@@ -157,6 +157,15 @@ const authConfig: Config = {
                     adminOnly: true
                 }
             ]
+        },
+        githubToken: {
+            path: '/github-token',
+            access: [
+                {
+                    methods: ['GET'],
+                    adminOnly: false
+                }
+            ]
         }
     }
 };

@@ -214,8 +214,8 @@ export const configure = (_app: typeof app) => {
             })(req, res, next);
         },
         routeGuard(AccessRules), // route guard middleware
-        router, // the router with all the routes
-        githubRouter
+        router // the router with all the routes
+        // githubRouter
     );
 };
 
