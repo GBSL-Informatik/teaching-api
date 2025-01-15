@@ -157,6 +157,15 @@ const authConfig: Config = {
                     adminOnly: true
                 }
             ]
+        },
+        githubToken: {
+            path: '/cms',
+            access: [
+                {
+                    methods: ['GET', 'PUT'],
+                    adminOnly: false
+                }
+            ]
         }
     }
 };
