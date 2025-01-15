@@ -201,6 +201,13 @@ dokku nginx:set dev-teaching-api x-forwarded-proto-value '$http_x_forwarded_prot
 dokku nginx:set dev-teaching-api x-forwarded-for-value '$http_x_forwarded_for'
 dokku nginx:set dev-teaching-api x-forwarded-port-value '$http_x_forwarded_port'
 
+# backup db
+# dokku postgres:backup-auth dev-teaching-api <aws-access-key-id> <aws-secret-access-key> <aws-default-region> <aws-signature-version> <endpoint-url> 
+dokku postgres:backup-auth dev-teaching-api <aws-access-key-id> <aws-secret-access-key> auto s3v4 https://92bdb68939987bdbf6207ccde70891de.eu.r2.cloudflarestorage.com
+dokku postgres:backup dev-teaching-api <bucket-name>
+dokku postgres:backup-set-encryption dev-teaching-api <GPG-Key>
+dokku postgres:backup-schedule dev-teaching-api "0 3 * * *" fs-informatik # daily backup at 3am
+
 
 ######### on local machine #########
 # 1. add the remote to your project:
