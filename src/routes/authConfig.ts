@@ -159,10 +159,10 @@ const authConfig: Config = {
             ]
         },
         githubToken: {
-            path: '/github-token',
+            path: '/cms',
             access: [
                 {
-                    methods: ['GET'],
+                    methods: ['GET', 'PUT'],
                     adminOnly: false
                 }
             ]

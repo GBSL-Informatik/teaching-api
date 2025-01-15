@@ -1,4 +1,4 @@
-import { AllowedAction, Prisma, User } from '@prisma/client';
+import { AllowedAction, CmsSettings, Prisma, User } from '@prisma/client';
 import { ApiDocument } from '../models/Document';
 import { ApiUserPermission } from '../models/RootUserPermission';
 import { ApiGroupPermission } from '../models/RootGroupPermission';
@@ -18,7 +18,8 @@ export enum RecordType {
     UserPermission = 'UserPermission',
     GroupPermission = 'GroupPermission',
     DocumentRoot = 'DocumentRoot',
-    AllowedAction = 'AllowedAction'
+    AllowedAction = 'AllowedAction',
+    CmsSettings = 'CmsSettings'
 }
 
 type TypeRecordMap = {
@@ -28,6 +29,7 @@ type TypeRecordMap = {
     [RecordType.GroupPermission]: ApiGroupPermission;
     [RecordType.DocumentRoot]: ApiDocumentRootWithoutDocuments;
     [RecordType.AllowedAction]: AllowedAction;
+    [RecordType.CmsSettings]: CmsSettings;
 };
 
 export interface NewRecord<T extends RecordType> {

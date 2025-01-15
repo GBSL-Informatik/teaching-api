@@ -168,6 +168,25 @@ this will generate
 
 the docs will be publically available under `/prisma/index.html`.
 
+### Undo last migration (dev mode only!!!!)
+# connect to current db
+```bash
+psql -d postgres -h localhost -U teaching_website -d teaching_website
+```
+
+# delete last migration
+```sql
+DELETE FROM _prisma_migrations WHERE started_at = (SELECT MAX(started_at)FROM _prisma_migrations);
+```
+
+# undo your migration, e.g. drop a view or remove a column
+```sql
+drop view view_name; -- drop view
+ALTER TABLE table_name DROP COLUMN column_name; -- drop column
+```
+
+# disconnect
+\q
 
 ## Deployment
 ### PostgreSQL

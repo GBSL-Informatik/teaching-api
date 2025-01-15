@@ -39,6 +39,11 @@ import {
 import { allowedActions, createAllowedAction, destroyAllowedAction } from '../controllers/admins';
 import Logger from '../utils/logger';
 import { HTTP400Error } from '../utils/errors/Errors';
+import {
+    githubToken,
+    find as findCmsSettings,
+    update as updateCmsSettings
+} from '../controllers/cmsSettings';
 
 // initialize router
 const router = express.Router();
@@ -101,35 +106,7 @@ router.get('/admin/allowedActions', allowedActions);
 router.post('/admin/allowedActions', createAllowedAction);
 router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 
-const githubToken: RequestHandler<any, any, any, { code: string }> = async (req, res, next) => {
-    Logger.info('githubToken');
-    console.log('here');
-    try {
-        const { code } = req.query;
-        const response = await fetch('https://github.com/login/oauth/access_token', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                client_id: process.env.GITHUB_CLIENT_ID,
-                client_secret: process.env.GITHUB_CLIENT_SECRET,
-                // Additional parameters as needed
-                redirect_uri: process.env.GITHUB_REDIRECT_URI,
-                scope: 'repo', // Requested permissions
-                code: code
-            })
-        });
-        const githubToken = await response.json();
-        if (githubToken.error) {
-            throw new HTTP400Error(githubToken.error_description);
-        }
-        res.status(200).json(githubToken);
-    } catch (error) {
-        next(error);
-    }
-};
-
-router.get('/github-token', githubToken);
+router.get('/cms/settings', findCmsSettings);
+router.put('/cms/settings', updateCmsSettings);
+router.get('/cms/github-token', githubToken);
 export default router;
