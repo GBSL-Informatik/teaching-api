@@ -78,23 +78,23 @@ To set up a local dev database, run
 ```bash
 psql postgres # sudo -u postgres psql
 
-postgres=> CREATE ROLE teaching_website WITH LOGIN PASSWORD 'teaching_website';
-postgres=> ALTER ROLE teaching_website CREATEDB;
+postgres=> CREATE ROLE teaching_api WITH LOGIN PASSWORD 'teaching_api';
+postgres=> ALTER ROLE teaching_api CREATEDB;
 postgres=> \du
 postgres=> \q
 
-psql -d postgres -h localhost -U teaching_website
+psql -d postgres -h localhost -U teaching_api
 
-postgres=> CREATE DATABASE teaching_website;
-postgres=> CREATE DATABASE teaching_website_test; # for testing
+postgres=> CREATE DATABASE teaching_api;
+postgres=> CREATE DATABASE teaching_api_test; # for testing
 postgres=> \list
-postgres=> \c teaching_website
+postgres=> \c teaching_api
 ```
 
 make sure to set the db-name and the password in the `.env` file:
 
 ```bash
-DATABASE_URL="postgresql://teaching_website:teaching_website@localhost:5432/teaching_website"
+DATABASE_URL="postgresql://teaching_api:teaching_api@localhost:5432/teaching_api"
 ```
 
 #### Create the Database
