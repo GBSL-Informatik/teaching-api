@@ -151,6 +151,7 @@ function Document(db: PrismaClient['document']) {
                     }
                 });
                 if (mainDoc) {
+                    // the frontend may depend on the error message (try to not change: status code + [not unique])
                     throw new HTTP403Error('[not unique] Main document already exists for this user');
                 }
             }
