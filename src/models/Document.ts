@@ -151,6 +151,9 @@ function Document(db: PrismaClient['document']) {
                     }
                 });
                 if (mainDoc) {
+                    Logger.warn(
+                        `[not unique]: Main document fro documentRoot "${documentRootId}" already exists for user "${authorId}"`
+                    );
                     // the frontend may depend on the error message (try to not change: status code + [not unique])
                     throw new HTTP403Error('[not unique] Main document already exists for this user');
                 }
