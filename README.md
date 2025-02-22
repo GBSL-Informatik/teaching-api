@@ -168,6 +168,25 @@ this will generate
 
 the docs will be publically available under `/prisma/index.html`.
 
+### Undo last migration (dev mode only!!!!)
+# connect to current db
+```bash
+psql -d postgres -h localhost -U teaching_website -d teaching_website
+```
+
+# delete last migration
+```sql
+DELETE FROM _prisma_migrations WHERE started_at = (SELECT MAX(started_at)FROM _prisma_migrations);
+```
+
+# undo your migration, e.g. drop a view or remove a column
+```sql
+drop view view_name; -- drop view
+ALTER TABLE table_name DROP COLUMN column_name; -- drop column
+```
+
+# disconnect
+\q
 
 ## Deployment
 ### PostgreSQL
@@ -200,6 +219,13 @@ dokku nginx:set dev-teaching-api client-max-body-size 5m
 dokku nginx:set dev-teaching-api x-forwarded-proto-value '$http_x_forwarded_proto'
 dokku nginx:set dev-teaching-api x-forwarded-for-value '$http_x_forwarded_for'
 dokku nginx:set dev-teaching-api x-forwarded-port-value '$http_x_forwarded_port'
+
+# backup db
+# dokku postgres:backup-auth dev-teaching-api <aws-access-key-id> <aws-secret-access-key> <aws-default-region> <aws-signature-version> <endpoint-url> 
+dokku postgres:backup-auth dev-teaching-api <aws-access-key-id> <aws-secret-access-key> auto s3v4 https://92bdb68939987bdbf6207ccde70891de.eu.r2.cloudflarestorage.com
+dokku postgres:backup dev-teaching-api <bucket-name>
+dokku postgres:backup-set-encryption dev-teaching-api <GPG-Key>
+dokku postgres:backup-schedule dev-teaching-api "0 3 * * *" fs-informatik # daily backup at 3am
 
 
 ######### on local machine #########

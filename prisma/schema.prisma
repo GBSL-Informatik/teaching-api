@@ -31,8 +31,28 @@ model User {
   studentGroups                   StudentGroup[]                    @relation("StudentGroupToUser")
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
+  cmsSettings                     CmsSettings?
 
   @@map("users")
+}
+
+model CmsSettings {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @map("user_id") @db.Uuid
+
+  activeBranch String? @map("active_branch")
+  activePath   String? @map("active_path")
+
+  token                 String?   @map("token")
+  tokenExpiresAt        DateTime? @map("token_expires_at")
+  refreshToken          String?   @map("refresh_token")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("cms_settings")
 }
 
 model StudentGroup {
