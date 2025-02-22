@@ -17,14 +17,15 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     }
 };
 
-export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' }> = async (
-    req,
-    res,
-    next
-) => {
+export const create: RequestHandler<
+    any,
+    any,
+    DbDocument,
+    { onBehalfOf?: 'true'; uniqueMain?: 'true' }
+> = async (req, res, next) => {
     try {
         const { type, documentRootId, data, parentId } = req.body;
-        const { onBehalfOf } = req.query;
+        const { onBehalfOf, uniqueMain } = req.query;
         const onBehalfUser = onBehalfOf === 'true' && req.user!.isAdmin ? req.body.authorId : undefined;
         const { model, permissions } = await Document.createModel(
             req.user!,
@@ -32,6 +33,7 @@ export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' 
             documentRootId,
             data,
             !parentId ? undefined : parentId,
+            uniqueMain === 'true',
             onBehalfUser
         );
         /**

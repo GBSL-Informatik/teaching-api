@@ -104,6 +104,7 @@ function Document(db: PrismaClient['document']) {
             documentRootId: string,
             data: any,
             parentId?: string,
+            uniqueMain?: boolean,
             _onBehalfOfUserId?: string /** this flag enables creation of documents on behalf of another user */
         ): Promise<Response<ApiDocument>> {
             const documentRoot = await DocumentRoot.findModel(actor, documentRootId);
@@ -123,10 +124,6 @@ function Document(db: PrismaClient['document']) {
                     throw new HTTP404Error('On Behalf Of user not found');
                 }
             }
-            /**
-             * Since it is easyier to check wheter a user has permissions to create a model
-             * when the model actually exists, we create the model first and then check the permissions.
-             */
             if (parentId) {
                 const parent = await this.findModel(actor, parentId);
                 if (!parent) {
@@ -145,6 +142,26 @@ function Document(db: PrismaClient['document']) {
                     throw new HTTP403Error('Insufficient access permission');
                 }
             }
+            if (uniqueMain) {
+                const mainDoc = await db.findFirst({
+                    where: {
+                        documentRootId: documentRootId,
+                        authorId: authorId,
+                        type: type
+                    }
+                });
+                if (mainDoc) {
+                    Logger.warn(
+                        `[not unique]: Main document fro documentRoot "${documentRootId}" already exists for user "${authorId}"`
+                    );
+                    // the frontend may depend on the error message (try to not change: status code + [not unique])
+                    throw new HTTP403Error('[not unique] Main document already exists for this user');
+                }
+            }
+            /**
+             * Since it is easyier to check wheter a user has permissions to create a model
+             * when the model actually exists, we create the model first and then check the permissions.
+             */
             const model = await db
                 .create({
                     data: {
