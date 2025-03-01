@@ -37,6 +37,11 @@ import {
     destroy as deleteDocumentRoot
 } from '../controllers/documentRoots';
 import { allowedActions, createAllowedAction, destroyAllowedAction } from '../controllers/admins';
+import {
+    githubToken,
+    find as findCmsSettings,
+    update as updateCmsSettings
+} from '../controllers/cmsSettings';
 
 // initialize router
 const router = express.Router();
@@ -99,4 +104,7 @@ router.get('/admin/allowedActions', allowedActions);
 router.post('/admin/allowedActions', createAllowedAction);
 router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 
+router.get('/cms/settings', findCmsSettings);
+router.put('/cms/settings', updateCmsSettings);
+router.get('/cms/github-token', githubToken);
 export default router;

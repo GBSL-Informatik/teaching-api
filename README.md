@@ -21,21 +21,23 @@ to format all typescript files.
 
 ## Environment Variables
 
-| Variable              | Description                                                                                                                                                                                     | Example                                             |
-|:----------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------|
-| `DATABASE_URL`        | The URL to connect to the PostgreSQL database.                                                                                                                                                  | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
-| `USER_EMAIL`          | The email of the user to be created on seeding.                                                                                                                                                 | `reto.holz@gbsl.ch`                                 |
-| `USER_ID`             | The UUID of the user to be created on seeding. \*                                                                                                                                               | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
-| `NO_AUTH`             | If set (and not running `production` mode), clients can authenticate as any user by supplying `{'email': 'some@email.ch'}` in the `Auhorization` header, for any user email in the database\*\* | `NO_AUTH=true`                                      |
-| `PORT`                | (optional) The port the server should listen on.                                                                                                                                                | `3002` (default)                                    |
-| `FRONTEND_URL`        | The URL of the frontend.                                                                                                                                                                        | `http://localhost:3000`                             |
-| `SESSION_SECRET`      | The secret for the session cookie.\*\*\*                                                                                                                                                        | `secret`                                            |
-| `MSAL_CLIENT_ID`      | The client id for the web api from Azure.                                                                                                                                                       |                                                     |
-| `MSAL_TENANT_ID`      | The Tenant ID from your Azure instance                                                                                                                                                          |                                                     |
-| `APP_NAME`            | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey`                                                                                                                         | `xyzTeaching`, default: `twa`                       |
-| `WITH_DEPLOY_PREVIEW` | When set to `true`, the app will allow requests from `https://deploy-preview-\d+--teaching-dev.netlify.app` and use `sameSite=none` instead of strict.                                          |                                                     |
-| `ADMIN_USER_GROUP_ID` | The UUID of the group that should be used as the admin group. For this group a RW-Permission will be always added to a newly created document root when it's access is not RW                   | default: ""                                         |	
-
+| Variable               | Description                                                                                                                                                                                     | Example                                             |
+|:-----------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------|
+| `DATABASE_URL`         | The URL to connect to the PostgreSQL database.                                                                                                                                                  | `postgresql://{user}:{pw}@localhost:5432/{db_name}` |
+| `USER_EMAIL`           | The email of the user to be created on seeding.                                                                                                                                                 | `reto.holz@gbsl.ch`                                 |
+| `USER_ID`              | The UUID of the user to be created on seeding. \*                                                                                                                                               | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
+| `NO_AUTH`              | If set (and not running `production` mode), clients can authenticate as any user by supplying `{'email': 'some@email.ch'}` in the `Auhorization` header, for any user email in the database\*\* | `NO_AUTH=true`                                      |
+| `PORT`                 | (optional) The port the server should listen on.                                                                                                                                                | `3002` (default)                                    |
+| `FRONTEND_URL`         | The URL of the frontend.                                                                                                                                                                        | `http://localhost:3000`                             |
+| `SESSION_SECRET`       | The secret for the session cookie.\*\*\*                                                                                                                                                        | `secret`                                            |
+| `MSAL_CLIENT_ID`       | The client id for the web api from Azure.                                                                                                                                                       |                                                     |
+| `MSAL_TENANT_ID`       | The Tenant ID from your Azure instance                                                                                                                                                          |                                                     |
+| `APP_NAME`             | The name of the app. Used for the cookie name prefix `{APP_NAME}ApiKey`                                                                                                                         | `xyzTeaching`, default: `twa`                       |
+| `WITH_DEPLOY_PREVIEW`  | When set to `true`, the app will allow requests from `https://deploy-preview-\d+--teaching-dev.netlify.app` and use `sameSite=none` instead of strict.                                          |                                                     |
+| `ADMIN_USER_GROUP_ID`  | The UUID of the group that should be used as the admin group. For this group a RW-Permission will be always added to a newly created document root when it's access is not RW                   | default: ""                                         |
+| `GITHUB_CLIENT_SECRET` | Used for the CMS to work properly. Register an app under https://github.com/settings/apps.                                                                                                      |                                                     |
+| `GITHUB_CLIENT_ID`     |                                                                                                                                                                                                 |                                                     |
+| `GITHUB_REDIRECT_URI`  |                                                                                                                                                                                                 |                                                     |
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).<br/>
 \*\* To change users, clear LocalStorage to delete the API key created upon first authentication.<br/>
@@ -168,6 +170,25 @@ this will generate
 
 the docs will be publically available under `/prisma/index.html`.
 
+### Undo last migration (dev mode only!!!!)
+# connect to current db
+```bash
+psql -d postgres -h localhost -U teaching_website -d teaching_website
+```
+
+# delete last migration
+```sql
+DELETE FROM _prisma_migrations WHERE started_at = (SELECT MAX(started_at)FROM _prisma_migrations);
+```
+
+# undo your migration, e.g. drop a view or remove a column
+```sql
+drop view view_name; -- drop view
+ALTER TABLE table_name DROP COLUMN column_name; -- drop column
+```
+
+# disconnect
+\q
 
 ## Deployment
 ### PostgreSQL
@@ -201,6 +222,13 @@ dokku nginx:set dev-teaching-api x-forwarded-proto-value '$http_x_forwarded_prot
 dokku nginx:set dev-teaching-api x-forwarded-for-value '$http_x_forwarded_for'
 dokku nginx:set dev-teaching-api x-forwarded-port-value '$http_x_forwarded_port'
 
+# backup db
+# dokku postgres:backup-auth dev-teaching-api <aws-access-key-id> <aws-secret-access-key> <aws-default-region> <aws-signature-version> <endpoint-url> 
+dokku postgres:backup-auth dev-teaching-api <aws-access-key-id> <aws-secret-access-key> auto s3v4 https://92bdb68939987bdbf6207ccde70891de.eu.r2.cloudflarestorage.com
+dokku postgres:backup dev-teaching-api <bucket-name>
+dokku postgres:backup-set-encryption dev-teaching-api <GPG-Key>
+dokku postgres:backup-schedule dev-teaching-api "0 3 * * *" fs-informatik # daily backup at 3am
+
 
 ######### on local machine #########
 # 1. add the remote to your project:
@@ -224,3 +252,13 @@ If the API and the Database are running on the same server, you can improve the 
 > Authentication Error: When your API can not authenticate requests
 >  - set the debug level in authConfig to 'info' and check the logs
 >  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! **not** in the Frontend's manifest, there it must still be `null` !!)
+
+
+## CMS
+
+For the cms to work properly, you need to register a github app under https://github.com/settings/apps. The following settings are required:
+
+- Callback URL:
+    - `http://localhost:3000/gh-callback` for local development
+    - `https://teaching-dev.domain.ch/gh-callback` for the productive environment
+    - No whitelist-URL's can be added, so you'd need to add for each deploy-preview a separate url...

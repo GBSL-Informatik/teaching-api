@@ -15,6 +15,21 @@ Table users {
   studentGroups student_groups [not null]
   view_DocumentUserPermissions view__document_user_permissions [not null]
   view_AllDocumentUserPermissions view__all_document_user_permissions [not null]
+  cmsSettings cms_settings
+}
+
+Table cms_settings {
+  id String [pk]
+  user users [not null]
+  userId String [unique, not null]
+  activeBranch String
+  activePath String
+  token String
+  tokenExpiresAt DateTime
+  refreshToken String
+  refreshTokenExpiresAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 }
 
 Table student_groups {
@@ -174,6 +189,8 @@ Enum Access {
   RW_User
   None_User
 }
+
+Ref: cms_settings.userId - users.id [delete: Cascade]
 
 Ref: student_groups.parentId - student_groups.id [delete: Cascade]
 
