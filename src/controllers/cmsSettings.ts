@@ -15,11 +15,6 @@ export const find: RequestHandler = async (req, res, next) => {
 export const update: RequestHandler<any, any, Partial<DbCmsSettings>> = async (req, res, next) => {
     try {
         const model = await CmsSettings.updateModel(req.user!, req.body);
-
-        /**
-         * Notifications to All users since the document root is a global entity.
-         * --> even with restricted access, the document root can be seen by all users.
-         */
         const change: ChangedRecord<RecordType.CmsSettings> = {
             type: RecordType.CmsSettings,
             record: model
