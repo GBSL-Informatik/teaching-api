@@ -7,7 +7,6 @@ import cors from 'cors';
 import morganMiddleware from './middleware/morgan.middleware';
 import passport from 'passport';
 import router from './routes/router';
-import githubRouter from './routes/router.github';
 import routeGuard, { PUBLIC_GET_ACCESS, PUBLIC_GET_ACCESS_REGEX, createAccessRules } from './auth/guard';
 import authConfig from './routes/authConfig';
 import { type User } from '@prisma/client';
@@ -215,7 +214,6 @@ export const configure = (_app: typeof app) => {
         },
         routeGuard(AccessRules), // route guard middleware
         router // the router with all the routes
-        // githubRouter
     );
 };
 
