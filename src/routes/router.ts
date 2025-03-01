@@ -1,4 +1,4 @@
-import express, { RequestHandler } from 'express';
+import express from 'express';
 import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users';
 import {
     all as allStudentGroups,
@@ -37,8 +37,6 @@ import {
     destroy as deleteDocumentRoot
 } from '../controllers/documentRoots';
 import { allowedActions, createAllowedAction, destroyAllowedAction } from '../controllers/admins';
-import Logger from '../utils/logger';
-import { HTTP400Error } from '../utils/errors/Errors';
 import {
     githubToken,
     find as findCmsSettings,
