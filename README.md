@@ -252,3 +252,13 @@ If the API and the Database are running on the same server, you can improve the 
 > Authentication Error: When your API can not authenticate requests
 >  - set the debug level in authConfig to 'info' and check the logs
 >  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! **not** in the Frontend's manifest, there it must still be `null` !!)
+
+
+## CMS
+
+For the cms to work properly, you need to register a github app under https://github.com/settings/apps. The following settings are required:
+
+- Callback URL:
+    - `http://localhost:3000/gh-callback` for local development
+    - `https://teaching-dev.domain.ch/gh-callback` for the productive environment
+    - No whitelist-URL's can be added, so you'd need to add for each deploy-preview a separate url...
