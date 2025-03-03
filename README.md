@@ -216,7 +216,10 @@ dokku config:set --no-restart dev-teaching-api DOKKU_LETSENCRYPT_EMAIL="foo@bar.
 dokku config:set dev-teaching-api SESSION_SECRET="$(openssl rand -base64 32)"
 dokku config:set dev-teaching-api FRONTEND_URL="https://..."
 
-dokku nginx:set dev-teaching-api client-max-body-size 5m
+mkdir /home/dokku/dev-teaching-api/nginx.conf.d/
+echo 'client_max_body_size 5m;' > /home/dokku/dev-teaching-api/nginx.conf.d/upload.conf
+chown dokku:dokku /home/dokku/dev-teaching-api/nginx.conf.d/upload.conf
+service nginx reload
 
 dokku nginx:set dev-teaching-api x-forwarded-proto-value '$http_x_forwarded_proto'
 dokku nginx:set dev-teaching-api x-forwarded-for-value '$http_x_forwarded_for'
