@@ -34,7 +34,7 @@ class MockStrat extends Strategy {
                 if ('id' in auth) {
                     where = { id: auth.id };
                 } else if ('email' in auth) {
-                    where = { email: auth.email };
+                    where = { email: auth.email.toLowerCase() };
                 }
             } catch (/* istanbul ignore next */ err) {
                 Logger.warn('Bearer Verify Error', err);
