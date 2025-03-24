@@ -40,7 +40,8 @@ import { allowedActions, createAllowedAction, destroyAllowedAction } from '../co
 import {
     githubToken,
     find as findCmsSettings,
-    update as updateCmsSettings
+    update as updateCmsSettings,
+    logout as githubLogout
 } from '../controllers/cmsSettings';
 
 // initialize router
@@ -107,4 +108,5 @@ router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);
 router.get('/cms/github-token', githubToken);
+router.post('/cms/logout', githubLogout);
 export default router;

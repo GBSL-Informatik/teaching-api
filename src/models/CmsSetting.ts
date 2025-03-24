@@ -119,6 +119,14 @@ function CmsSetting(db: PrismaClient['cmsSettings']) {
             }
             return this._updateTokens(cms.userId, githubToken);
         },
+        async logout(actor: User): Promise<ApiCmsSettings | null> {
+            const settings = await db.findUnique({ where: { userId: actor.id } });
+            if (!settings) {
+                return null;
+            }
+            const model = await this._invalidateTokens(actor.id);
+            return prepareRecord(model);
+        },
         async findModel(actor: User): Promise<ApiCmsSettings | null> {
             const settings = await db.upsert({
                 where: { userId: actor.id },

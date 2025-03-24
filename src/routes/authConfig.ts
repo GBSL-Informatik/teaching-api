@@ -166,6 +166,15 @@ const authConfig: Config = {
                     adminOnly: false
                 }
             ]
+        },
+        githubLogout: {
+            path: '/cms/logout',
+            access: [
+                {
+                    methods: ['POST'],
+                    adminOnly: false
+                }
+            ]
         }
     }
 };
