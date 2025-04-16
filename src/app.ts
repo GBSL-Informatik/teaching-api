@@ -111,6 +111,9 @@ app.use(express.static(path.join(__dirname, '..', 'docs')));
 app.get(`${API_URL}`, (req, res) => {
     return res.status(200).send('Welcome to the TEACHING-WEBSITE-API V1.0');
 });
+app.get(`${API_URL}/debug-sentry`, function mainHandler(req, res) {
+    throw new Error('My first Sentry error!');
+});
 
 const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {

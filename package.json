@@ -6,7 +6,7 @@
   "author": "GBSL Informatik",
   "license": "CC-BY-SA",
   "scripts": {
-    "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
+    "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json && yarn sentry:sourcemaps",
     "start": "node -r dotenv/config ./dist/src/server.js",
     "dev": "dotenv -- nodemon src/server.ts",
     "dummy:run": "ts-node -r dotenv/config ./bin/dummy.ts",
@@ -16,10 +16,13 @@
     "db:reset": "dotenv -- ts-node prisma/reset.ts",
     "db:recreate": "yarn run db:reset && yarn run db:migrate && yarn run db:seed",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org balthasar-hofer --project teaching-api ./dist && sentry-cli sourcemaps upload --org balthasar-hofer --project teaching-api ./dist"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
+    "@sentry/cli": "^2.43.0",
+    "@sentry/node": "^9.12.0",
     "connect-pg-simple": "^9.0.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
