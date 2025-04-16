@@ -17,7 +17,7 @@
     "db:recreate": "yarn run db:reset && yarn run db:migrate && yarn run db:seed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org balthasar-hofer --project teaching-api ./dist && sentry-cli sourcemaps upload --org balthasar-hofer --project teaching-api ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist && sentry-cli sourcemaps upload --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
