@@ -20,7 +20,9 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE']
     },
-    transports: ['websocket' /* , 'polling' */]
+    pingInterval: 15_000,
+    pingTimeout: 20_000,
+    transports: ['websocket', 'webtransport' /* , 'polling' */]
 });
 
 // convert a connect middleware to a Socket.IO middleware

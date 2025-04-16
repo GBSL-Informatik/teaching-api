@@ -29,7 +29,7 @@
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.5",
-    "socket.io": "^4.7.5",
+    "socket.io": "^4.8.1",
     "winston": "^3.13.0"
   },
   "prisma": {
