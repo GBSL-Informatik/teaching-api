@@ -4,3 +4,5 @@ node_modules
 docs/prisma/**/*
 docs/*.svg
 dist/
+# Sentry Config File
+.sentryclirc

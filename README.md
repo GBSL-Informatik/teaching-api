@@ -38,6 +38,8 @@ to format all typescript files.
 | `GITHUB_CLIENT_SECRET` | Used for the CMS to work properly. Register an app under https://github.com/settings/apps.                                                                                                      |                                                     |
 | `GITHUB_CLIENT_ID`     |                                                                                                                                                                                                 |                                                     |
 | `GITHUB_REDIRECT_URI`  |                                                                                                                                                                                                 |                                                     |
+| `SENTRY_DSN`           | Sentry DSN for error tracking.                                                                                                                                                                  |                                                     |
+| `SENTRY_AUTH_TOKEN`    | Auth token for uploading sourcemaps to sentry. Get it by configuring your app with `npx @sentry/wizard@latest -i sourcemaps`.                                                                   |                                                     |
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).<br/>
 \*\* To change users, clear LocalStorage to delete the API key created upon first authentication.<br/>

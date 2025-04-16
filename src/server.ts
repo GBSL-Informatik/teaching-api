@@ -6,6 +6,7 @@ import { ClientToServerEvents, IoEvent, ServerToClientEvents } from './routes/so
 import passport from 'passport';
 import EventRouter from './routes/socketEvents';
 import { NextFunction, Request, Response } from 'express';
+import * as Sentry from '@sentry/node';
 
 const PORT = process.env.PORT || 3002;
 
@@ -22,6 +23,11 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
     },
     transports: ['websocket' /* , 'polling' */]
 });
+if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN
+    });
+}
 
 // convert a connect middleware to a Socket.IO middleware
 io.use((socket, next) => {
@@ -52,6 +58,10 @@ app.use((req: Request, res, next) => {
 });
 
 configure(app);
+
+if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
+    Sentry.setupExpressErrorHandler(app);
+}
 
 server.listen(PORT || 3002, () => {
     Logger.info(`application is running at: http://localhost:${PORT}`);
