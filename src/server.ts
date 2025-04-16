@@ -21,7 +21,9 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE']
     },
-    transports: ['websocket' /* , 'polling' */]
+    pingInterval: 15_000,
+    pingTimeout: 20_000,
+    transports: ['websocket', 'webtransport' /* , 'polling' */]
 });
 if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
     Sentry.init({
