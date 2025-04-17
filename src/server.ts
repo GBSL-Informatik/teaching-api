@@ -27,7 +27,9 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
 });
 if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
     Sentry.init({
-        dsn: process.env.SENTRY_DSN
+        dsn: process.env.SENTRY_DSN,
+        tracesSampleRate: 0.1,
+        integrations: [Sentry.prismaIntegration()]
     });
 }
 
