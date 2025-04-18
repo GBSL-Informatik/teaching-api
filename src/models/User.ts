@@ -41,11 +41,7 @@ function User(db: PrismaClient['user']) {
                         {
                             studentGroups: {
                                 some: {
-                                    users: {
-                                        some: {
-                                            id: actor.id
-                                        }
-                                    }
+                                    userId: actor.id
                                 }
                             }
                         }

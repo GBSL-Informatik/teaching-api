@@ -81,7 +81,7 @@ function Document(db: PrismaClient['document']) {
                                         studentGroup: {
                                             users: {
                                                 some: {
-                                                    id: actor.id
+                                                    userId: actor.id
                                                 }
                                             }
                                         }
@@ -179,7 +179,7 @@ function Document(db: PrismaClient['document']) {
                                         studentGroup: {
                                             users: {
                                                 some: {
-                                                    id: authorId
+                                                    userId: authorId
                                                 }
                                             }
                                         }

@@ -98,7 +98,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 studentGroup: {
                                     users: {
                                         some: {
-                                            id: actor.id
+                                            userId: actor.id
                                         }
                                     }
                                 }
@@ -164,7 +164,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 studentGroup: {
                                     users: {
                                         some: {
-                                            id: actorId
+                                            userId: actorId
                                         }
                                     }
                                 }

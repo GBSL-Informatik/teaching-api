@@ -13,14 +13,14 @@ type ApiStudentGroup = DbStudentGroup & {
 };
 
 const asApiRecord = (
-    record: (DbStudentGroup & { users: { id: string }[] }) | null
+    record: (DbStudentGroup & { users: { userId: string }[] }) | null
 ): ApiStudentGroup | null => {
     if (!record) {
         return null;
     }
     const group = {
         ...record,
-        userIds: record.users.map((user) => user.id)
+        userIds: record.users.map((user) => user.userId)
     };
     delete (group as any).users;
     return group;
@@ -36,7 +36,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 include: {
                     users: {
                         select: {
-                            id: true
+                            userId: true
                         }
                     }
                 }
@@ -78,7 +78,10 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 data: {
                     users: {
                         connect: {
-                            id: userId
+                            id: {
+                                userId: userId,
+                                studentGroupId: record.id
+                            }
                         }
                     }
                 }
@@ -101,7 +104,10 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 data: {
                     users: {
                         disconnect: {
-                            id: userId
+                            id: {
+                                userId: userId,
+                                studentGroupId: record.id
+                            }
                         }
                     }
                 }
@@ -122,14 +128,14 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     : {
                           users: {
                               some: {
-                                  id: actor.id
+                                  userId: actor.id
                               }
                           }
                       },
                 include: {
                     users: {
                         select: {
-                            id: true
+                            userId: true
                         }
                     }
                 }
