@@ -1,12 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions", "views", "relationJoins"]
-  output          = "../docs/prisma"
 }
 
 generator docs {
   provider = "node node_modules/prisma-docs-generator"
-  output   = "../src/generated/prisma"
+  output   = "../docs/prisma"
 }
 
 // generator dbml {
