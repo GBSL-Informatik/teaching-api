@@ -77,10 +77,15 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 },
                 data: {
                     users: {
-                        connect: {
-                            id: {
-                                userId: userId,
-                                studentGroupId: record.id
+                        connectOrCreate: {
+                            where: {
+                                id: {
+                                    userId: userId,
+                                    studentGroupId: record.id
+                                }
+                            },
+                            create: {
+                                userId: userId
                             }
                         }
                     }
@@ -103,7 +108,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 },
                 data: {
                     users: {
-                        disconnect: {
+                        delete: {
                             id: {
                                 userId: userId,
                                 studentGroupId: record.id
