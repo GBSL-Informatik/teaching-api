@@ -1,7 +1,7 @@
 BEGIN;
+DROP VIEW IF EXISTS view__users_documents;
 DROP VIEW IF EXISTS view__document_user_permissions;
 DROP VIEW IF EXISTS view__all_document_user_permissions;
-DROP VIEW IF EXISTS view__users_documents;
 DROP INDEX "_StudentGroupToUser_B_index";
 ALTER TABLE "_StudentGroupToUser" RENAME TO "user_student_groups";
 ALTER TABLE "user_student_groups" RENAME CONSTRAINT "_StudentGroupToUser_AB_pkey" TO "user_student_groups_pkey";
@@ -13,6 +13,10 @@ ALTER TABLE "user_student_groups" RENAME CONSTRAINT "_StudentGroupToUser_B_fkey"
 
 ALTER TABLE "user_student_groups" ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT false;
 CREATE INDEX "user_student_group_user_index" ON "user_student_groups"("user_id");
+
+ALTER TABLE "user_student_groups" DROP CONSTRAINT "user_student_groups_pkey",
+ADD CONSTRAINT "user_student_groups_pkey" PRIMARY KEY ("user_id", "student_group_id");
+
 COMMIT;
 
 -- assumption: all child documents of a document share the same document_root_id
@@ -138,6 +142,19 @@ CREATE OR REPLACE VIEW view__all_document_user_permissions AS
             WHERE user_to_sg.user_id IS NOT NULL
     ) as doc_user_permissions;
 
+
+CREATE OR REPLACE VIEW view__document_user_permissions AS
+    SELECT
+        document_root_id,
+        user_id,
+        access,
+        document_id,
+        root_user_permission_id,
+        root_group_permission_id,
+        group_id
+    FROM view__all_document_user_permissions
+    WHERE access_rank = 1;
+
 CREATE OR REPLACE VIEW view__users_documents AS
     SELECT
         view__document_user_permissions.user_id AS user_id,
@@ -183,15 +200,3 @@ CREATE OR REPLACE VIEW view__users_documents AS
             LEFT JOIN documents d ON document_roots.id=d.document_root_id AND view__document_user_permissions.document_id=d.id
     WHERE view__document_user_permissions.user_id IS NOT NULL
     GROUP BY document_roots.id, view__document_user_permissions.user_id;
-
-CREATE OR REPLACE VIEW view__document_user_permissions AS
-    SELECT
-        document_root_id,
-        user_id,
-        access,
-        document_id,
-        root_user_permission_id,
-        root_group_permission_id,
-        group_id
-    FROM view__all_document_user_permissions
-    WHERE access_rank = 1;
