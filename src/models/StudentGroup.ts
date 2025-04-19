@@ -10,20 +10,35 @@ const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
 
 type ApiStudentGroup = DbStudentGroup & {
     userIds: string[];
+    adminIds: string[];
 };
 
 const asApiRecord = (
-    record: (DbStudentGroup & { users: { userId: string }[] }) | null
+    record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
 ): ApiStudentGroup | null => {
     if (!record) {
         return null;
     }
     const group = {
         ...record,
-        userIds: record.users.map((user) => user.userId)
+        userIds: record.users.map((user) => user.userId),
+        adminIds: record.users.filter((u) => u.isAdmin).map((u) => u.userId)
     };
     delete (group as any).users;
     return group;
+};
+
+const hasAdminAccess = (actor: User, record?: ApiStudentGroup | null): record is ApiStudentGroup => {
+    if (!record) {
+        if (!actor.isAdmin) {
+            return false;
+        }
+        throw new HTTP404Error('Group not found');
+    }
+    if (!actor.isAdmin && !record.adminIds.includes(actor.id)) {
+        return false;
+    }
+    return true;
 };
 
 function StudentGroup(db: PrismaClient['studentGroup']) {
@@ -36,7 +51,8 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 include: {
                     users: {
                         select: {
-                            userId: true
+                            userId: true,
+                            isAdmin: true
                         }
                     }
                 }
@@ -46,12 +62,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
 
         async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<DbStudentGroup> {
             const record = await this.findModel(id);
-            if (!record) {
-                throw new HTTP404Error('Group not found');
-            }
-            if (!actor.isAdmin) {
-                throw new HTTP403Error('Not authorized');
-            }
+            hasAdminAccess(actor, record);
             /** remove fields not updatable*/
             const sanitized = getData(data, false, actor.isAdmin);
             return db.update({
@@ -62,13 +73,44 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
         },
 
-        async addUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
-            if (!actor.isAdmin) {
+        async setAdminRole(
+            actor: User,
+            id: string,
+            userId: string,
+            isAdmin: boolean
+        ): Promise<DbStudentGroup> {
+            const record = await this.findModel(id);
+            if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
+
+            /** remove fields not updatable*/
+            return db.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    users: {
+                        update: {
+                            where: {
+                                id: {
+                                    userId: userId,
+                                    studentGroupId: record.id
+                                }
+                            },
+                            data: {
+                                isAdmin: isAdmin
+                            }
+                        }
+                    }
+                }
+            });
+        },
+
+        async addUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
             const record = await this.findModel(id);
-            if (!record) {
-                throw new HTTP404Error('Group not found');
+            if (!hasAdminAccess(actor, record)) {
+                throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
             return db.update({
@@ -94,12 +136,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         },
 
         async removeUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
-            if (!actor.isAdmin) {
-                throw new HTTP403Error('Not authorized');
-            }
             const record = await this.findModel(id);
-            if (!record) {
-                throw new HTTP404Error('Group not found');
+            if (!hasAdminAccess(actor, record)) {
+                throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
             return db.update({
@@ -140,7 +179,8 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 include: {
                     users: {
                         select: {
-                            userId: true
+                            userId: true,
+                            isAdmin: true
                         }
                     }
                 }

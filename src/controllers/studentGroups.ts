@@ -36,6 +36,24 @@ export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup 
     }
 };
 
+export const setAdminRole: RequestHandler<{ id: string; userId: string }, any, { isAdmin: boolean }> = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const model = await StudentGroup.setAdminRole(
+            req.user!,
+            req.params.id,
+            req.params.userId,
+            req.body.isAdmin
+        );
+        res.status(200).json(model);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const addUser: RequestHandler<{ id: string; userId: string }, any, any> = async (req, res, next) => {
     try {
         const model = await StudentGroup.addUser(req.user!, req.params.id, req.params.userId);
