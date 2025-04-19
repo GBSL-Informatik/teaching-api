@@ -6,3 +6,5 @@ docs/*.svg
 dist/
 # Sentry Config File
 .sentryclirc
+
+src/generated/prisma
