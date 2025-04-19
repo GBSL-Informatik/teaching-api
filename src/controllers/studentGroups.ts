@@ -5,7 +5,7 @@ import StudentGroup from '../models/StudentGroup';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const group = await StudentGroup.findModel(req.params.id);
+        const group = await StudentGroup.findModel(req.user!, req.params.id);
         res.json(group);
     } catch (error) {
         next(error);
@@ -14,9 +14,8 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
 
 export const create: RequestHandler<any, any, DbStudentGroup> = async (req, res, next) => {
     try {
-        Logger.info(req.body);
         const { name, description, parentId } = req.body;
-        const model = await StudentGroup.createModel(name, description, parentId);
+        const model = await StudentGroup.createModel(req.user!, name, description, parentId);
         res.status(200).json(model);
     } catch (error) {
         next(error);

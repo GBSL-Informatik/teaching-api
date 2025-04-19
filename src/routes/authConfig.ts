@@ -109,12 +109,8 @@ const authConfig: Config = {
             path: '/studentGroups',
             access: [
                 {
-                    methods: ['GET'],
+                    methods: ['GET', 'PUT', 'POST', 'DELETE'],
                     adminOnly: false
-                },
-                {
-                    methods: ['PUT', 'POST', 'DELETE'],
-                    adminOnly: true
                 }
             ]
         },

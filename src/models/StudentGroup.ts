@@ -43,10 +43,19 @@ const hasAdminAccess = (actor: User, record?: ApiStudentGroup | null): record is
 
 function StudentGroup(db: PrismaClient['studentGroup']) {
     return Object.assign(db, {
-        async findModel(id: string): Promise<ApiStudentGroup | null> {
+        async findModel(actor: User, id: string): Promise<ApiStudentGroup | null> {
             const model = await db.findUnique({
                 where: {
-                    id: id
+                    id: id,
+                    ...(actor.isAdmin
+                        ? {}
+                        : {
+                              users: {
+                                  some: {
+                                      userId: actor.id
+                                  }
+                              }
+                          })
                 },
                 include: {
                     users: {
@@ -61,7 +70,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         },
 
         async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<DbStudentGroup> {
-            const record = await this.findModel(id);
+            const record = await this.findModel(actor, id);
             hasAdminAccess(actor, record);
             /** remove fields not updatable*/
             const sanitized = getData(data, false, actor.isAdmin);
@@ -79,7 +88,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             userId: string,
             isAdmin: boolean
         ): Promise<DbStudentGroup> {
-            const record = await this.findModel(id);
+            const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -108,7 +117,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         },
 
         async addUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
-            const record = await this.findModel(id);
+            const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -136,7 +145,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         },
 
         async removeUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
-            const record = await this.findModel(id);
+            const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -189,21 +198,43 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         },
 
         async createModel(
+            actor: User,
             name: string,
             description: string,
             parentId: string | null
         ): Promise<DbStudentGroup> {
-            // TODO: Guard against nonexistent parent if parentId is specified?
+            if (!actor.isAdmin) {
+                // check if the user has at least one admin-group
+                const isGroupAdmin = await prisma.userStudentGroup.findFirst({
+                    where: {
+                        userId: actor.id,
+                        isAdmin: true
+                    }
+                });
+                if (!isGroupAdmin) {
+                    throw new HTTP403Error('Not authorized');
+                }
+            }
             return db.create({
                 data: {
                     name: name,
                     description: description,
-                    parentId: parentId
+                    parentId: parentId,
+                    users: {
+                        create: {
+                            userId: actor.id,
+                            isAdmin: true
+                        }
+                    }
                 }
             });
         },
 
         async deleteModel(actor: User, id: string): Promise<DbStudentGroup> {
+            const record = await this.findModel(actor, id);
+            if (!hasAdminAccess(actor, record)) {
+                throw new HTTP403Error('Not authorized');
+            }
             return db.delete({
                 where: {
                     id: id
