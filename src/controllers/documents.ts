@@ -35,7 +35,8 @@ export const create: RequestHandler<
                     id: onBehalfUserId,
                     studentGroups: {
                         some: {
-                            userId: req.user!.id
+                            userId: req.user!.id,
+                            isAdmin: true
                         }
                     }
                 }

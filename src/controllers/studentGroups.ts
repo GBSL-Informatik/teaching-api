@@ -1,6 +1,5 @@
 import { StudentGroup as DbStudentGroup } from '@prisma/client';
 import { RequestHandler } from 'express';
-import Logger from '../utils/logger';
 import StudentGroup from '../models/StudentGroup';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {

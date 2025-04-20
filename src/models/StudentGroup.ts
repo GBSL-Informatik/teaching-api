@@ -62,7 +62,8 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                         : {
                               users: {
                                   some: {
-                                      userId: actor.id
+                                      userId: actor.id,
+                                      isAdmin: true
                                   }
                               }
                           })
@@ -219,7 +220,8 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                         : {
                               users: {
                                   some: {
-                                      userId: actor.id
+                                      userId: actor.id,
+                                      isAdmin: true
                                   }
                               }
                           },
@@ -240,7 +242,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             name: string,
             description: string,
             parentId: string | null
-        ): Promise<DbStudentGroup> {
+        ): Promise<ApiStudentGroup> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -256,7 +258,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     throw new HTTP403Error('Not authorized to create subgroup in this group');
                 }
             }
-            return db.create({
+            const model = await db.create({
                 data: {
                     name: name,
                     description: description,
@@ -267,8 +269,17 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                             isAdmin: true
                         }
                     }
+                },
+                include: {
+                    users: {
+                        select: {
+                            userId: true,
+                            isAdmin: true
+                        }
+                    }
                 }
             });
+            return asApiRecord(model)!;
         },
 
         async deleteModel(actor: User, id: string): Promise<DbStudentGroup> {

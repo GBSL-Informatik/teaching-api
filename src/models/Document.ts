@@ -245,7 +245,8 @@ function Document(db: PrismaClient['document']) {
                                   author: {
                                       studentGroups: {
                                           some: {
-                                              userId: actor.id
+                                              userId: actor.id,
+                                              isAdmin: true
                                           }
                                       }
                                   }
@@ -361,7 +362,8 @@ function Document(db: PrismaClient['document']) {
                     author: {
                         studentGroups: {
                             some: {
-                                userId: actor.id
+                                userId: actor.id,
+                                isAdmin: true
                             }
                         }
                     }

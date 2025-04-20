@@ -275,7 +275,8 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                               user: {
                                   studentGroups: {
                                       some: {
-                                          userId: actor.id
+                                          userId: actor.id,
+                                          isAdmin: true
                                       }
                                   }
                               }
@@ -291,7 +292,8 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                               user: {
                                   studentGroups: {
                                       some: {
-                                          userId: actor.id
+                                          userId: actor.id,
+                                          isAdmin: true
                                       }
                                   }
                               }
