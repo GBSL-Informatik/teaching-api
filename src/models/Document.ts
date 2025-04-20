@@ -7,6 +7,7 @@ import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { ApiUserPermission } from './RootUserPermission';
 import Logger from '../utils/logger';
+import { hasElevatedAccess } from './User';
 
 type AccessCheckableDocument = DbDocument & {
     documentRoot: AccessCheckableDocumentRoot;
@@ -111,7 +112,8 @@ function Document(db: PrismaClient['document']) {
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
             }
-            const onBehalfOf = !!_onBehalfOfUserId && actor.isAdmin;
+            const elevatedAccess = hasElevatedAccess(actor.role);
+            const onBehalfOf = !!_onBehalfOfUserId && elevatedAccess;
             const authorId = onBehalfOf ? _onBehalfOfUserId : actor.id;
             if (onBehalfOf && _onBehalfOfUserId !== actor.id) {
                 Logger.info(`🔑 On Behalf Of: ${_onBehalfOfUserId}`);
@@ -135,7 +137,7 @@ function Document(db: PrismaClient['document']) {
                 if (
                     !(
                         parent.document.authorId === actor.id ||
-                        actor.isAdmin ||
+                        elevatedAccess ||
                         RWAccess.has(parent.highestPermission)
                     )
                 ) {
@@ -228,7 +230,8 @@ function Document(db: PrismaClient['document']) {
             docData: JsonObject,
             _onBehalfOf = false /** this flag enables the modification of documents on behalf of another user */
         ) {
-            const onBehalfOf = _onBehalfOf && actor.isAdmin;
+            const elevatedAccess = hasElevatedAccess(actor.role);
+            const onBehalfOf = _onBehalfOf && elevatedAccess;
             if (onBehalfOf) {
                 /**
                  * ensure the document exists
@@ -327,7 +330,7 @@ function Document(db: PrismaClient['document']) {
 
         async all(actor: User): Promise<DbDocument[]> {
             // TODO: Only include documents where the (non-admin) user has at least RO access on the root.
-            if (actor.isAdmin) {
+            if (hasElevatedAccess(actor.role)) {
                 return db.findMany({});
             }
             return db.findMany({
@@ -342,7 +345,7 @@ function Document(db: PrismaClient['document']) {
         },
 
         async allOfDocumentRoots(actor: User, documentRootIds: string[]): Promise<DbDocument[]> {
-            if (!actor.isAdmin) {
+            if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
             const documents = await db.findMany({

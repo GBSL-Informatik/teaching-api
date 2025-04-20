@@ -2,6 +2,7 @@ import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '@pri
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
+import { hasElevatedAccess } from './User';
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['description', 'name'],
@@ -29,13 +30,14 @@ const asApiRecord = (
 };
 
 const hasAdminAccess = (actor: User, record?: ApiStudentGroup | null): record is ApiStudentGroup => {
+    const elevatedAccess = hasElevatedAccess(actor.role);
     if (!record) {
-        if (!actor.isAdmin) {
+        if (!elevatedAccess) {
             return false;
         }
         throw new HTTP404Error('Group not found');
     }
-    if (!actor.isAdmin && !record.adminIds.includes(actor.id)) {
+    if (!elevatedAccess && !record.adminIds.includes(actor.id)) {
         return false;
     }
     return true;
@@ -44,10 +46,11 @@ const hasAdminAccess = (actor: User, record?: ApiStudentGroup | null): record is
 function StudentGroup(db: PrismaClient['studentGroup']) {
     return Object.assign(db, {
         async findModel(actor: User, id: string): Promise<ApiStudentGroup | null> {
+            const elevatedAccess = hasElevatedAccess(actor.role);
             const model = await db.findUnique({
                 where: {
                     id: id,
-                    ...(actor.isAdmin
+                    ...(elevatedAccess
                         ? {}
                         : {
                               users: {
@@ -73,7 +76,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             const record = await this.findModel(actor, id);
             hasAdminAccess(actor, record);
             /** remove fields not updatable*/
-            const sanitized = getData(data, false, actor.isAdmin);
+            const sanitized = getData(data, false, hasElevatedAccess(actor.role));
             return db.update({
                 where: {
                     id: id
@@ -176,7 +179,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             //
             // user IDs should be provided, otherwise the frontend will not be able to relate the groups to the users
             const all = await db.findMany({
-                where: actor.isAdmin
+                where: hasElevatedAccess(actor.role)
                     ? undefined
                     : {
                           users: {
@@ -203,7 +206,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             description: string,
             parentId: string | null
         ): Promise<DbStudentGroup> {
-            if (!actor.isAdmin) {
+            if (!hasElevatedAccess(actor.role)) {
                 // check if the user has at least one admin-group
                 const isGroupAdmin = await prisma.userStudentGroup.findFirst({
                     where: {

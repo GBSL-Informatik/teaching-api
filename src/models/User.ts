@@ -1,8 +1,15 @@
-import { Prisma, PrismaClient, User as DbUser } from '@prisma/client';
+import { Prisma, PrismaClient, User as DbUser, Role } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
-const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName'], ['isAdmin']);
+const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName'], ['role']);
+
+export const hasElevatedAccess = (role?: Role | null) => {
+    if (!role) {
+        return false;
+    }
+    return role === Role.ADMIN || role === Role.TEACHER;
+};
 
 function User(db: PrismaClient['user']) {
     return Object.assign(db, {
@@ -15,11 +22,12 @@ function User(db: PrismaClient['user']) {
             if (!record) {
                 throw new HTTP404Error('User not found');
             }
-            if (!(record.id === actor.id || actor.isAdmin)) {
+            const elevatedAccess = hasElevatedAccess(actor.role);
+            if (!(record.id === actor.id || elevatedAccess)) {
                 throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
-            const sanitized = getData(data, false, record.id === actor.id ? false : actor.isAdmin);
+            const sanitized = getData(data, false, record.id === actor.id ? false : elevatedAccess);
             return db.update({
                 where: {
                     id: id
@@ -29,7 +37,7 @@ function User(db: PrismaClient['user']) {
         },
 
         async all(actor: DbUser): Promise<DbUser[]> {
-            if (actor.isAdmin) {
+            if (hasElevatedAccess(actor.role)) {
                 return db.findMany({});
             }
             return db.findMany({
@@ -51,16 +59,22 @@ function User(db: PrismaClient['user']) {
             });
         },
 
-        async setIsAdmin(actor: DbUser, userId: string, isAdmin: boolean): Promise<DbUser> {
-            if (!actor.isAdmin) {
+        async setRole(actor: DbUser, userId: string, role: Role): Promise<DbUser> {
+            if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
+            }
+            if (role === Role.ADMIN && actor.role !== Role.ADMIN) {
+                throw new HTTP403Error('Not authorized');
+            }
+            if (role === Role.STUDENT && actor.id === userId) {
+                throw new HTTP403Error('Not allowed to set yourself as student');
             }
             return db.update({
                 where: {
                     id: userId
                 },
                 data: {
-                    isAdmin
+                    role: role
                 }
             });
         }

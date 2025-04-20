@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { AccessMatrix, PUBLIC_ROUTES } from '../routes/authConfig';
 import Logger from '../utils/logger';
 import { HttpStatusCode } from '../utils/errors/BaseError';
+import { Role } from '@prisma/client';
+import { hasElevatedAccess } from '../models/User';
 
 interface AccessRegexRule {
     path: string;
@@ -81,7 +83,9 @@ const routeGuard = (accessMatrix: AccessRegexRule[]) => {
             return res.status(HttpStatusCode.FORBIDDEN).json({ error: 'No roles claim found!' });
         }
 
-        if (!requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.isAdmin || false)) {
+        if (
+            !requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.role || Role.STUDENT)
+        ) {
             return res
                 .status(HttpStatusCode.FORBIDDEN)
                 .json({ error: 'User does not have the role, method or path' });
@@ -98,7 +102,7 @@ const requestHasRequiredAttributes = (
     accessMatrix: AccessRegexRule[],
     path: string,
     method: string,
-    isAdmin: boolean
+    role: Role
 ) => {
     const accessRules = Object.values(accessMatrix);
     const accessRule = accessRules
@@ -108,12 +112,14 @@ const requestHasRequiredAttributes = (
     if (!accessRule) {
         return false;
     }
+    const elevatedAccess = hasElevatedAccess(role);
     const hasAccess = accessRule.access.some(
         (rule) =>
-            (isAdmin || !rule.adminOnly) && rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
+            (elevatedAccess || !rule.adminOnly) &&
+            rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
     );
     Logger.info(
-        `${hasAccess ? '✅' : '❌'} Access Rule for ${isAdmin ? 'Admin' : 'User'}: [${method}:${path}] ${JSON.stringify(accessRule)}`
+        `${hasAccess ? '✅' : '❌'} Access Rule for ${elevatedAccess ? 'Admin/Teacher' : 'User'}: [${method}:${path}] ${JSON.stringify(accessRule)}`
     );
     return hasAccess;
 };

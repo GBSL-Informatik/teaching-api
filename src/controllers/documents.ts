@@ -7,6 +7,7 @@ import { IoRoom } from '../routes/socketEvents';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import { hasElevatedAccess } from '../models/User';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -26,7 +27,8 @@ export const create: RequestHandler<
     try {
         const { type, documentRootId, data, parentId } = req.body;
         const { onBehalfOf, uniqueMain } = req.query;
-        const onBehalfUser = onBehalfOf === 'true' && req.user!.isAdmin ? req.body.authorId : undefined;
+        const elevatedAccess = hasElevatedAccess(req.user?.role);
+        const onBehalfUser = onBehalfOf === 'true' && elevatedAccess ? req.body.authorId : undefined;
         const { model, permissions } = await Document.createModel(
             req.user!,
             type,

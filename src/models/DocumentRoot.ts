@@ -13,6 +13,7 @@ import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
+import { hasElevatedAccess } from './User';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -261,7 +262,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             };
         },
         async getPermissions(actor: User, id: string): Promise<Permissions> {
-            if (!actor.isAdmin) {
+            if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
             const userPermissions = await prisma.rootUserPermission.findMany({
@@ -285,7 +286,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             if (!record) {
                 throw new HTTP404Error('DocumentRoot not found');
             }
-            if (!actor.isAdmin) {
+            if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
 
