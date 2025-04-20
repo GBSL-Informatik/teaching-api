@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '@prisma/client';
+import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User, Role } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
@@ -29,15 +29,22 @@ const asApiRecord = (
     return group;
 };
 
+/**
+ * returns true if the user can administer the group.
+ * The user is either
+ * - an admin, or
+ * - a teacher and an admin of the group
+ */
 const hasAdminAccess = (actor: User, record?: ApiStudentGroup | null): record is ApiStudentGroup => {
     const elevatedAccess = hasElevatedAccess(actor.role);
     if (!record) {
         if (!elevatedAccess) {
             return false;
         }
+        // only users with elevated access should be able to see that the group does not exist
         throw new HTTP404Error('Group not found');
     }
-    if (!elevatedAccess && !record.adminIds.includes(actor.id)) {
+    if (actor.role !== Role.ADMIN && !record.adminIds.includes(actor.id)) {
         return false;
     }
     return true;
@@ -46,11 +53,11 @@ const hasAdminAccess = (actor: User, record?: ApiStudentGroup | null): record is
 function StudentGroup(db: PrismaClient['studentGroup']) {
     return Object.assign(db, {
         async findModel(actor: User, id: string): Promise<ApiStudentGroup | null> {
-            const elevatedAccess = hasElevatedAccess(actor.role);
+            const adminAccess = actor.role === Role.ADMIN;
             const model = await db.findUnique({
                 where: {
                     id: id,
-                    ...(elevatedAccess
+                    ...(adminAccess
                         ? {}
                         : {
                               users: {
@@ -74,9 +81,25 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
 
         async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<DbStudentGroup> {
             const record = await this.findModel(actor, id);
-            hasAdminAccess(actor, record);
+            if (!hasAdminAccess(actor, record)) {
+                throw new HTTP403Error('Not authorized');
+            }
             /** remove fields not updatable*/
             const sanitized = getData(data, false, hasElevatedAccess(actor.role));
+            const parentId =
+                typeof sanitized.parentId === 'string' ? sanitized.parentId : sanitized.parentId?.set;
+            if (parentId && actor.role !== Role.ADMIN) {
+                const isParentAdmin = await prisma.userStudentGroup.findFirst({
+                    where: {
+                        studentGroupId: parentId,
+                        userId: actor.id,
+                        isAdmin: true
+                    }
+                });
+                if (!isParentAdmin) {
+                    throw new HTTP403Error('Not authorized to create subgroup in this group');
+                }
+            }
             return db.update({
                 where: {
                     id: id
@@ -94,6 +117,14 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
+            }
+            if (
+                actor.id === userId &&
+                !isAdmin &&
+                record!.adminIds.includes(userId) &&
+                record!.adminIds.length === 1
+            ) {
+                throw new HTTP403Error('Cannot remove admin role from self if the last admin');
             }
 
             /** remove fields not updatable*/
@@ -152,6 +183,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
+            if (actor.id === userId && record!.adminIds.includes(userId) && record!.adminIds.length === 1) {
+                throw new HTTP403Error('Cannot remove self from group if the last admin');
+            }
             /** remove fields not updatable*/
             return db.update({
                 where: {
@@ -179,15 +213,16 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             //
             // user IDs should be provided, otherwise the frontend will not be able to relate the groups to the users
             const all = await db.findMany({
-                where: hasElevatedAccess(actor.role)
-                    ? undefined
-                    : {
-                          users: {
-                              some: {
-                                  userId: actor.id
+                where:
+                    actor.role === Role.ADMIN
+                        ? undefined
+                        : {
+                              users: {
+                                  some: {
+                                      userId: actor.id
+                                  }
                               }
-                          }
-                      },
+                          },
                 include: {
                     users: {
                         select: {
@@ -207,15 +242,18 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             parentId: string | null
         ): Promise<DbStudentGroup> {
             if (!hasElevatedAccess(actor.role)) {
-                // check if the user has at least one admin-group
-                const isGroupAdmin = await prisma.userStudentGroup.findFirst({
+                throw new HTTP403Error('Not authorized');
+            }
+            if (actor.role !== Role.ADMIN && parentId) {
+                const isParentAdmin = await prisma.userStudentGroup.findFirst({
                     where: {
+                        studentGroupId: parentId,
                         userId: actor.id,
                         isAdmin: true
                     }
                 });
-                if (!isGroupAdmin) {
-                    throw new HTTP403Error('Not authorized');
+                if (!isParentAdmin) {
+                    throw new HTTP403Error('Not authorized to create subgroup in this group');
                 }
             }
             return db.create({

@@ -1,11 +1,10 @@
 /* istanbul ignore file */
 
-import type { User } from '@prisma/client';
+import { Role, type User } from '@prisma/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
 import { ClientToServerEvents, IoEvent, IoClientEvent, ServerToClientEvents } from './socketEventTypes';
 import StudentGroup from '../models/StudentGroup';
-import { hasElevatedAccess } from '../models/User';
 
 export enum IoRoom {
     ADMIN = 'admin',
@@ -20,7 +19,7 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         }
         socket.join(user.id);
 
-        if (hasElevatedAccess(user.role)) {
+        if (user.role === Role.ADMIN) {
             socket.join(IoRoom.ADMIN);
             socket.on(IoClientEvent.JOIN_ROOM, (roomId: string, callback: () => void) => {
                 socket.join(roomId);

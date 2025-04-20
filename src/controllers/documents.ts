@@ -1,4 +1,4 @@
-import { Document as DbDocument, Prisma } from '@prisma/client';
+import { Document as DbDocument, Prisma, Role } from '@prisma/client';
 import { RequestHandler } from 'express';
 import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
@@ -28,7 +28,22 @@ export const create: RequestHandler<
         const { type, documentRootId, data, parentId } = req.body;
         const { onBehalfOf, uniqueMain } = req.query;
         const elevatedAccess = hasElevatedAccess(req.user?.role);
-        const onBehalfUser = onBehalfOf === 'true' && elevatedAccess ? req.body.authorId : undefined;
+        const onBehalfUserId = onBehalfOf === 'true' && elevatedAccess ? req.body.authorId : undefined;
+        if (onBehalfUserId && req.user!.role !== Role.ADMIN) {
+            const onBehalfOfUser = await prisma.user.findUnique({
+                where: {
+                    id: onBehalfUserId,
+                    studentGroups: {
+                        some: {
+                            userId: req.user!.id
+                        }
+                    }
+                }
+            });
+            if (!onBehalfOfUser) {
+                throw new HTTP403Error('Not allowed to create on behalf of this user');
+            }
+        }
         const { model, permissions } = await Document.createModel(
             req.user!,
             type,
@@ -36,7 +51,7 @@ export const create: RequestHandler<
             data,
             !parentId ? undefined : parentId,
             uniqueMain === 'true',
-            onBehalfUser
+            onBehalfUserId
         );
         /**
          * Notifications to
@@ -219,15 +234,6 @@ export const linkTo: RequestHandler<{ id: string; parentId: string }, any, any> 
         ];
 
         res.status(200).json(updated);
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const all: RequestHandler = async (req, res, next) => {
-    try {
-        const documents = await Document.all(req.user!);
-        res.json(documents);
     } catch (error) {
         next(error);
     }

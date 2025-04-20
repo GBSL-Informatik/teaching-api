@@ -1,4 +1,4 @@
-import { Access, Document as DbDocument, PrismaClient, User } from '@prisma/client';
+import { Access, Document as DbDocument, PrismaClient, Role, User } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
@@ -238,7 +238,18 @@ function Document(db: PrismaClient['document']) {
                  */
                 const record = await db.findUnique({
                     where: {
-                        id: id
+                        id: id,
+                        ...(actor.role === Role.ADMIN
+                            ? {}
+                            : {
+                                  author: {
+                                      studentGroups: {
+                                          some: {
+                                              userId: actor.id
+                                          }
+                                      }
+                                  }
+                              })
                     }
                 });
                 if (!record) {
@@ -328,30 +339,31 @@ function Document(db: PrismaClient['document']) {
             return model;
         },
 
-        async all(actor: User): Promise<DbDocument[]> {
-            // TODO: Only include documents where the (non-admin) user has at least RO access on the root.
-            if (hasElevatedAccess(actor.role)) {
-                return db.findMany({});
-            }
-            return db.findMany({
-                where: {
-                    authorId: actor.id
-                },
-                include: {
-                    author: true,
-                    children: true
-                }
-            });
-        },
-
         async allOfDocumentRoots(actor: User, documentRootIds: string[]): Promise<DbDocument[]> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
+            if (actor.role === Role.ADMIN) {
+                return db.findMany({
+                    where: {
+                        documentRootId: {
+                            in: documentRootIds
+                        }
+                    }
+                });
+            }
+            // only include documents where the author is in the same group as the actor.
             const documents = await db.findMany({
                 where: {
                     documentRootId: {
                         in: documentRootIds
+                    },
+                    author: {
+                        studentGroups: {
+                            some: {
+                                userId: actor.id
+                            }
+                        }
                     }
                 }
             });

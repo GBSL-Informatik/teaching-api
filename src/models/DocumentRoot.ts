@@ -6,7 +6,8 @@ import {
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
-    User
+    User,
+    Role
 } from '@prisma/client';
 import { ApiDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
@@ -267,12 +268,34 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             }
             const userPermissions = await prisma.rootUserPermission.findMany({
                 where: {
-                    documentRootId: id
+                    documentRootId: id,
+                    ...(actor.role === Role.ADMIN
+                        ? {}
+                        : {
+                              user: {
+                                  studentGroups: {
+                                      some: {
+                                          userId: actor.id
+                                      }
+                                  }
+                              }
+                          })
                 }
             });
             const groupPermissions = await prisma.rootGroupPermission.findMany({
                 where: {
-                    documentRootId: id
+                    documentRootId: id,
+                    ...(actor.role === Role.ADMIN
+                        ? {}
+                        : {
+                              user: {
+                                  studentGroups: {
+                                      some: {
+                                          userId: actor.id
+                                      }
+                                  }
+                              }
+                          })
                 }
             });
             return {
@@ -286,7 +309,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             if (!record) {
                 throw new HTTP404Error('DocumentRoot not found');
             }
-            if (!hasElevatedAccess(actor.role)) {
+            if (actor.role !== Role.ADMIN) {
                 throw new HTTP403Error('Not authorized');
             }
 

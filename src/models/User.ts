@@ -4,11 +4,17 @@ import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
 const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName'], ['role']);
 
+const RoleAccessLevel: { [key in Role]: number } = {
+    [Role.STUDENT]: 0,
+    [Role.TEACHER]: 1,
+    [Role.ADMIN]: 2
+};
+
 export const hasElevatedAccess = (role?: Role | null) => {
     if (!role) {
         return false;
     }
-    return role === Role.ADMIN || role === Role.TEACHER;
+    return RoleAccessLevel[role] > 0;
 };
 
 function User(db: PrismaClient['user']) {
@@ -37,7 +43,7 @@ function User(db: PrismaClient['user']) {
         },
 
         async all(actor: DbUser): Promise<DbUser[]> {
-            if (hasElevatedAccess(actor.role)) {
+            if (actor.role === Role.ADMIN) {
                 return db.findMany({});
             }
             return db.findMany({
@@ -63,11 +69,21 @@ function User(db: PrismaClient['user']) {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
-            if (role === Role.ADMIN && actor.role !== Role.ADMIN) {
-                throw new HTTP403Error('Not authorized');
+            const actorLevel = RoleAccessLevel[actor.role];
+            const roleLevel = RoleAccessLevel[role];
+            if (actorLevel <= roleLevel) {
+                throw new HTTP403Error('Not allowed to set a higher role');
             }
-            if (role === Role.STUDENT && actor.id === userId) {
-                throw new HTTP403Error('Not allowed to set yourself as student');
+            if (actor.id === userId && roleLevel < actorLevel) {
+                throw new HTTP403Error('Not allowed to lower own role');
+            }
+            const record = await this.findModel(userId);
+            if (!record) {
+                throw new HTTP404Error('User not found');
+            }
+            const recordLevel = RoleAccessLevel[record.role];
+            if (recordLevel >= actorLevel) {
+                throw new HTTP403Error('Not allowed to lower role of user with higher or equal role');
             }
             return db.update({
                 where: {
