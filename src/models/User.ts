@@ -43,10 +43,10 @@ function User(db: PrismaClient['user']) {
         },
 
         async all(actor: DbUser): Promise<DbUser[]> {
-            if (actor.role === Role.ADMIN) {
+            if (hasElevatedAccess(actor.role)) {
                 return db.findMany({});
             }
-            return db.findMany({
+            const users = await db.findMany({
                 where: {
                     OR: [
                         {
@@ -60,9 +60,9 @@ function User(db: PrismaClient['user']) {
                             }
                         }
                     ]
-                },
-                distinct: ['id']
+                }
             });
+            return users;
         },
 
         async setRole(actor: DbUser, userId: string, role: Role): Promise<DbUser> {
