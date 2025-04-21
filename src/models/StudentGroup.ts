@@ -9,7 +9,7 @@ const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['parentId']
 );
 
-type ApiStudentGroup = DbStudentGroup & {
+export type ApiStudentGroup = DbStudentGroup & {
     userIds: string[];
     adminIds: string[];
 };
@@ -111,7 +111,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             id: string,
             userId: string,
             isAdmin: boolean
-        ): Promise<DbStudentGroup> {
+        ): Promise<ApiStudentGroup> {
             const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
@@ -126,7 +126,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             }
 
             /** remove fields not updatable*/
-            return db.update({
+            const result = await db.update({
                 where: {
                     id: id
                 },
@@ -144,17 +144,26 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                             }
                         }
                     }
+                },
+                include: {
+                    users: {
+                        select: {
+                            userId: true,
+                            isAdmin: true
+                        }
+                    }
                 }
             });
+            return asApiRecord(result)!;
         },
 
-        async addUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
+        async addUser(actor: User, id: string, userId: string): Promise<ApiStudentGroup> {
             const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
-            return db.update({
+            const result = await db.update({
                 where: {
                     id: id
                 },
@@ -172,11 +181,20 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                             }
                         }
                     }
+                },
+                include: {
+                    users: {
+                        select: {
+                            userId: true,
+                            isAdmin: true
+                        }
+                    }
                 }
             });
+            return asApiRecord(result)!;
         },
 
-        async removeUser(actor: User, id: string, userId: string): Promise<DbStudentGroup> {
+        async removeUser(actor: User, id: string, userId: string): Promise<ApiStudentGroup> {
             const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
@@ -185,7 +203,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 throw new HTTP403Error('Cannot remove self from group if the last admin');
             }
             /** remove fields not updatable*/
-            return db.update({
+            const result = await db.update({
                 where: {
                     id: id
                 },
@@ -198,8 +216,17 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                             }
                         }
                     }
+                },
+                include: {
+                    users: {
+                        select: {
+                            userId: true,
+                            isAdmin: true
+                        }
+                    }
                 }
             });
+            return asApiRecord(result)!;
         },
 
         async all(actor: User): Promise<ApiStudentGroup[]> {

@@ -1,4 +1,4 @@
-import { Document as DbDocument, Prisma, Role } from '@prisma/client';
+import { Document as DbDocument, Prisma } from '@prisma/client';
 import { RequestHandler } from 'express';
 import Document from '../models/Document';
 import { JsonObject } from '@prisma/client/runtime/library';
@@ -7,7 +7,6 @@ import { IoRoom } from '../routes/socketEvents';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
-import { hasElevatedAccess, whereStudentGroupAccess } from '../models/User';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
