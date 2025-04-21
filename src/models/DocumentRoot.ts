@@ -14,7 +14,7 @@ import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
-import { hasElevatedAccess } from './User';
+import { hasElevatedAccess, whereStudentGroupAccess } from './User';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -267,38 +267,33 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 throw new HTTP403Error('Not authorized');
             }
             const userPermissions = await prisma.rootUserPermission.findMany({
-                where: {
-                    documentRootId: id,
-                    ...(actor.role === Role.ADMIN
-                        ? {}
+                where:
+                    actor.role === Role.ADMIN
+                        ? {
+                              documentRootId: id
+                          }
                         : {
-                              user: {
-                                  studentGroups: {
-                                      some: {
-                                          userId: actor.id,
-                                          isAdmin: true
-                                      }
-                                  }
-                              }
-                          })
-                }
+                              documentRootId: id,
+                              user: whereStudentGroupAccess(actor.id, true)
+                          }
             });
             const groupPermissions = await prisma.rootGroupPermission.findMany({
-                where: {
-                    documentRootId: id,
-                    ...(actor.role === Role.ADMIN
-                        ? {}
+                where:
+                    actor.role === Role.ADMIN
+                        ? {
+                              documentRootId: id
+                          }
                         : {
-                              user: {
-                                  studentGroups: {
+                              documentRootId: id,
+                              studentGroup: {
+                                  users: {
                                       some: {
                                           userId: actor.id,
                                           isAdmin: true
                                       }
                                   }
                               }
-                          })
-                }
+                          }
             });
             return {
                 id: id,

@@ -1,7 +1,8 @@
-import { Prisma, PrismaClient, User as DbUser, Role } from '@prisma/client';
+import { Prisma, PrismaClient, User as DbUser, Role, User } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
+import _ from 'lodash';
 const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName'], ['role']);
 
 const RoleAccessLevel: { [key in Role]: number } = {
@@ -16,6 +17,24 @@ export const hasElevatedAccess = (role?: Role | null) => {
     }
     return RoleAccessLevel[role] > 0;
 };
+
+export const whereStudentGroupAccess = (userId: string, isAdmin?: boolean) => ({
+    studentGroups: {
+        some: {
+            studentGroup: {
+                users: {
+                    some:
+                        isAdmin === undefined
+                            ? { userId }
+                            : {
+                                  userId,
+                                  isAdmin
+                              }
+                }
+            }
+        }
+    }
+});
 
 function User(db: PrismaClient['user']) {
     return Object.assign(db, {
@@ -44,6 +63,10 @@ function User(db: PrismaClient['user']) {
 
         async all(actor: DbUser): Promise<DbUser[]> {
             if (hasElevatedAccess(actor.role)) {
+                /**
+                 * Admins and teachers can see all users.
+                 * Reason: teachers need to add new users to their student groups
+                 */
                 return db.findMany({});
             }
             const users = await db.findMany({
@@ -52,15 +75,10 @@ function User(db: PrismaClient['user']) {
                         {
                             id: actor.id
                         },
-                        {
-                            studentGroups: {
-                                some: {
-                                    userId: actor.id
-                                }
-                            }
-                        }
+                        whereStudentGroupAccess(actor.id)
                     ]
-                }
+                },
+                distinct: ['id']
             });
             return users;
         },

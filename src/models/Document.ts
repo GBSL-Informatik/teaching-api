@@ -7,7 +7,7 @@ import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { ApiUserPermission } from './RootUserPermission';
 import Logger from '../utils/logger';
-import { hasElevatedAccess } from './User';
+import { hasElevatedAccess, whereStudentGroupAccess } from './User';
 
 type AccessCheckableDocument = DbDocument & {
     documentRoot: AccessCheckableDocumentRoot;
@@ -116,15 +116,16 @@ function Document(db: PrismaClient['document']) {
             const onBehalfOf = !!_onBehalfOfUserId && elevatedAccess;
             const authorId = onBehalfOf ? _onBehalfOfUserId : actor.id;
             if (onBehalfOf && _onBehalfOfUserId !== actor.id) {
-                Logger.info(`🔑 On Behalf Of: ${_onBehalfOfUserId}`);
                 const onBehalfOfUser = await prisma.user.findUnique({
-                    where: {
-                        id: _onBehalfOfUserId
-                    }
+                    where:
+                        actor.role === Role.ADMIN
+                            ? { id: _onBehalfOfUserId }
+                            : { id: _onBehalfOfUserId, ...whereStudentGroupAccess(actor.id, true) }
                 });
                 if (!onBehalfOfUser) {
-                    throw new HTTP404Error('On Behalf Of user not found');
+                    throw new HTTP404Error('On Behalf Of user not found or no required access');
                 }
+                Logger.info(`🔑 On Behalf Of: ${_onBehalfOfUserId}`);
             }
             if (parentId) {
                 const parent = await this.findModel(actor, parentId);
@@ -237,21 +238,13 @@ function Document(db: PrismaClient['document']) {
                  * ensure the document exists
                  */
                 const record = await db.findUnique({
-                    where: {
-                        id: id,
-                        ...(actor.role === Role.ADMIN
-                            ? {}
+                    where:
+                        actor.role === Role.ADMIN
+                            ? { id }
                             : {
-                                  author: {
-                                      studentGroups: {
-                                          some: {
-                                              userId: actor.id,
-                                              isAdmin: true
-                                          }
-                                      }
-                                  }
-                              })
-                    }
+                                  id: id,
+                                  author: whereStudentGroupAccess(actor.id, true)
+                              }
                 });
                 if (!record) {
                     throw new HTTP404Error('Document not found');
@@ -359,14 +352,7 @@ function Document(db: PrismaClient['document']) {
                     documentRootId: {
                         in: documentRootIds
                     },
-                    author: {
-                        studentGroups: {
-                            some: {
-                                userId: actor.id,
-                                isAdmin: true
-                            }
-                        }
-                    }
+                    author: whereStudentGroupAccess(actor.id, true)
                 }
             });
             return documents;

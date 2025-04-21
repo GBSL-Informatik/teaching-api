@@ -7,7 +7,7 @@ import { IoRoom } from '../routes/socketEvents';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
-import { hasElevatedAccess } from '../models/User';
+import { hasElevatedAccess, whereStudentGroupAccess } from '../models/User';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -27,24 +27,7 @@ export const create: RequestHandler<
     try {
         const { type, documentRootId, data, parentId } = req.body;
         const { onBehalfOf, uniqueMain } = req.query;
-        const elevatedAccess = hasElevatedAccess(req.user?.role);
-        const onBehalfUserId = onBehalfOf === 'true' && elevatedAccess ? req.body.authorId : undefined;
-        if (onBehalfUserId && req.user!.role !== Role.ADMIN) {
-            const onBehalfOfUser = await prisma.user.findUnique({
-                where: {
-                    id: onBehalfUserId,
-                    studentGroups: {
-                        some: {
-                            userId: req.user!.id,
-                            isAdmin: true
-                        }
-                    }
-                }
-            });
-            if (!onBehalfOfUser) {
-                throw new HTTP403Error('Not allowed to create on behalf of this user');
-            }
-        }
+        const onBehalfUserId = onBehalfOf === 'true' ? req.body.authorId : undefined;
         const { model, permissions } = await Document.createModel(
             req.user!,
             type,

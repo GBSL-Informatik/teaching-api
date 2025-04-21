@@ -55,19 +55,16 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         async findModel(actor: User, id: string): Promise<ApiStudentGroup | null> {
             const adminAccess = actor.role === Role.ADMIN;
             const model = await db.findUnique({
-                where: {
-                    id: id,
-                    ...(adminAccess
-                        ? {}
-                        : {
-                              users: {
-                                  some: {
-                                      userId: actor.id,
-                                      isAdmin: true
-                                  }
+                where: adminAccess
+                    ? { id }
+                    : {
+                          id: id,
+                          users: {
+                              some: {
+                                  userId: actor.id
                               }
-                          })
-                },
+                          }
+                      },
                 include: {
                     users: {
                         select: {
@@ -214,17 +211,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             //
             // user IDs should be provided, otherwise the frontend will not be able to relate the groups to the users
             const all = await db.findMany({
-                where:
-                    actor.role === Role.ADMIN
-                        ? undefined
-                        : {
-                              users: {
-                                  some: {
-                                      userId: actor.id,
-                                      isAdmin: true
-                                  }
-                              }
-                          },
+                ...(actor.role === Role.ADMIN ? {} : { where: { users: { some: { userId: actor.id } } } }),
                 include: {
                     users: {
                         select: {
