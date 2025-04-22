@@ -14,9 +14,16 @@ export type ApiStudentGroup = DbStudentGroup & {
     adminIds: string[];
 };
 
-const asApiRecord = (
+function asApiRecord(
+    record: DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }
+): ApiStudentGroup;
+function asApiRecord(record: null): null;
+function asApiRecord(
     record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
-): ApiStudentGroup | null => {
+): ApiStudentGroup | null;
+function asApiRecord(
+    record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
+): ApiStudentGroup | null {
     if (!record) {
         return null;
     }
@@ -27,7 +34,7 @@ const asApiRecord = (
     };
     delete (group as any).users;
     return group;
-};
+}
 
 /**
  * returns true if the user can administer the group.
@@ -77,7 +84,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             return asApiRecord(model);
         },
 
-        async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<DbStudentGroup> {
+        async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<ApiStudentGroup> {
             const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
@@ -98,12 +105,21 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     throw new HTTP403Error('Not authorized to create subgroup in this group');
                 }
             }
-            return db.update({
+            const result = await db.update({
                 where: {
                     id: id
                 },
-                data: sanitized
+                data: sanitized,
+                include: {
+                    users: {
+                        select: {
+                            userId: true,
+                            isAdmin: true
+                        }
+                    }
+                }
             });
+            return asApiRecord(result);
         },
 
         async setAdminRole(

@@ -30,10 +30,7 @@ type TypeRecordMap = {
     [RecordType.UserPermission]: ApiUserPermission;
     [RecordType.GroupPermission]: ApiGroupPermission;
     [RecordType.DocumentRoot]: ApiDocumentRootWithoutDocuments;
-    [RecordType.StudentGroup]: Omit<ApiStudentGroup, 'userIds' | 'adminIds'> & {
-        userIds?: string[];
-        adminIds?: string[];
-    };
+    [RecordType.StudentGroup]: ApiStudentGroup;
     [RecordType.AllowedAction]: AllowedAction;
     [RecordType.CmsSettings]: CmsSettings;
 };

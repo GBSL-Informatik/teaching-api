@@ -29,6 +29,9 @@ export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup 
 ) => {
     try {
         const model = await StudentGroup.updateModel(req.user!, req.params.id, req.body.data);
+        if (!model) {
+            return res.status(404).json({ message: 'Student group not found' });
+        }
 
         res.notifications = [
             {
