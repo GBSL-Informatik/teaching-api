@@ -7,6 +7,7 @@ import passport from 'passport';
 import EventRouter from './routes/socketEvents';
 import { NextFunction, Request, Response } from 'express';
 import * as Sentry from '@sentry/node';
+import { HTTP403Error } from './utils/errors/Errors';
 
 const PORT = process.env.PORT || 3002;
 
@@ -51,7 +52,7 @@ io.use((socket, next) => {
     if ((socket.request as any).user) {
         next();
     } else {
-        next(new Error('unauthorized'));
+        next(new HTTP403Error('unauthorized'));
     }
 });
 

@@ -111,8 +111,12 @@ const authConfig: Config = {
             path: '/studentGroups',
             access: [
                 {
-                    methods: ['GET', 'PUT', 'POST', 'DELETE'],
+                    methods: ['GET'],
                     minRole: Role.STUDENT
+                },
+                {
+                    methods: ['GET', 'PUT', 'POST', 'DELETE'],
+                    minRole: Role.TEACHER
                 }
             ]
         },

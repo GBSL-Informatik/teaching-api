@@ -3,6 +3,7 @@ import prisma from '../prisma';
 import { RootUserPermission as DbRootUserPermission, User } from '@prisma/client';
 import { asUserAccess } from '../helpers/accessPolicy';
 import { hasElevatedAccess, whereStudentGroupAccess } from './User';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 
@@ -20,7 +21,7 @@ const ensureAccessOrThrow = async (actor: User, userId: string) => {
         }
     });
     if (!user) {
-        throw new Error('Not authorized');
+        throw new HTTP403Error('Not authorized');
     }
 };
 
@@ -33,10 +34,10 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             access: Access
         ): Promise<DbRootUserPermission> {
             if (!hasElevatedAccess(actor.role)) {
-                throw new Error('Not authorized');
+                throw new HTTP403Error('Not authorized');
             }
             if (actor.role === Role.TEACHER) {
-                ensureAccessOrThrow(actor, userId);
+                await ensureAccessOrThrow(actor, userId);
             }
             const result = await db.create({
                 data: {
@@ -50,14 +51,14 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
 
         async updateModel(actor: User, id: string, access: Access): Promise<DbRootUserPermission> {
             if (!hasElevatedAccess(actor.role)) {
-                throw new Error('Not authorized');
+                throw new HTTP403Error('Not authorized');
             }
             const record = await db.findUnique({ where: { id: id } });
             if (!record) {
-                throw new Error('User permission not found');
+                throw new HTTP404Error('User permission not found');
             }
             if (actor.role === Role.TEACHER) {
-                ensureAccessOrThrow(actor, record.userId);
+                await ensureAccessOrThrow(actor, record.userId);
             }
             const result = await db.update({
                 where: {
@@ -72,14 +73,14 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
 
         async deleteModel(actor: User, id: string): Promise<ApiUserPermission> {
             if (!hasElevatedAccess(actor.role)) {
-                throw new Error('Not authorized');
+                throw new HTTP403Error('Not authorized');
             }
             const record = await db.findUnique({ where: { id: id } });
             if (!record) {
-                throw new Error('User permission not found');
+                throw new HTTP404Error('User permission not found');
             }
             if (actor.role === Role.TEACHER) {
-                ensureAccessOrThrow(actor, record.userId);
+                await ensureAccessOrThrow(actor, record.userId);
             }
             const result = await db.delete({
                 where: {

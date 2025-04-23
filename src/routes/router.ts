@@ -70,7 +70,7 @@ router.put('/studentGroups/:id', updateStudentGroup);
 router.delete('/studentGroups/:id', deleteStudentGroup);
 router.post('/studentGroups/:id/members/:userId', addStudentGroupUser);
 router.delete('/studentGroups/:id/members/:userId', removeStudentGroupUser);
-router.post('/studentGroups/:id/:userId', setStudentGroupAdminRole);
+router.post('/studentGroups/:id/admins/:userId', setStudentGroupAdminRole);
 
 router.post('/permissions/user', createUserPermission);
 router.put('/permissions/user/:id', updateUserPermission);
