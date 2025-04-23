@@ -33,16 +33,3 @@ export const all: RequestHandler = async (req, res, next) => {
         next(error);
     }
 };
-
-export const setRole: RequestHandler<{ id: string }, any, { data: { role: Role } }> = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const user = await User.setRole(req.user!, req.params.id, req.body.data.role);
-        res.json(user);
-    } catch (error) {
-        next(error);
-    }
-};

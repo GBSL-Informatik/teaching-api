@@ -3,7 +3,7 @@ import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
 import _ from 'lodash';
-const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName'], ['role']);
+const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName']);
 
 const RoleAccessLevel: { [key in Role]: number } = {
     [Role.STUDENT]: 0,
@@ -51,6 +51,9 @@ function User(db: PrismaClient['user']) {
             if (!(record.id === actor.id || elevatedAccess)) {
                 throw new HTTP403Error('Not authorized');
             }
+            if (data.role && data.role !== record.role) {
+                await this.setRole(actor, id, data.role as Role);
+            }
             /** remove fields not updatable*/
             const sanitized = getData(data, false, record.id === actor.id ? false : elevatedAccess);
             return db.update({
@@ -89,7 +92,7 @@ function User(db: PrismaClient['user']) {
             }
             const actorLevel = RoleAccessLevel[actor.role];
             const roleLevel = RoleAccessLevel[role];
-            if (actorLevel <= roleLevel) {
+            if (roleLevel > actorLevel) {
                 throw new HTTP403Error('Not allowed to set a higher role');
             }
             if (actor.id === userId && roleLevel < actorLevel) {
@@ -100,8 +103,8 @@ function User(db: PrismaClient['user']) {
                 throw new HTTP404Error('User not found');
             }
             const recordLevel = RoleAccessLevel[record.role];
-            if (recordLevel >= actorLevel) {
-                throw new HTTP403Error('Not allowed to lower role of user with higher or equal role');
+            if (actorLevel < recordLevel) {
+                throw new HTTP403Error('Not allowed to change the role of user with a higher role');
             }
             return db.update({
                 where: {
