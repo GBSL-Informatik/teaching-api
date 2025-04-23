@@ -17,7 +17,7 @@ export const create: RequestHandler<
             throw new HTTP400Error('Missing documentRootId, userId or access');
         }
 
-        const model = await RootUserPermission.createModel(documentRootId, userId, access);
+        const model = await RootUserPermission.createModel(req.user!, documentRootId, userId, access);
 
         res.notifications = [
             {
@@ -37,7 +37,7 @@ export const update: RequestHandler<{ id: string }, any, { access: Access }> = a
         if (!req.params.id) {
             throw new HTTP400Error('Missing id');
         }
-        const model = await RootUserPermission.updateModel(req.params.id, req.body.access);
+        const model = await RootUserPermission.updateModel(req.user!, req.params.id, req.body.access);
 
         res.notifications = [
             {
@@ -57,7 +57,7 @@ export const destroy: RequestHandler<{ id: string }> = async (req, res, next) =>
         if (!req.params.id) {
             throw new HTTP400Error('Missing id');
         }
-        const model = await RootUserPermission.deleteModel(req.params.id);
+        const model = await RootUserPermission.deleteModel(req.user!, req.params.id);
 
         res.notifications = [
             {

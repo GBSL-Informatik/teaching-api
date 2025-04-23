@@ -1,7 +1,8 @@
-import { Access, PrismaClient } from '@prisma/client';
+import { Access, PrismaClient, Role } from '@prisma/client';
 import prisma from '../prisma';
-import { RootUserPermission as DbRootUserPermission } from '.prisma/client';
+import { RootUserPermission as DbRootUserPermission, User } from '@prisma/client';
 import { asUserAccess } from '../helpers/accessPolicy';
+import { hasElevatedAccess, whereStudentGroupAccess } from './User';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 
@@ -11,21 +12,32 @@ export type ApiUserPermission = {
     access: Access;
 };
 
-function asApiRecord(dbResult: DbRootUserPermission): ApiUserPermission {
-    return {
-        id: dbResult.id,
-        userId: dbResult.userId,
-        access: dbResult.access
-    };
-}
+const ensureAccessOrThrow = async (actor: User, userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+            ...whereStudentGroupAccess(actor.id, true)
+        }
+    });
+    if (!user) {
+        throw new Error('Not authorized');
+    }
+};
 
 function RootUserPermission(db: PrismaClient['rootUserPermission']) {
     return Object.assign(db, {
         async createModel(
+            actor: User,
             documentRootId: string,
             userId: string,
             access: Access
         ): Promise<DbRootUserPermission> {
+            if (!hasElevatedAccess(actor.role)) {
+                throw new Error('Not authorized');
+            }
+            if (actor.role === Role.TEACHER) {
+                ensureAccessOrThrow(actor, userId);
+            }
             const result = await db.create({
                 data: {
                     documentRootId: documentRootId,
@@ -36,7 +48,17 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             return result;
         },
 
-        async updateModel(id: string, access: Access): Promise<DbRootUserPermission> {
+        async updateModel(actor: User, id: string, access: Access): Promise<DbRootUserPermission> {
+            if (!hasElevatedAccess(actor.role)) {
+                throw new Error('Not authorized');
+            }
+            const record = await db.findUnique({ where: { id: id } });
+            if (!record) {
+                throw new Error('User permission not found');
+            }
+            if (actor.role === Role.TEACHER) {
+                ensureAccessOrThrow(actor, record.userId);
+            }
             const result = await db.update({
                 where: {
                     id: id
@@ -48,7 +70,17 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             return result;
         },
 
-        async deleteModel(id: string): Promise<ApiUserPermission> {
+        async deleteModel(actor: User, id: string): Promise<ApiUserPermission> {
+            if (!hasElevatedAccess(actor.role)) {
+                throw new Error('Not authorized');
+            }
+            const record = await db.findUnique({ where: { id: id } });
+            if (!record) {
+                throw new Error('User permission not found');
+            }
+            if (actor.role === Role.TEACHER) {
+                ensureAccessOrThrow(actor, record.userId);
+            }
             const result = await db.delete({
                 where: {
                     id: id
