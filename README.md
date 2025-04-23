@@ -9,6 +9,26 @@ In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dot
 yarn global add dotenv-cli
 ```
 
+## Concepts
+
+### User Roles
+
+A user can have one of the following roles:
+- `ADMIN`: The user has full access to the system and can manage all resources. This includes
+  - CRUD\* operations on all resources
+  - Manage user roles and permissions
+  - Access to all system settings
+- `TEACHER`: The user can manage their own resources and has limited access to other users' resources. This includes
+  - CRUD\* operations on their own resources
+  - CRUD\* operations on StudentGroups (can create new groups, can add/remove users to/from groups they have admin access to)
+  - When a teacher creates a studentGroup and adds students to this group, the students are referenced as **managed** users.
+  - Can read docuements from managed users.
+  - Can CRUD user- and group-permissions for managed users and administrated groups.
+- `STUDENT`: The user has limited access to the system and can only manage their own resources.
+
+
+\* Documents can be updated always only by the user who created them. Except the document has excplicite shared permissions with other users/groups.
+
 ## Code Formatting
 
 For a consistent code style, the project uses [Prettier](https://prettier.io/). To format the code, run
@@ -175,23 +195,23 @@ this will generate
 the docs will be publically available under `/prisma/index.html`.
 
 ### Undo last migration (dev mode only!!!!)
-# connect to current db
+### connect to current db
 ```bash
 psql -d postgres -h localhost -U teaching_website -d teaching_website
 ```
 
-# delete last migration
+### delete last migration
 ```sql
 DELETE FROM _prisma_migrations WHERE started_at = (SELECT MAX(started_at)FROM _prisma_migrations);
 ```
 
-# undo your migration, e.g. drop a view or remove a column
+### undo your migration, e.g. drop a view or remove a column
 ```sql
 drop view view_name; -- drop view
 ALTER TABLE table_name DROP COLUMN column_name; -- drop column
 ```
 
-# disconnect
+### disconnect
 \q
 
 ## Deployment
