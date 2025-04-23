@@ -3,7 +3,8 @@ import { AccessMatrix, PUBLIC_ROUTES } from '../routes/authConfig';
 import Logger from '../utils/logger';
 import { HttpStatusCode } from '../utils/errors/BaseError';
 import { Role } from '@prisma/client';
-import { hasElevatedAccess } from '../models/User';
+import { getAccessLevel, hasElevatedAccess } from '../models/User';
+import { user } from '../controllers/users';
 
 interface AccessRegexRule {
     path: string;
@@ -11,7 +12,7 @@ interface AccessRegexRule {
     weight: number;
     access: {
         methods: ('GET' | 'POST' | 'PUT' | 'DELETE')[];
-        adminOnly: boolean;
+        minRole: Role;
     }[];
 }
 
@@ -41,7 +42,6 @@ export const createAccessRules = (accessMatrix: AccessMatrix): AccessRegexRule[]
     }, 0);
     const accessRulesWithRegex = accessRules.map((accessRule) => {
         const parts = accessRule.path.split('/');
-        let wildcards = 0;
         let weight = 0;
         const path = parts
             .map((part, idx) => {
@@ -83,9 +83,7 @@ const routeGuard = (accessMatrix: AccessRegexRule[]) => {
             return res.status(HttpStatusCode.FORBIDDEN).json({ error: 'No roles claim found!' });
         }
 
-        if (
-            !requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.role || Role.STUDENT)
-        ) {
+        if (!requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.role)) {
             return res
                 .status(HttpStatusCode.FORBIDDEN)
                 .json({ error: 'User does not have the role, method or path' });
@@ -102,7 +100,7 @@ const requestHasRequiredAttributes = (
     accessMatrix: AccessRegexRule[],
     path: string,
     method: string,
-    role: Role
+    role?: Role
 ) => {
     const accessRules = Object.values(accessMatrix);
     const accessRule = accessRules
@@ -112,14 +110,14 @@ const requestHasRequiredAttributes = (
     if (!accessRule) {
         return false;
     }
-    const elevatedAccess = hasElevatedAccess(role);
+    const userAccessLevel = getAccessLevel(role);
     const hasAccess = accessRule.access.some(
         (rule) =>
-            (elevatedAccess || !rule.adminOnly) &&
+            userAccessLevel >= getAccessLevel(rule.minRole) &&
             rule.methods.includes(method as 'GET' | 'POST' | 'PUT' | 'DELETE')
     );
     Logger.info(
-        `${hasAccess ? '✅' : '❌'} Access Rule for ${elevatedAccess ? 'Admin/Teacher' : 'User'}: [${method}:${path}] ${JSON.stringify(accessRule)}`
+        `${hasAccess ? '✅' : '❌'} Access Rule for ${role}: [${method}:${path}] ${JSON.stringify(accessRule)}`
     );
     return hasAccess;
 };

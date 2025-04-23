@@ -1,3 +1,5 @@
+import { Role } from '@prisma/client';
+
 interface Credentials {
     tenantID: string;
     clientID: string;
@@ -17,7 +19,7 @@ export interface AccessMatrix {
         path: string;
         access: {
             methods: ('GET' | 'POST' | 'PUT' | 'DELETE')[];
-            adminOnly: boolean;
+            minRole: Role;
         }[];
     };
 }
@@ -56,7 +58,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -65,7 +67,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'POST'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -74,7 +76,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['DELETE', 'GET', 'POST', 'PUT'],
-                    adminOnly: true
+                    minRole: Role.TEACHER
                 }
             ]
         },
@@ -83,7 +85,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -92,7 +94,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -101,7 +103,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -110,7 +112,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT', 'POST', 'DELETE'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -119,7 +121,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['POST', 'PUT', 'DELETE'],
-                    adminOnly: true
+                    minRole: Role.TEACHER
                 }
             ]
         },
@@ -128,7 +130,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT', 'POST', 'DELETE'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -137,11 +139,11 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'POST'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 },
                 {
                     methods: ['PUT', 'DELETE'],
-                    adminOnly: true
+                    minRole: Role.TEACHER
                 }
             ]
         },
@@ -150,7 +152,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET'],
-                    adminOnly: true
+                    minRole: Role.TEACHER
                 }
             ]
         },
@@ -159,7 +161,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['GET', 'PUT'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         },
@@ -168,7 +170,7 @@ const authConfig: Config = {
             access: [
                 {
                     methods: ['POST'],
-                    adminOnly: false
+                    minRole: Role.STUDENT
                 }
             ]
         }

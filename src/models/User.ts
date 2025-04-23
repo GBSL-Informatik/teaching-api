@@ -11,6 +11,13 @@ const RoleAccessLevel: { [key in Role]: number } = {
     [Role.ADMIN]: 2
 };
 
+export const getAccessLevel = (role?: Role | null) => {
+    if (!role) {
+        return 0;
+    }
+    return RoleAccessLevel[role] || 0;
+};
+
 export const hasElevatedAccess = (role?: Role | null) => {
     if (!role) {
         return false;
