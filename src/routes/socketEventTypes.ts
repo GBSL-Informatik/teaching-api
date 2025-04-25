@@ -3,6 +3,7 @@ import { ApiDocument } from '../models/Document';
 import { ApiUserPermission } from '../models/RootUserPermission';
 import { ApiGroupPermission } from '../models/RootGroupPermission';
 import { ApiDocumentRootWithoutDocuments } from '../models/DocumentRoot';
+import { ApiStudentGroup } from '../models/StudentGroup';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
@@ -18,6 +19,7 @@ export enum RecordType {
     UserPermission = 'UserPermission',
     GroupPermission = 'GroupPermission',
     DocumentRoot = 'DocumentRoot',
+    StudentGroup = 'StudentGroup',
     AllowedAction = 'AllowedAction',
     CmsSettings = 'CmsSettings'
 }
@@ -28,6 +30,7 @@ type TypeRecordMap = {
     [RecordType.UserPermission]: ApiUserPermission;
     [RecordType.GroupPermission]: ApiGroupPermission;
     [RecordType.DocumentRoot]: ApiDocumentRootWithoutDocuments;
+    [RecordType.StudentGroup]: ApiStudentGroup;
     [RecordType.AllowedAction]: AllowedAction;
     [RecordType.CmsSettings]: CmsSettings;
 };
@@ -105,6 +108,6 @@ export type ServerToClientEvents = {
 };
 
 export interface ClientToServerEvents {
-    [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: () => void) => void;
-    [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: () => void) => void;
+    [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: (joined: boolean) => void) => void;
+    [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: (left: boolean) => void) => void;
 }

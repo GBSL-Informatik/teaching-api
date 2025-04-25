@@ -1,4 +1,4 @@
-import { User as DbUser } from '@prisma/client';
+import { User as DbUser, Role } from '@prisma/client';
 import { RequestHandler } from 'express';
 import User from '../models/User';
 import Logger from '../utils/logger';
@@ -29,19 +29,6 @@ export const all: RequestHandler = async (req, res, next) => {
     try {
         const users = await User.all(req.user!);
         res.json(users);
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const setIsAdmin: RequestHandler<{ id: string }, any, { data: { isAdmin: boolean } }> = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const user = await User.setIsAdmin(req.user!, req.params.id, req.body.data.isAdmin);
-        res.json(user);
     } catch (error) {
         next(error);
     }

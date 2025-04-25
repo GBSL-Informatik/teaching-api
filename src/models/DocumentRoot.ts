@@ -6,13 +6,15 @@ import {
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
-    User
+    User,
+    Role
 } from '@prisma/client';
 import { ApiDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
+import { hasElevatedAccess, whereStudentGroupAccess } from './User';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -98,7 +100,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 studentGroup: {
                                     users: {
                                         some: {
-                                            id: actor.id
+                                            userId: actor.id
                                         }
                                     }
                                 }
@@ -164,7 +166,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                                 studentGroup: {
                                     users: {
                                         some: {
-                                            id: actorId
+                                            userId: actorId
                                         }
                                     }
                                 }
@@ -261,18 +263,37 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             };
         },
         async getPermissions(actor: User, id: string): Promise<Permissions> {
-            if (!actor.isAdmin) {
+            if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
             const userPermissions = await prisma.rootUserPermission.findMany({
-                where: {
-                    documentRootId: id
-                }
+                where:
+                    actor.role === Role.ADMIN
+                        ? {
+                              documentRootId: id
+                          }
+                        : {
+                              documentRootId: id,
+                              user: whereStudentGroupAccess(actor.id, true)
+                          }
             });
             const groupPermissions = await prisma.rootGroupPermission.findMany({
-                where: {
-                    documentRootId: id
-                }
+                where:
+                    actor.role === Role.ADMIN
+                        ? {
+                              documentRootId: id
+                          }
+                        : {
+                              documentRootId: id,
+                              studentGroup: {
+                                  users: {
+                                      some: {
+                                          userId: actor.id,
+                                          isAdmin: true
+                                      }
+                                  }
+                              }
+                          }
             });
             return {
                 id: id,
@@ -285,7 +306,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             if (!record) {
                 throw new HTTP404Error('DocumentRoot not found');
             }
-            if (!actor.isAdmin) {
+            if (actor.role !== Role.ADMIN) {
                 throw new HTTP403Error('Not authorized');
             }
 

@@ -1,4 +1,4 @@
-import { Access, Document as DbDocument, PrismaClient, User } from '@prisma/client';
+import { Access, Document as DbDocument, PrismaClient, Role, User } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
@@ -7,6 +7,7 @@ import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { ApiUserPermission } from './RootUserPermission';
 import Logger from '../utils/logger';
+import { hasElevatedAccess, whereStudentGroupAccess } from './User';
 
 type AccessCheckableDocument = DbDocument & {
     documentRoot: AccessCheckableDocumentRoot;
@@ -81,7 +82,7 @@ function Document(db: PrismaClient['document']) {
                                         studentGroup: {
                                             users: {
                                                 some: {
-                                                    id: actor.id
+                                                    userId: actor.id
                                                 }
                                             }
                                         }
@@ -111,18 +112,20 @@ function Document(db: PrismaClient['document']) {
             if (!documentRoot) {
                 throw new HTTP404Error('Document root not found');
             }
-            const onBehalfOf = !!_onBehalfOfUserId && actor.isAdmin;
+            const elevatedAccess = hasElevatedAccess(actor.role);
+            const onBehalfOf = !!_onBehalfOfUserId && elevatedAccess;
             const authorId = onBehalfOf ? _onBehalfOfUserId : actor.id;
             if (onBehalfOf && _onBehalfOfUserId !== actor.id) {
-                Logger.info(`🔑 On Behalf Of: ${_onBehalfOfUserId}`);
                 const onBehalfOfUser = await prisma.user.findUnique({
-                    where: {
-                        id: _onBehalfOfUserId
-                    }
+                    where:
+                        actor.role === Role.ADMIN
+                            ? { id: _onBehalfOfUserId }
+                            : { id: _onBehalfOfUserId, ...whereStudentGroupAccess(actor.id, true) }
                 });
                 if (!onBehalfOfUser) {
-                    throw new HTTP404Error('On Behalf Of user not found');
+                    throw new HTTP404Error('On Behalf Of user not found or no required access');
                 }
+                Logger.info(`🔑 On Behalf Of: ${_onBehalfOfUserId}`);
             }
             if (parentId) {
                 const parent = await this.findModel(actor, parentId);
@@ -135,7 +138,7 @@ function Document(db: PrismaClient['document']) {
                 if (
                     !(
                         parent.document.authorId === actor.id ||
-                        actor.isAdmin ||
+                        elevatedAccess ||
                         RWAccess.has(parent.highestPermission)
                     )
                 ) {
@@ -179,7 +182,7 @@ function Document(db: PrismaClient['document']) {
                                         studentGroup: {
                                             users: {
                                                 some: {
-                                                    id: authorId
+                                                    userId: authorId
                                                 }
                                             }
                                         }
@@ -228,15 +231,20 @@ function Document(db: PrismaClient['document']) {
             docData: JsonObject,
             _onBehalfOf = false /** this flag enables the modification of documents on behalf of another user */
         ) {
-            const onBehalfOf = _onBehalfOf && actor.isAdmin;
+            const elevatedAccess = hasElevatedAccess(actor.role);
+            const onBehalfOf = _onBehalfOf && elevatedAccess;
             if (onBehalfOf) {
                 /**
                  * ensure the document exists
                  */
                 const record = await db.findUnique({
-                    where: {
-                        id: id
-                    }
+                    where:
+                        actor.role === Role.ADMIN
+                            ? { id }
+                            : {
+                                  id: id,
+                                  author: whereStudentGroupAccess(actor.id, true)
+                              }
                 });
                 if (!record) {
                     throw new HTTP404Error('Document not found');
@@ -325,31 +333,26 @@ function Document(db: PrismaClient['document']) {
             return model;
         },
 
-        async all(actor: User): Promise<DbDocument[]> {
-            // TODO: Only include documents where the (non-admin) user has at least RO access on the root.
-            if (actor.isAdmin) {
-                return db.findMany({});
-            }
-            return db.findMany({
-                where: {
-                    authorId: actor.id
-                },
-                include: {
-                    author: true,
-                    children: true
-                }
-            });
-        },
-
         async allOfDocumentRoots(actor: User, documentRootIds: string[]): Promise<DbDocument[]> {
-            if (!actor.isAdmin) {
+            if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
+            if (actor.role === Role.ADMIN) {
+                return db.findMany({
+                    where: {
+                        documentRootId: {
+                            in: documentRootIds
+                        }
+                    }
+                });
+            }
+            // only include documents where the author is in the same group as the actor.
             const documents = await db.findMany({
                 where: {
                     documentRootId: {
                         in: documentRootIds
-                    }
+                    },
+                    author: whereStudentGroupAccess(actor.id, true)
                 }
             });
             return documents;

@@ -6,7 +6,7 @@
   "author": "GBSL Informatik",
   "license": "CC-BY-SA",
   "scripts": {
-    "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json && yarn sentry:sourcemaps",
+    "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json && (yarn sentry:sourcemaps || true)",
     "start": "node -r dotenv/config ./dist/src/server.js",
     "dev": "dotenv -- nodemon src/server.ts",
     "dummy:run": "ts-node -r dotenv/config ./bin/dummy.ts",
@@ -58,5 +58,8 @@
     "prisma-erd-generator": "^2.0.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": "^22.11.0"
   }
 }

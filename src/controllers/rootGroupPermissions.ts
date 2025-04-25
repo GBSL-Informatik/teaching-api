@@ -16,7 +16,7 @@ export const create: RequestHandler<
             throw new HTTP400Error('Missing documentRootId, groupId or access');
         }
 
-        const model = await RootGroupPermission.createModel(documentRootId, groupId, access);
+        const model = await RootGroupPermission.createModel(req.user!, documentRootId, groupId, access);
 
         res.notifications = [
             {
@@ -33,7 +33,7 @@ export const create: RequestHandler<
 
 export const update: RequestHandler<{ id: string }, any, { access: Access }> = async (req, res, next) => {
     try {
-        const model = await RootGroupPermission.updateModel(req.params.id, req.body.access);
+        const model = await RootGroupPermission.updateModel(req.user!, req.params.id, req.body.access);
 
         res.notifications = [
             {
@@ -50,7 +50,7 @@ export const update: RequestHandler<{ id: string }, any, { access: Access }> = a
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
-        const model = await RootGroupPermission.deleteModel(req.params.id);
+        const model = await RootGroupPermission.deleteModel(req.user!, req.params.id);
 
         res.notifications = [
             {

@@ -5,6 +5,7 @@ import { IoRoom } from '../routes/socketEvents';
 import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
 import Document from '../models/Document';
 import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
+import { hasElevatedAccess } from '../models/User';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -38,7 +39,7 @@ export const findManyFor: RequestHandler<
         if (!req.params.id) {
             throw new HTTP400Error('Missing user id');
         }
-        const canLoad = req.user!.id === req.params.id || req.user?.isAdmin;
+        const canLoad = req.user!.id === req.params.id || hasElevatedAccess(req.user?.role);
         if (!canLoad) {
             throw new HTTP403Error('Not Authorized');
         }
@@ -59,7 +60,7 @@ export const findManyFor: RequestHandler<
 
 export const allDocuments: RequestHandler<any, any, any, { rids: string[] }> = async (req, res, next) => {
     try {
-        if (!req.user!.isAdmin) {
+        if (!hasElevatedAccess(req.user!.role)) {
             throw new HTTP403Error('Not Authorized');
         }
         const ids = Array.isArray(req.query.rids) ? req.query.rids : [req.query.rids];

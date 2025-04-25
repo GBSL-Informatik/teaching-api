@@ -26,7 +26,7 @@ export const create: RequestHandler<
     try {
         const { type, documentRootId, data, parentId } = req.body;
         const { onBehalfOf, uniqueMain } = req.query;
-        const onBehalfUser = onBehalfOf === 'true' && req.user!.isAdmin ? req.body.authorId : undefined;
+        const onBehalfUserId = onBehalfOf === 'true' ? req.body.authorId : undefined;
         const { model, permissions } = await Document.createModel(
             req.user!,
             type,
@@ -34,7 +34,7 @@ export const create: RequestHandler<
             data,
             !parentId ? undefined : parentId,
             uniqueMain === 'true',
-            onBehalfUser
+            onBehalfUserId
         );
         /**
          * Notifications to
@@ -217,15 +217,6 @@ export const linkTo: RequestHandler<{ id: string; parentId: string }, any, any> 
         ];
 
         res.status(200).json(updated);
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const all: RequestHandler = async (req, res, next) => {
-    try {
-        const documents = await Document.all(req.user!);
-        res.json(documents);
     } catch (error) {
         next(error);
     }

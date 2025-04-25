@@ -7,7 +7,8 @@ import {
     find as findStudentGroup,
     update as updateStudentGroup,
     addUser as addStudentGroupUser,
-    removeUser as removeStudentGroupUser
+    removeUser as removeStudentGroupUser,
+    setAdminRole as setStudentGroupAdminRole
 } from '../controllers/studentGroups';
 import {
     create as createUserPermission,
@@ -69,6 +70,7 @@ router.put('/studentGroups/:id', updateStudentGroup);
 router.delete('/studentGroups/:id', deleteStudentGroup);
 router.post('/studentGroups/:id/members/:userId', addStudentGroupUser);
 router.delete('/studentGroups/:id/members/:userId', removeStudentGroupUser);
+router.post('/studentGroups/:id/admins/:userId', setStudentGroupAdminRole);
 
 router.post('/permissions/user', createUserPermission);
 router.put('/permissions/user/:id', updateUserPermission);

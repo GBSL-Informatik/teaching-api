@@ -8,10 +8,6 @@ generator docs {
   output   = "../docs/prisma"
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-}
-
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
@@ -23,15 +19,15 @@ model User {
   email                           String                            @unique
   firstName                       String                            @map("first_name")
   lastName                        String                            @map("last_name")
-  isAdmin                         Boolean                           @default(false) @map("is_admin")
+  role                            Role                              @default(STUDENT) @map("role")
   createdAt                       DateTime                          @default(now()) @map("created_at")
   updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
   documents                       Document[]                        @relation("documents")
   rootUserPermissions             RootUserPermission[]              @relation("root_user_to_user_permission")
-  studentGroups                   StudentGroup[]                    @relation("StudentGroupToUser")
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
   cmsSettings                     CmsSettings?
+  studentGroups                   UserStudentGroup[]                @relation("user_student_groups")
 
   @@map("users")
 }
@@ -55,17 +51,30 @@ model CmsSettings {
   @@map("cms_settings")
 }
 
+model UserStudentGroup {
+  userId         String       @map("user_id") @db.Uuid
+  studentGroupId String       @map("student_group_id") @db.Uuid
+  isAdmin        Boolean      @default(false) @map("is_admin")
+  user           User         @relation("user_student_groups", fields: [userId], references: [id], onDelete: Cascade)
+  studentGroup   StudentGroup @relation("user_student_groups", fields: [studentGroupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, studentGroupId], name: "id", map: "user_student_groups_pkey")
+  @@index([userId], map: "user_student_group_user_index")
+  @@map("user_student_groups")
+}
+
 model StudentGroup {
-  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                            String                            @default("")
-  description                     String                            @default("")
-  parentId                        String?                           @map("parent_id") @db.Uuid
-  createdAt                       DateTime                          @default(now()) @map("created_at")
-  updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
-  rootGroupPermissions            RootGroupPermission[]             @relation("root_group_to_student_group_permission")
-  parent                          StudentGroup?                     @relation("parent_student_group", fields: [parentId], references: [id], onDelete: Cascade)
-  children                        StudentGroup[]                    @relation("parent_student_group")
-  users                           User[]                            @relation("StudentGroupToUser")
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String                @default("")
+  description          String                @default("")
+  parentId             String?               @map("parent_id") @db.Uuid
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @default(now()) @updatedAt @map("updated_at")
+  rootGroupPermissions RootGroupPermission[] @relation("root_group_to_student_group_permission")
+  parent               StudentGroup?         @relation("parent_student_group", fields: [parentId], references: [id], onDelete: Cascade)
+  children             StudentGroup[]        @relation("parent_student_group")
+  users                UserStudentGroup[]    @relation("user_student_groups")
+
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
@@ -217,4 +226,10 @@ enum Access {
   RO_User
   RW_User
   None_User
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
 }
