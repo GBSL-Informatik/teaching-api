@@ -11,7 +11,7 @@ export enum IoEvent {
     CHANGED_DOCUMENT = 'CHANGED_DOCUMENT',
     DELETED_RECORD = 'DELETED_RECORD',
     CONNECTED_CLIENTS = 'CONNECTED_CLIENTS',
-    REQUEST_NAVIGATION = 'REQUEST_NAVIGATION'
+    ACTION = 'ACTION'
 }
 
 export enum RecordType {
@@ -98,7 +98,7 @@ export type Notification =
 export enum IoClientEvent {
     JOIN_ROOM = 'JOIN_ROOM',
     LEAVE_ROOM = 'LEAVE_ROOM',
-    REQUEST_NAVIGATION = 'REQUEST_NAVIGATION'
+    ACTION = 'ACTION'
 }
 
 export type ServerToClientEvents = {
@@ -107,26 +107,17 @@ export type ServerToClientEvents = {
     [IoEvent.DELETED_RECORD]: (message: DeletedRecord) => void;
     [IoEvent.CHANGED_DOCUMENT]: (message: ChangedDocument) => void;
     [IoEvent.CONNECTED_CLIENTS]: (message: ConnectedClients) => void;
-    [IoEvent.REQUEST_NAVIGATION]: (message: NavigationAction) => void;
+    [IoEvent.ACTION]: (message: Action['action']) => void;
 };
 
-interface NavigationReload {
-    type: 'reload';
-}
-interface NavigationTarget {
-    type: 'target';
-    target: string;
-}
-export type NavigationAction = NavigationReload | NavigationTarget;
-
-export interface NavigationRequest {
+export interface Action<T = {}> {
+    action: T;
     roomIds: string[];
     userIds: string[];
-    action: NavigationAction;
 }
 
 export interface ClientToServerEvents {
     [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: (joined: boolean) => void) => void;
     [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: (left: boolean) => void) => void;
-    [IoClientEvent.REQUEST_NAVIGATION]: (targets: NavigationRequest, callback: () => void) => void;
+    [IoClientEvent.ACTION]: (action: Action, callback: (ok: boolean) => void) => void;
 }
