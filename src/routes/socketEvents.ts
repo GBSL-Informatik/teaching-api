@@ -8,7 +8,7 @@ import {
     IoEvent,
     IoClientEvent,
     ServerToClientEvents,
-    NavigationRequest
+    Action
 } from './socketEventTypes';
 import StudentGroup from '../models/StudentGroup';
 import prisma from '../prisma';
@@ -35,14 +35,13 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
             io.to(IoRoom.ADMIN).emit(IoEvent.CONNECTED_CLIENTS, { rooms: rooms, type: 'full' });
         }
         if (hasElevatedAccess(user.role)) {
-            socket.on(IoClientEvent.REQUEST_NAVIGATION, (navRequest, onDone) => {
+            socket.on(IoClientEvent.ACTION, (navRequest, onDone) => {
                 if (user.role === Role.ADMIN) {
                     socket
                         .to([...navRequest.roomIds, ...navRequest.userIds])
                         .except(socket.id)
                         .emit(IoEvent.REQUEST_NAVIGATION, navRequest.action);
-                    onDone(true);
-                    return;
+                    return onDone(true);
                 }
                 // check access first
                 (navRequest.roomIds.length > 0
