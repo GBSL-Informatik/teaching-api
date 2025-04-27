@@ -128,5 +128,5 @@ export interface NavigationRequest {
 export interface ClientToServerEvents {
     [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: (joined: boolean) => void) => void;
     [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: (left: boolean) => void) => void;
-    [IoClientEvent.REQUEST_NAVIGATION]: (targets: NavigationRequest, callback: () => void) => void;
+    [IoClientEvent.REQUEST_NAVIGATION]: (targets: NavigationRequest, callback: (ok: boolean) => void) => void;
 }

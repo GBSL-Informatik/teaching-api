@@ -35,84 +35,85 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
             io.to(IoRoom.ADMIN).emit(IoEvent.CONNECTED_CLIENTS, { rooms: rooms, type: 'full' });
         }
         if (hasElevatedAccess(user.role)) {
-            socket.on(IoClientEvent.REQUEST_NAVIGATION, (navRequest: NavigationRequest) => {
+            socket.on(IoClientEvent.REQUEST_NAVIGATION, (navRequest, onDone) => {
                 if (user.role === Role.ADMIN) {
                     socket
                         .to([...navRequest.roomIds, ...navRequest.userIds])
                         .except(socket.id)
                         .emit(IoEvent.REQUEST_NAVIGATION, navRequest.action);
-                } else {
-                    // check access first
-                    (navRequest.roomIds.length > 0
-                        ? prisma.studentGroup
-                              .findMany({
-                                  where: {
-                                      id: { in: navRequest.roomIds },
-                                      users: {
-                                          some: {
-                                              userId: user.id,
-                                              isAdmin: true
-                                          }
+                    onDone(true);
+                    return;
+                }
+                // check access first
+                (navRequest.roomIds.length > 0
+                    ? prisma.studentGroup
+                          .findMany({
+                              where: {
+                                  id: { in: navRequest.roomIds },
+                                  users: {
+                                      some: {
+                                          userId: user.id,
+                                          isAdmin: true
                                       }
-                                  },
-                                  select: {
-                                      id: true
                                   }
-                              })
-                              .then((sg) => {
-                                  return sg.map((group) => group.id);
-                              })
-                        : Promise.resolve([])
-                    ).then((groupIds) => {
-                        return (
-                            navRequest.userIds.length > 0
-                                ? prisma.studentGroup
-                                      .findMany({
-                                          where: {
-                                              AND: [
-                                                  {
-                                                      users: {
-                                                          some: {
-                                                              userId: { in: navRequest.userIds }
-                                                          }
-                                                      }
-                                                  },
-                                                  {
-                                                      users: {
-                                                          some: {
-                                                              userId: user.id,
-                                                              isAdmin: true
-                                                          }
+                              },
+                              select: {
+                                  id: true
+                              }
+                          })
+                          .then((sg) => {
+                              return sg.map((group) => group.id);
+                          })
+                    : Promise.resolve([])
+                ).then((groupIds) => {
+                    return (
+                        navRequest.userIds.length > 0
+                            ? prisma.studentGroup
+                                  .findMany({
+                                      where: {
+                                          AND: [
+                                              {
+                                                  users: {
+                                                      some: {
+                                                          userId: { in: navRequest.userIds }
                                                       }
                                                   }
-                                              ]
-                                          },
-                                          select: {
-                                              users: {
-                                                  select: {
-                                                      userId: true
+                                              },
+                                              {
+                                                  users: {
+                                                      some: {
+                                                          userId: user.id,
+                                                          isAdmin: true
+                                                      }
                                                   }
                                               }
+                                          ]
+                                      },
+                                      select: {
+                                          users: {
+                                              select: {
+                                                  userId: true
+                                              }
                                           }
-                                      })
-                                      .then((studentGroups) => {
-                                          return studentGroups
-                                              .flatMap((group) => group.users.flatMap((user) => user.userId))
-                                              .filter((id) => navRequest.userIds.includes(id));
-                                      })
-                                : Promise.resolve([])
-                        ).then((userIds) => {
-                            const audience = [...userIds, ...groupIds];
-                            if (audience.length === 0) {
-                                return;
-                            }
+                                      }
+                                  })
+                                  .then((studentGroups) => {
+                                      return studentGroups
+                                          .flatMap((group) => group.users.flatMap((user) => user.userId))
+                                          .filter((id) => navRequest.userIds.includes(id));
+                                  })
+                            : Promise.resolve([])
+                    ).then((userIds) => {
+                        const audience = [...userIds, ...groupIds];
+                        if (audience.length > 0) {
                             socket
                                 .to(audience)
                                 .except(socket.id)
                                 .emit(IoEvent.REQUEST_NAVIGATION, navRequest.action);
-                        });
+                        }
+                        onDone(true);
                     });
-                }
+                });
             });
         }
         socket.join(IoRoom.ALL);
