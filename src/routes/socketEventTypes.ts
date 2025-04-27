@@ -110,18 +110,8 @@ export type ServerToClientEvents = {
     [IoEvent.ACTION]: (message: Action['action']) => void;
 };
 
-interface ActionNavigationReload {
-    type: 'nav-reload';
-}
-interface ActionNavigationTarget {
-    type: 'nav-target';
-    target: string;
-}
-
-export type ActionNavigation = ActionNavigationReload | ActionNavigationTarget;
-
-export interface Action {
-    action: ActionNavigation;
+export interface Action<T = {}> {
+    action: T;
     roomIds: string[];
     userIds: string[];
 }
