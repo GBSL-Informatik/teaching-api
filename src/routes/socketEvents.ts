@@ -40,7 +40,7 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
                     socket
                         .to([...navRequest.roomIds, ...navRequest.userIds])
                         .except(socket.id)
-                        .emit(IoEvent.REQUEST_NAVIGATION, navRequest.action);
+                        .emit(IoEvent.ACTION, navRequest.action);
                     return onDone(true);
                 }
                 // check access first
@@ -105,10 +105,7 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
                     ).then((userIds) => {
                         const audience = [...userIds, ...groupIds];
                         if (audience.length > 0) {
-                            socket
-                                .to(audience)
-                                .except(socket.id)
-                                .emit(IoEvent.REQUEST_NAVIGATION, navRequest.action);
+                            socket.to(audience).except(socket.id).emit(IoEvent.ACTION, navRequest.action);
                         }
                         onDone(true);
                     });
