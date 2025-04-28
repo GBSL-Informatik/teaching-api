@@ -29,6 +29,14 @@ const app = express();
 export const API_VERSION = 'v1';
 export const API_URL = `/api/${API_VERSION}`;
 
+
+const HOSTNAME = new URL(process.env.FRONTEND_URL || 'http://localhost:3000').hostname;
+const domainParts = HOSTNAME.split('.');
+const domain = domainParts.slice(domainParts.length - 2).join('.'); /** foo.bar.ch --> domain is bar.ch */
+const CORS_APP = new RegExp(`https://(.*\.)?${domain.split('.')[0]}\.${domain.split('.')[1] || ':3000'}$`, 'i')
+const CORS_NETLIFY = process.env.NETLIFY_PROJECT_NAME ? new RegExp(`https://deploy-preview-\\d+--${process.env.NETLIFY_PROJECT_NAME}\\.netlify\\.app$`, 'i') : undefined;
+export const CORS_ORIGIN = [HOSTNAME, CORS_APP, CORS_NETLIFY].filter(rule => !!rule) as (string | RegExp)[];
+
 /**
  *  this is not needed when running behind a reverse proxy
  *  as is the case with dokku (nginx)
@@ -39,10 +47,9 @@ export const API_URL = `/api/${API_VERSION}`;
 app.use(
     cors({
         credentials: true,
-        origin: process.env.WITH_DEPLOY_PREVIEW
-            ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
-            : process.env.FRONTEND_URL || true /* true = strict origin */,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
+        origin: CORS_ORIGIN,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+
     })
 );
 
@@ -55,10 +62,6 @@ const store = new (connectPgSimple(session))({
     conString: process.env.DATABASE_URL,
     tableName: 'sessions'
 });
-
-const HOSTNAME = new URL(process.env.FRONTEND_URL || 'http://localhost:3000').hostname;
-const domainParts = HOSTNAME.split('.');
-const domain = domainParts.slice(domainParts.length - 2).join('.'); /** foo.bar.ch --> domain is bar.ch */
 
 const SESSION_MAX_AGE = 2592000000 as const; // 1000 * 60 * 60 * 24 * 30 = 2592000000 = 30 days
 
@@ -80,7 +83,7 @@ export const sessionMiddleware = session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: process.env.WITH_DEPLOY_PREVIEW ? 'none' : 'strict',
+        sameSite: process.env.NETLIFY_PROJECT_NAME ? 'none' : 'strict',
         domain: domain.length > 0 ? domain : undefined,
         maxAge: SESSION_MAX_AGE // 30 days
     }

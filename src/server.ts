@@ -1,4 +1,4 @@
-import app, { configure, sessionMiddleware } from './app';
+import app, { configure, CORS_ORIGIN, sessionMiddleware } from './app';
 import http from 'http';
 import Logger from './utils/logger';
 import { Server } from 'socket.io';
@@ -12,13 +12,10 @@ import { HTTP403Error } from './utils/errors/Errors';
 const PORT = process.env.PORT || 3002;
 
 const server = http.createServer(app);
-const corsOrigin = process.env.WITH_DEPLOY_PREVIEW
-    ? [process.env.FRONTEND_URL || true, /https:\/\/deploy-preview-\d+--teaching-dev.netlify.app/]
-    : process.env.FRONTEND_URL || true; /* true = strict origin */
 
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
     cors: {
-        origin: corsOrigin,
+        origin: CORS_ORIGIN,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE']
     },
