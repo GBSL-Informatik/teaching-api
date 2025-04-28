@@ -29,13 +29,16 @@ const app = express();
 export const API_VERSION = 'v1';
 export const API_URL = `/api/${API_VERSION}`;
 
-
 const HOSTNAME = new URL(process.env.FRONTEND_URL || 'http://localhost:3000').hostname;
 const domainParts = HOSTNAME.split('.');
 const domain = domainParts.slice(domainParts.length - 2).join('.'); /** foo.bar.ch --> domain is bar.ch */
-const CORS_APP = new RegExp(`https://(.*\.)?${domain.split('.')[0]}\.${domain.split('.')[1] || ':3000'}$`, 'i')
-const CORS_NETLIFY = process.env.NETLIFY_PROJECT_NAME ? new RegExp(`https://deploy-preview-\\d+--${process.env.NETLIFY_PROJECT_NAME}\\.netlify\\.app$`, 'i') : undefined;
-export const CORS_ORIGIN = [HOSTNAME, CORS_APP, CORS_NETLIFY].filter(rule => !!rule) as (string | RegExp)[];
+const CORS_APP = domain.split('.')[1]
+    ? new RegExp(`https://(.*\.)?${domain.split('.')[0]}\\.${domain.split('.')[1]}$`, 'i')
+    : 'http://localhost:3000';
+const CORS_NETLIFY = process.env.NETLIFY_PROJECT_NAME
+    ? new RegExp(`https://deploy-preview-\\d+--${process.env.NETLIFY_PROJECT_NAME}\\.netlify\\.app$`, 'i')
+    : undefined;
+export const CORS_ORIGIN = [HOSTNAME, CORS_APP, CORS_NETLIFY].filter((rule) => !!rule) as (string | RegExp)[];
 
 /**
  *  this is not needed when running behind a reverse proxy
@@ -48,8 +51,7 @@ app.use(
     cors({
         credentials: true,
         origin: CORS_ORIGIN,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
     })
 );
 
