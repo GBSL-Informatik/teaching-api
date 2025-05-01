@@ -40,6 +40,11 @@ const CORS_NETLIFY = process.env.NETLIFY_PROJECT_NAME
     : undefined;
 export const CORS_ORIGIN = [HOSTNAME, CORS_APP, CORS_NETLIFY].filter((rule) => !!rule) as (string | RegExp)[];
 
+if (process.env.NODE_ENV !== 'production') {
+    const additionlOrigins = process.env.ADDITIONAL_DEV_FRONTEND_URLS?.split(';') || [];
+    additionlOrigins.filter((origin) => !!origin).forEach((origin) => CORS_ORIGIN.push(origin));
+}
+
 /**
  *  this is not needed when running behind a reverse proxy
  *  as is the case with dokku (nginx)
