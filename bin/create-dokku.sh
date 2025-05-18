@@ -15,8 +15,8 @@ read -p "Enter MSAL_TENANT_ID: " MSAL_TENANT_ID
 # Prompt for DOKKU_LETSENCRYPT_EMAIL
 read -p "Enter DOKKU_LETSENCRYPT_EMAIL: " LETSENCRYPT_EMAIL
 
-# Prompt for FRONTEND_URL
-read -p "Enter FRONTEND_URL: " FRONTEND_URL
+# Prompt for D
+read -p "Enter ALLOWED_ORIGINS: " ALLOWED_ORIGINS
 
 # Prompt for AWS backup credentials
 read -p "Enter AWS access key ID for backup: " AWS_ACCESS_KEY
@@ -43,7 +43,7 @@ dokku config:set $APP_NAME MSAL_CLIENT_ID="$MSAL_CLIENT_ID"
 dokku config:set $APP_NAME MSAL_TENANT_ID="$MSAL_TENANT_ID"
 dokku config:set --no-restart $APP_NAME DOKKU_LETSENCRYPT_EMAIL="$LETSENCRYPT_EMAIL"
 dokku config:set $APP_NAME SESSION_SECRET="$SESSION_SECRET"
-dokku config:set $APP_NAME FRONTEND_URL="$FRONTEND_URL"
+dokku config:set $APP_NAME ALLOWED_ORIGINS="$ALLOWED_ORIGINS"
 
 # Configure nginx for file uploads
 mkdir -p /home/dokku/$APP_NAME/nginx.conf.d/

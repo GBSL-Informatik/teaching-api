@@ -1,4 +1,4 @@
-import app, { configure, CORS_ORIGIN, sessionMiddleware } from './app';
+import app, { configure, sessionMiddleware } from './app';
 import http from 'http';
 import Logger from './utils/logger';
 import { Server } from 'socket.io';
@@ -8,6 +8,7 @@ import EventRouter from './routes/socketEvents';
 import { NextFunction, Request, Response } from 'express';
 import * as Sentry from '@sentry/node';
 import { HTTP403Error } from './utils/errors/Errors';
+import { CORS_ORIGIN } from './utils/originConfig';
 
 const PORT = process.env.PORT || 3002;
 
