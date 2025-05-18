@@ -48,7 +48,8 @@ to format all typescript files.
 | `USER_ID`              | The UUID of the user to be created on seeding. \*                                                                                                                                               | `fc0dfc19-d4a3-4354-afef-b5706046b368`              |
 | `NO_AUTH`              | If set (and not running `production` mode), clients can authenticate as any user by supplying `{'email': 'some@email.ch'}` in the `Auhorization` header, for any user email in the database\*\* | `NO_AUTH=true`                                      |
 | `PORT`                 | (optional) The port the server should listen on.                                                                                                                                                | `3002` (default)                                    |
-| `ALLOWED_ORIGINS`         | A comma-separated list of origins allowed to access the api.                                                                                                                                                                        | `http://localhost:3000`                             |
+| `ALLOWED_ORIGINS`      | A comma-separated list of origins allowed to access the api. E.g. teaching-dev.gbsl.website                                                                                                     | `localhost:3000`                                    |
+| `ALLOW_SUBDOMAINS`     | Wheter subdomains from `ALLOWED_DOMAINS` should be granted access too.                                                                                                                          | `false`                                             |
 | `SESSION_SECRET`       | The secret for the session cookie.\*\*\*                                                                                                                                                        | `secret`                                            |
 | `MSAL_CLIENT_ID`       | The client id for the web api from Azure.                                                                                                                                                       |                                                     |
 | `MSAL_TENANT_ID`       | The Tenant ID from your Azure instance                                                                                                                                                          |                                                     |
@@ -239,6 +240,7 @@ dokku config:set dev-teaching-api MSAL_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXX
 dokku config:set --no-restart dev-teaching-api DOKKU_LETSENCRYPT_EMAIL="foo@bar.ch"
 dokku config:set dev-teaching-api SESSION_SECRET="$(openssl rand -base64 32)"
 dokku config:set dev-teaching-api ALLOWED_ORIGINS="tdev.tld"
+dokku config:set dev-teaching-api ALLOW_SUBDOMAINS="false"
 
 mkdir /home/dokku/dev-teaching-api/nginx.conf.d/
 echo 'client_max_body_size 5m;' > /home/dokku/dev-teaching-api/nginx.conf.d/upload.conf
