@@ -55,4 +55,4 @@ if (netlifyProjectName) {
     CORS_ORIGIN.push(new RegExp(`https://deploy-preview-\\d+--${netlifyProjectName}\\.netlify\\.app$`, 'i'));
 }
 
-export const SAME_SITE = allowedOrigins.length > 1 ? 'none' : 'strict';
+export const SAME_SITE = allowedOrigins.length > 1 || netlifyProjectName ? 'none' : 'strict';
