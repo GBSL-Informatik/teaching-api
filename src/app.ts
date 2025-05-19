@@ -16,6 +16,7 @@ import connectPgSimple from 'connect-pg-simple';
 import Logger from './utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
 import type { Server } from 'socket.io';
+import { CORS_ORIGIN, SAME_SITE } from './utils/originConfig';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 
@@ -28,17 +29,6 @@ const AccessRules = createAccessRules(authConfig.accessMatrix);
 const app = express();
 export const API_VERSION = 'v1';
 export const API_URL = `/api/${API_VERSION}`;
-
-const HOSTNAME = new URL(process.env.FRONTEND_URL || 'http://localhost:3000').hostname;
-const domainParts = HOSTNAME.split('.');
-const domain = domainParts.slice(domainParts.length - 2).join('.'); /** foo.bar.ch --> domain is bar.ch */
-const CORS_APP = domain.split('.')[1]
-    ? new RegExp(`https://(.*\.)?${domain.split('.')[0]}\\.${domain.split('.')[1]}$`, 'i')
-    : 'http://localhost:3000';
-const CORS_NETLIFY = process.env.NETLIFY_PROJECT_NAME
-    ? new RegExp(`https://deploy-preview-\\d+--${process.env.NETLIFY_PROJECT_NAME}\\.netlify\\.app$`, 'i')
-    : undefined;
-export const CORS_ORIGIN = [HOSTNAME, CORS_APP, CORS_NETLIFY].filter((rule) => !!rule) as (string | RegExp)[];
 
 /**
  *  this is not needed when running behind a reverse proxy
@@ -85,8 +75,7 @@ export const sessionMiddleware = session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: process.env.NETLIFY_PROJECT_NAME ? 'none' : 'strict',
-        domain: domain.length > 0 ? domain : undefined,
+        sameSite: SAME_SITE,
         maxAge: SESSION_MAX_AGE // 30 days
     }
 });
