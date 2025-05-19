@@ -11,7 +11,8 @@
 		"ghcr.io/rails/devcontainer/features/postgres-client": {
 			"version": "17"
 		},
-		"ghcr.io/code-fabrik/features/dokku-cli:latest": {}
+		"ghcr.io/code-fabrik/features/dokku-cli:latest": {},
+	    "ghcr.io/georglauterbach/dev-container-features/cache-vscode-extensions:0": {}
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// This can be used to network with other containers or with the host.
@@ -27,8 +28,40 @@
 				"dbaeumer.vscode-eslint",
 				"motivesoft.vscode-uuid-generator",
 		        "dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode"
-			]
+				"esbenp.prettier-vscode",
+				"ms-ossdata.vscode-pgsql",
+				"GitHub.copilot",
+				"GitHub.vscode-pull-request-github"
+			],
+			"settings": {
+				"pgsql.serverGroups": [
+					{
+						"name": "Servers",
+						"id": "9B1DBC9B-951B-4E3D-AC65-7D4CDE1773A0",
+						"isDefault": true
+					}
+				],
+				"pgsql.connections": [
+					{
+						"id": "30A5E0E0-9901-4311-913B-98F78549DD64",
+						"groupId": "9B1DBC9B-951B-4E3D-AC65-7D4CDE1773A0",
+						"authenticationType": "SqlLogin",
+						"connectTimeout": 15,
+						"applicationName": "vscode-pgsql",
+						"clientEncoding": "utf8",
+						"sslmode": "disable",
+						"server": "db",
+						"user": "postgres",
+						"port": "5432",
+						"database": "teaching_api",
+						"password": "postgres",
+						"savePassword": true,
+						"profileName": "TeachingAPI",
+						"copilotAccessMode": "ro",
+						"expiresOn": 0
+					}
+				]
+			}
 		}
 	},
 	"remoteEnv": {

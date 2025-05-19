@@ -1,6 +1,29 @@
 # Teaching Website Backend
 The backend for our teaching website.
 
+## Run the Project with VS Code
+
+The Project is ready to be used with dev containers. You only need a recent version of [Docker](https://www.docker.com/). Then you can reopen the project in a devcontainer (`Ctrl+Shift+P` > `Dev Containers: Reopen in Container`).
+
+Setup your local env - inside the devcontainer **you should not set** `DATABASE_URL` yourself.
+
+```bash
+USER_ID="<your uuid>"
+USER_EMAIL="<your mail>"
+USER_ROLE="ADMIN"
+NO_AUTH="true"
+```
+
+The `USER_ID` and `USER_EMAIL` are used only for seeding the database and are not strictly needed.
+The `USER_ID` is the `ID` attribute from the response of [Graph-Explorer/v1.0/me](https://developer.microsoft.com/en-us/graph/graph-explorer) - you need to log in first...
+
+
+The Project builds and you can run
+1. `yarn run db:migrate && yarn run db:seed` (needed only on the initial startup)
+2. `yarn run dev`
+
+And done...
+
 ## Dev Dependencies
 
 In order to use `.env` files, the [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) must be installed globally:
