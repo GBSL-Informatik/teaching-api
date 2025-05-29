@@ -60,8 +60,6 @@ router.put('/users/:id', updateUser);
  */
 router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
 
-router.get('/signupTokens', allSignupTokens);
-
 router.get('/signupToken/:id', findSignupToken);
 
 router.get('/studentGroups', allStudentGroups);
@@ -111,6 +109,8 @@ router.delete('/documents/:id', deleteDocument);
 router.get('/admin/allowedActions', allowedActions);
 router.post('/admin/allowedActions', createAllowedAction);
 router.delete('/admin/allowedActions/:id', destroyAllowedAction);
+
+router.get('/admin/signupTokens', allSignupTokens);
 
 router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);

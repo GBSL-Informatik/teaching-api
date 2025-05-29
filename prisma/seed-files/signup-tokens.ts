@@ -11,43 +11,43 @@ export const NEW_CLASS_SIGNUP_TOKEN_ID = 'feafd16d-eacc-483f-af92-13640740b575';
 export const signupTokens: Prisma.SignupTokenCreateManyInput[] = [
     {
         id: PERPETUAL_SIGNUP_TOKEN_ID,
-        description: 'An MSAL signup token that can be used to sign up indefinitely.',
+        description: 'Ein MSAL Signup Token, dass uneingeschränkt verwendet werden kann.',
         method: 'msal'
     },
     {
         id: SINGLE_USE_SIGNUP_TOKEN_ID,
-        description: 'A signup token that can be used once with GitHub.',
+        description: 'Ein Signup Token, mit dem man sich einmalig registrieren kann.',
         method: 'github',
         maxUses: 1
     },
     {
         id: USED_SINGLE_USE_SIGNUP_TOKEN_ID,
-        description: 'A signup token that has already been used once with GitHub.',
+        description: 'Ein GitHub Signup Token, das bereits verwendet wurde.',
         method: 'github',
         uses: 1,
         maxUses: 1
     },
     {
         id: EXPIRING_SIGNUP_TOKEN_ID,
-        description: 'A signup token that expires in 2050.',
+        description: 'Ein Signup Token, das bis 2050 gültig ist.',
         method: 'msal',
         validThrough: new Date('2050-01-01T00:00:00Z')
     },
     {
         id: EXPIRED_SIGNUP_TOKEN_ID,
-        description: 'A signup token that has in 2024.',
+        description: 'Ein Signup Token, das in 2024 abgelaugen ist.',
         method: 'msal',
         validThrough: new Date('2024-01-01T00:00:00Z')
     },
     {
         id: DISABLED_SIGNUP_TOKEN_ID,
-        description: 'A disabled signup token that cannot be used.',
+        description: 'Ein deaktiviertes Signup Token.',
         method: 'github',
         disabled: true
     },
     {
         id: NEW_CLASS_SIGNUP_TOKEN_ID,
-        description: 'A semi-realistic signup token for a new class that can be used to sign up.',
+        description: 'Ein (relativ) realistisches Signup Token für eine neue Klasse.',
         method: 'msal',
         validThrough: new Date('2050-01-01T00:00:00Z'),
         maxUses: 23

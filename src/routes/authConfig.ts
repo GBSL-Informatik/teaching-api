@@ -72,25 +72,6 @@ const authConfig: Config = {
                 }
             ]
         },
-        signupTokens: {
-            path: '/signupTokens',
-            access: [
-                {
-                    methods: ['GET'],
-                    minRole: Role.TEACHER
-                }
-            ]
-        },
-        // The GET route is public.
-        signupToken: {
-            path: '/signupToken',
-            access: [
-                {
-                    methods: ['POST', 'PUT', 'DELETE'],
-                    minRole: Role.TEACHER
-                }
-            ]
-        },
         admin: {
             path: '/admin',
             access: [
