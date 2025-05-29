@@ -1,4 +1,5 @@
 import { Role } from '@prisma/client';
+import { access } from 'fs';
 
 interface Credentials {
     tenantID: string;
@@ -68,6 +69,25 @@ const authConfig: Config = {
                 {
                     methods: ['GET', 'POST'],
                     minRole: Role.STUDENT
+                }
+            ]
+        },
+        signupTokens: {
+            path: '/signupTokens',
+            access: [
+                {
+                    methods: ['GET'],
+                    minRole: Role.TEACHER
+                }
+            ]
+        },
+        // The GET route is public.
+        signupToken: {
+            path: '/signupToken',
+            access: [
+                {
+                    methods: ['POST', 'PUT', 'DELETE'],
+                    minRole: Role.TEACHER
                 }
             ]
         },

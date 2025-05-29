@@ -17,6 +17,7 @@ import Logger from './utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
 import type { Server } from 'socket.io';
 import { CORS_ORIGIN, SAME_SITE } from './utils/originConfig';
+import SignupToken from './models/SignupToken';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 
@@ -122,6 +123,14 @@ app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) =>
     } catch (error) {
         next(error);
     }
+});
+
+app.get(`${API_URL}/signupToken/:id`, SessionOauthStrategy, async (req, res) => {
+    const token = await SignupToken.findModel(req.params.id, req.user);
+    if (!token) {
+        return res.status(404).send(`Signup token with id ${req.params.id} not found`);
+    }
+    return res.status(200).json(token);
 });
 
 app.post(`${API_URL}/logout`, async (req, res, next) => {

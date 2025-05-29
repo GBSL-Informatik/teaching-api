@@ -1,5 +1,6 @@
 import express from 'express';
 import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users';
+import { all as allSignupTokens, find as findSignupToken } from '../controllers/signupTokens';
 import {
     all as allStudentGroups,
     create as createStudentGroup,
@@ -58,6 +59,10 @@ router.put('/users/:id', updateUser);
  * @requires ?ids: string[]
  */
 router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
+
+router.get('/signupTokens', allSignupTokens);
+
+router.get('/signupToken/:id', findSignupToken);
 
 router.get('/studentGroups', allStudentGroups);
 router.post('/studentGroups', createStudentGroup);

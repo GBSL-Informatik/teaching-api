@@ -42,6 +42,10 @@ model SignupToken {
   disabled             Boolean        @default(false)
   defaultStudentGroups StudentGroup[] @relation("signup_token_student_groups")
 
+  /**
+   * Do we need a creator? Could be useful, especially for limiting default student groups to ones managed by that person.
+   */
+
   @@map("signup_tokens")
 }
 
