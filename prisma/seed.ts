@@ -1,5 +1,6 @@
-import { Access, PrismaClient, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
+import { signupTokens as seedSignupTokens } from './seed-files/signup-tokens';
 import { documents as seedDocuments } from './seed-files/documents';
 import {
     ALL_USERS_GROUP_ID,
@@ -7,13 +8,7 @@ import {
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
 } from './seed-files/student-groups';
-import {
-    documentRoots as seedDocumentRoots,
-    NONE_EXAM_DOCUMENT_ID,
-    RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
-    RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
-    RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
-} from './seed-files/document-roots';
+import { documentRoots as seedDocumentRoots } from './seed-files/document-roots';
 import {
     rootUserPermissions as seedRootUserPermissions,
     rootGroupPermissions as seedRootGroupPermissions
@@ -31,6 +26,10 @@ async function main() {
     console.log(seedUsers);
     const users = await prisma.user.createMany({
         data: seedUsers
+    });
+
+    const signupTokens = await prisma.signupToken.createMany({
+        data: seedSignupTokens
     });
 
     const documentRoots = await prisma.documentRoot.createMany({
@@ -92,6 +91,7 @@ async function main() {
             }
         }
     });
+    // TODO: Connect signup tokens to student groups.
 
     const rootUserPermissions = await prisma.rootUserPermission.createMany({
         data: seedRootUserPermissions

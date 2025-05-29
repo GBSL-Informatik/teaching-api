@@ -32,6 +32,19 @@ model User {
   @@map("users")
 }
 
+model SignupToken {
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  method               String
+  description          String         @default("")
+  validThrough         DateTime?      @map("valid_through")
+  uses                 Int            @default(0)
+  maxUses              Int            @default(0) @map("max_uses")
+  disabled             Boolean        @default(false)
+  defaultStudentGroups StudentGroup[] @relation("signup_token_student_groups")
+
+  @@map("signup_tokens")
+}
+
 model CmsSettings {
   id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -74,6 +87,7 @@ model StudentGroup {
   parent               StudentGroup?         @relation("parent_student_group", fields: [parentId], references: [id], onDelete: Cascade)
   children             StudentGroup[]        @relation("parent_student_group")
   users                UserStudentGroup[]    @relation("user_student_groups")
+  signupTokens         SignupToken[]         @relation("signup_token_student_groups")
 
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
