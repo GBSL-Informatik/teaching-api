@@ -18,7 +18,12 @@ function AiRequest(db: PrismaClient['aiRequest']) {
             });
             return requests;
         },
-        async createModel(actor: DbUser, aiTemplateId: string, input: string): Promise<DbAiRequest> {
+        async createModel(
+            actor: DbUser,
+            aiTemplateId: string,
+            input: string,
+            onResponse?: (aiRequest: DbAiRequest) => void
+        ): Promise<DbAiRequest> {
             const template = await prisma.aiTemplate.findUniqueOrThrow({
                 where: { id: aiTemplateId }
             });
@@ -65,36 +70,61 @@ function AiRequest(db: PrismaClient['aiRequest']) {
                 ]
             });
 
-            const response = await client.responses.create({
-                model: template.model,
-                input: requestInput,
-                text: {
-                    format: template.jsonSchema
-                        ? {
-                              type: 'json_schema',
-                              name: 'tdev_ai_response',
-                              schema: {},
-                              ...(template.jsonSchema! as unknown as Partial<OpenAI.ResponseFormatJSONSchema>)
-                          }
-                        : ({ type: 'text' } as OpenAI.ResponseFormatText)
-                },
-                reasoning: {},
-                tools: [],
-                temperature: template.temperature,
-                max_output_tokens: template.maxTokens,
-                top_p: template.topP,
-                store: false
-            });
-
             const aiRequest = await db.create({
                 data: {
                     userId: actor.id,
                     aiTemplateId: aiTemplateId,
                     request: input,
-                    response: JSON.parse(response.output_text),
-                    status: 'success'
+                    status: 'pending',
+                    response: {}
                 }
             });
+
+            client.responses
+                .create({
+                    model: template.model,
+                    input: requestInput,
+                    text: {
+                        format: template.jsonSchema
+                            ? {
+                                  type: 'json_schema',
+                                  name: template.name || 'tdev-ai-response',
+                                  schema: {},
+                                  ...(template.jsonSchema as unknown as Partial<OpenAI.ResponseFormatJSONSchema>)
+                              }
+                            : ({ type: 'text' } as OpenAI.ResponseFormatText)
+                    },
+                    reasoning: {},
+                    tools: [],
+                    temperature: template.temperature,
+                    max_output_tokens: template.maxTokens,
+                    top_p: template.topP,
+                    store: false
+                })
+                .then((response) => {
+                    db.update({
+                        where: { id: aiRequest.id },
+                        data: {
+                            status: response.error ? 'error' : 'completed',
+                            response: response.error ? response.error : JSON.parse(response.output_text)
+                        }
+                    }).then((updatedRequest) => {
+                        onResponse?.(updatedRequest);
+                    });
+                })
+                .catch((error) => {
+                    db.update({
+                        where: { id: aiRequest.id },
+                        data: {
+                            status: 'error',
+                            response: {
+                                error: error.message || 'Unknown error occurred'
+                            }
+                        }
+                    }).then((updatedRequest) => {
+                        onResponse?.(updatedRequest);
+                    });
+                });
             return aiRequest;
         }
     });
