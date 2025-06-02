@@ -28,8 +28,54 @@ model User {
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
   cmsSettings                     CmsSettings?
   studentGroups                   UserStudentGroup[]                @relation("user_student_groups")
+  aiRequests                      AiRequest[]
 
   @@map("users")
+}
+
+model AiTemplate {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String  @default("")
+  rateLimit         Int     @default(0) @map("rate_limit")
+  rateLimitPeriodMs BigInt  @default(3600000) @map("rate_limit_period_ms") // Default to 1 hour
+  isActive          Boolean @default(true) @map("is_active")
+
+  model  String @map("model")
+  apiKey String @map("api_key")
+  apiUrl String @map("api_url")
+
+  temperature   Float   @default(0.5) @map("temperature")
+  maxTokens     Int     @default(2048) @map("max_tokens")
+  topP          Float   @default(0.8) @map("top_p")
+  systemMessage String? @map("system_message")
+  jsonSchema    Json?   @map("json_schema")
+
+  aiRequests AiRequest[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("ai_templates")
+}
+
+model AiRequest {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  aiTemplate   AiTemplate @relation(fields: [aiTemplateId], references: [id], onDelete: Cascade)
+  aiTemplateId String     @map("ai_template_id") @db.Uuid
+
+  status     String @default("pending") // pending, completed, failed
+  statusCode Int?   @map("status_code")
+
+  request  String
+  response Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("ai_requests")
 }
 
 model CmsSettings {
