@@ -11,7 +11,7 @@ export const NEW_CLASS_SIGNUP_TOKEN_ID = 'feafd16d-eacc-483f-af92-13640740b575';
 export const signupTokens: Prisma.SignupTokenCreateManyInput[] = [
     {
         id: PERPETUAL_SIGNUP_TOKEN_ID,
-        description: 'Ein MSAL Signup Token, dass uneingeschränkt verwendet werden kann.',
+        description: 'Ein MSAL Signup Token, das uneingeschränkt verwendet werden kann.',
         method: 'msal'
     },
     {
