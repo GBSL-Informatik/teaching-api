@@ -7,6 +7,8 @@ CREATE TABLE "signup_tokens" (
     "uses" INTEGER NOT NULL DEFAULT 0,
     "max_uses" INTEGER NOT NULL DEFAULT 0,
     "disabled" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "signup_tokens_pkey" PRIMARY KEY ("id")
 );

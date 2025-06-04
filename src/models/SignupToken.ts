@@ -1,7 +1,13 @@
-import { PrismaClient, SignupToken as DbSignupToken, User } from '@prisma/client';
+import { PrismaClient, SignupToken as DbSignupToken, User, Prisma } from '@prisma/client';
 import prisma from '../prisma';
 import { hasElevatedAccess } from './User';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import { createDataExtractor } from '../helpers/dataExtractor';
+
+const getData = createDataExtractor<Prisma.SignupTokenUncheckedUpdateInput>(
+    [],
+    ['description', 'validThrough', 'maxUses', 'disabled']
+);
 
 function SignupToken(db: PrismaClient['signupToken']) {
     return Object.assign(db, {
@@ -10,6 +16,13 @@ function SignupToken(db: PrismaClient['signupToken']) {
             return db.findUnique({
                 where: { id }
             });
+        },
+        async all(actor: User): Promise<DbSignupToken[]> {
+            // TODO: Do we need to restrict the tokens to only the ones created by this actor, unless they are admin?
+            if (!hasElevatedAccess(actor.role)) {
+                throw new HTTP403Error('Insufficient access permission');
+            }
+            return db.findMany({});
         },
         async createModel(
             actor: User,
@@ -34,12 +47,19 @@ function SignupToken(db: PrismaClient['signupToken']) {
                 }
             });
         },
-        async all(actor: User): Promise<DbSignupToken[]> {
-            // TODO: Do we need to restrict the tokens to only the ones created by this actor, unless they are admin?
+        async updateModel(actor: User, data: Partial<DbSignupToken>, id: string): Promise<DbSignupToken> {
+            const record = await this.findModel(id, actor);
+            if (!record) {
+                throw new HTTP404Error('Signup token not found');
+            }
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Insufficient access permission');
             }
-            return db.findMany({});
+            const sanitized = getData(data, false, true);
+            return db.update({
+                where: { id },
+                data: sanitized
+            });
         },
         async deleteModel(actor: User, id: string): Promise<DbSignupToken> {
             const record = await this.findModel(id);

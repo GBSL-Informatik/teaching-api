@@ -42,10 +42,12 @@ model SignupToken {
   disabled             Boolean        @default(false)
   defaultStudentGroups StudentGroup[] @relation("signup_token_student_groups")
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
   /**
    * TODO:
    * - Do we need a creator? Could be useful, especially for limiting default student groups to ones managed by that person.
-   * - Do we need a createdAt?
    */
 
   @@map("signup_tokens")

@@ -1,6 +1,12 @@
 import express from 'express';
 import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users';
-import { all as allSignupTokens, find as findSignupToken } from '../controllers/signupTokens';
+import {
+    all as allSignupTokens,
+    find as findSignupToken,
+    create as createSignupToken,
+    update as updateSignupToken,
+    destroy as deleteSignupToken
+} from '../controllers/signupTokens';
 import {
     all as allStudentGroups,
     create as createStudentGroup,
@@ -111,6 +117,9 @@ router.post('/admin/allowedActions', createAllowedAction);
 router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 
 router.get('/admin/signupTokens', allSignupTokens);
+router.post('/admin/signupTokens', createSignupToken);
+router.put('/admin/signupTokens/:id', updateSignupToken);
+router.delete('/admin/signupTokens/:id', deleteSignupToken);
 
 router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);
