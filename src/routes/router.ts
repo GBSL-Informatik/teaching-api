@@ -45,6 +45,19 @@ import {
     logout as githubLogout
 } from '../controllers/cmsSettings';
 
+import {
+    all as allAiTemplates,
+    create as createAiTemplate,
+    destroy as destroyAiTemplate,
+    find as findAiTemplate,
+    update as updateAiTemplate
+} from '../controllers/aiTemplate';
+import {
+    all as allAiRequests,
+    create as createAiRequest,
+    find as findAiRequest
+} from '../controllers/aiRequest';
+
 // initialize router
 const router = express.Router();
 
@@ -111,4 +124,15 @@ router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);
 router.get('/cms/github-token', githubToken);
 router.post('/cms/logout', githubLogout);
+
+router.get('/admin/aiTemplates', allAiTemplates);
+router.get('/admin/aiTemplates/:id', findAiTemplate);
+router.post('/admin/aiTemplates', createAiTemplate);
+router.put('/admin/aiTemplates/:id', updateAiTemplate);
+router.delete('/admin/aiTemplates/:id', destroyAiTemplate);
+
+router.get('/aiTemplates/:id/requests', allAiRequests);
+router.get('/aiTemplates/:id/requests/:requestId', findAiRequest);
+router.post('/aiTemplates/:id/requests', createAiRequest);
+
 export default router;

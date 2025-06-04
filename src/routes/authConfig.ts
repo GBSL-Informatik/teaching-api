@@ -80,6 +80,15 @@ const authConfig: Config = {
                 }
             ]
         },
+        aiTemplateRequests: {
+            path: '/aiTemplates/:id/requests',
+            access: [
+                {
+                    methods: ['GET', 'POST'],
+                    minRole: Role.STUDENT
+                }
+            ]
+        },
         users: {
             path: '/users',
             access: [
