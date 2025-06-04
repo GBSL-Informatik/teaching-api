@@ -88,7 +88,7 @@ function AiRequest(db: PrismaClient['aiRequest']) {
                         format: template.jsonSchema
                             ? {
                                   type: 'json_schema',
-                                  name: template.name || 'tdev-ai-response',
+                                  name: 'tdev-ai-response',
                                   schema: {},
                                   ...(template.jsonSchema as unknown as Partial<OpenAI.ResponseFormatJSONSchema>)
                               }
