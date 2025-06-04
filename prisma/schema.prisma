@@ -35,7 +35,6 @@ model User {
 
 model AiTemplate {
   id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name              String  @default("")
   rateLimit         Int     @default(0) @map("rate_limit")
   rateLimitPeriodMs BigInt  @default(3600000) @map("rate_limit_period_ms") // Default to 1 hour
   isActive          Boolean @default(true) @map("is_active")
