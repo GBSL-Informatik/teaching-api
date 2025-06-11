@@ -29,25 +29,24 @@ model User {
   cmsSettings                     CmsSettings?
   studentGroups                   UserStudentGroup[]                @relation("user_student_groups")
   aiRequests                      AiRequest[]
+  aiTemplates                     AiTemplate[]                      @relation("ai_templates")
 
   @@map("users")
 }
 
 model AiTemplate {
-  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  author            User    @relation("ai_templates", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId          String  @map("author_id") @db.Uuid
   rateLimit         Int     @default(0) @map("rate_limit")
   rateLimitPeriodMs BigInt  @default(3600000) @map("rate_limit_period_ms") // Default to 1 hour
   isActive          Boolean @default(true) @map("is_active")
 
-  model  String @map("model")
   apiKey String @map("api_key")
   apiUrl String @map("api_url")
 
-  temperature   Float   @default(0.5) @map("temperature")
-  maxTokens     Int     @default(2048) @map("max_tokens")
-  topP          Float   @default(0.8) @map("top_p")
-  systemMessage String? @map("system_message")
-  jsonSchema    Json?   @map("json_schema")
+  config Json @map("config") // Configuration for the AI template, e.g., model, parameters
 
   aiRequests AiRequest[]
 

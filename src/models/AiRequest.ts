@@ -48,19 +48,16 @@ function AiRequest(db: PrismaClient['aiRequest']) {
                 baseURL: template.apiUrl
             });
 
-            const requestInput: OpenAI.Responses.ResponseInput = [];
-            if (template.systemMessage) {
-                requestInput.push({
-                    role: 'system',
-                    content: [
-                        {
-                            type: 'input_text',
-                            text: template.systemMessage
-                        }
-                    ]
-                });
-            }
-            requestInput.push({
+            const templateConfig =
+                template.config as unknown as OpenAI.Responses.ResponseCreateParamsNonStreaming;
+            const config: OpenAI.Responses.ResponseCreateParamsNonStreaming = {
+                ...templateConfig,
+                input: Array.isArray(templateConfig.input)
+                    ? (templateConfig.input as OpenAI.Responses.ResponseInput)
+                    : [templateConfig.input as unknown as OpenAI.Responses.ResponseInputItem]
+            };
+
+            (config.input as OpenAI.Responses.ResponseInput).push({
                 role: 'user',
                 content: [
                     {
@@ -81,26 +78,7 @@ function AiRequest(db: PrismaClient['aiRequest']) {
             });
 
             client.responses
-                .create({
-                    model: template.model,
-                    input: requestInput,
-                    text: {
-                        format: template.jsonSchema
-                            ? {
-                                  type: 'json_schema',
-                                  name: 'tdev-ai-response',
-                                  schema: {},
-                                  ...(template.jsonSchema as unknown as Partial<OpenAI.ResponseFormatJSONSchema>)
-                              }
-                            : ({ type: 'text' } as OpenAI.ResponseFormatText)
-                    },
-                    reasoning: {},
-                    tools: [],
-                    temperature: template.temperature,
-                    max_output_tokens: template.maxTokens,
-                    top_p: template.topP,
-                    store: false
-                })
+                .create(config)
                 .then((response) => {
                     db.update({
                         where: { id: aiRequest.id },

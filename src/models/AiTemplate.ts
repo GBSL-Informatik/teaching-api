@@ -30,19 +30,24 @@ function AiTemplate(db: PrismaClient['aiTemplate']) {
                 throw new HTTP403Error('Not authorized to update AI templates');
             }
             const record = await this.findModel(actor, id);
+            if (record.authorId !== actor.id) {
+                throw new HTTP403Error('Not authorized to update this AI template');
+            }
+            const updateData: Prisma.AiTemplateUpdateInput = {
+                config: data.config as Prisma.InputJsonValue,
+                apiKey: data.apiKey,
+                apiUrl: data.apiUrl,
+                isActive: data.isActive,
+                rateLimit: data.rateLimit,
+                rateLimitPeriodMs: data.rateLimitPeriodMs
+            };
             /** remove fields not updatable*/
             return db
                 .update({
                     where: {
                         id: record.id
                     },
-                    data: {
-                        ...data,
-                        jsonSchema:
-                            typeof data.jsonSchema === 'object'
-                                ? (data.jsonSchema as Prisma.JsonObject)
-                                : undefined
-                    }
+                    data: updateData
                 })
                 .then((v) => prepareAiTemplate(v));
         },
@@ -59,7 +64,12 @@ function AiTemplate(db: PrismaClient['aiTemplate']) {
             }
             return db
                 .create({
-                    data: data
+                    data: {
+                        ...data,
+                        author: {
+                            connect: { id: actor.id }
+                        }
+                    }
                 })
                 .then((v) => prepareAiTemplate(v));
         },
