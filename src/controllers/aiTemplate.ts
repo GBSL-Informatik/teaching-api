@@ -20,6 +20,14 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
         next(error);
     }
 };
+export const clone: RequestHandler<{ id: string }, any, any> = async (req, res, next) => {
+    try {
+        const template = await AiTemplate.cloneModel(req.user!, req.params.id);
+        res.status(201).json(template);
+    } catch (error) {
+        next(error);
+    }
+};
 export const create: RequestHandler<any, any, any> = async (req, res, next) => {
     try {
         const template = await AiTemplate.createModel(req.user!, req.body);

@@ -50,7 +50,8 @@ import {
     create as createAiTemplate,
     destroy as destroyAiTemplate,
     find as findAiTemplate,
-    update as updateAiTemplate
+    update as updateAiTemplate,
+    clone as cloneAiTemplate
 } from '../controllers/aiTemplate';
 import {
     all as allAiRequests,
@@ -127,6 +128,7 @@ router.post('/cms/logout', githubLogout);
 
 router.get('/admin/aiTemplates', allAiTemplates);
 router.get('/admin/aiTemplates/:id', findAiTemplate);
+router.post('/admin/aiTemplates/:id/clone', cloneAiTemplate);
 router.post('/admin/aiTemplates', createAiTemplate);
 router.put('/admin/aiTemplates/:id', updateAiTemplate);
 router.delete('/admin/aiTemplates/:id', destroyAiTemplate);

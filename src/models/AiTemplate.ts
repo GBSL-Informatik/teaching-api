@@ -25,6 +25,35 @@ function AiTemplate(db: PrismaClient['aiTemplate']) {
             }
             return db.findUniqueOrThrow({ where: { id } }).then((v) => prepareAiTemplate(v));
         },
+        async cloneModel(actor: DbUser, id: string): Promise<DbAiTemplate> {
+            if (!hasElevatedAccess(actor.role)) {
+                throw new HTTP403Error('Not authorized to find AI templates');
+            }
+            const record = await this.findModel(actor, id);
+            if (record.authorId !== actor.id) {
+                throw new HTTP403Error('Not authorized to clone this AI template');
+            }
+            if ((record.config as any)?.text?.format?.name) {
+                (record.config as any).text.format.name =
+                    `${(record.config as any).text.format.name} (clone)`;
+            }
+            const cloneData: Prisma.AiTemplateCreateInput = {
+                config: record.config as Prisma.InputJsonValue,
+                apiKey: record.apiKey,
+                apiUrl: record.apiUrl,
+                isActive: record.isActive,
+                rateLimit: record.rateLimit,
+                rateLimitPeriodMs: record.rateLimitPeriodMs,
+                author: {
+                    connect: { id: actor.id }
+                }
+            };
+            return db
+                .create({
+                    data: cloneData
+                })
+                .then((v) => prepareAiTemplate(v));
+        },
         async updateModel(actor: DbUser, id: string, data: Partial<DbAiTemplate>): Promise<DbAiTemplate> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized to update AI templates');
