@@ -29,10 +29,7 @@ function AiTemplate(db: PrismaClient['aiTemplate']) {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized to find AI templates');
             }
-            const record = await this.findModel(actor, id);
-            if (record.authorId !== actor.id) {
-                throw new HTTP403Error('Not authorized to clone this AI template');
-            }
+            const record = await db.findUniqueOrThrow({ where: { id: id, authorId: actor.id } });
             if ((record.config as any)?.text?.format?.name) {
                 (record.config as any).text.format.name =
                     `${(record.config as any).text.format.name} (clone)`;
