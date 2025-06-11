@@ -24,7 +24,7 @@ const users: Prisma.UserCreateInput[] = [
 if (USER_EMAIL && USER_ID) {
     const name = USER_EMAIL.split('@')[0];
     users.push({
-        email: USER_EMAIL,
+        email: USER_EMAIL.toLowerCase(),
         id: USER_ID,
         firstName: name.split('.')[0],
         lastName: name.split('.')[1] || name,
