@@ -6,7 +6,7 @@ import { createDataExtractor } from '../helpers/dataExtractor';
 
 const getData = createDataExtractor<Prisma.SignupTokenUncheckedUpdateInput>(
     [],
-    ['description', 'validThrough', 'maxUses', 'disabled']
+    ['method', 'description', 'validThrough', 'maxUses', 'disabled']
 );
 
 function SignupToken(db: PrismaClient['signupToken']) {
