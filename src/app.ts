@@ -93,18 +93,22 @@ passport.serializeUser((user, done) => {
     done(null, user.id);
 });
 
-passport.deserializeUser(async (id: string, done) => {
+const deserializeUser = async (id: string, done: (err: any, user?: User | null) => void) => {
     const user = await prisma.user.findUnique({ where: { id: id } });
     done(null, user);
-});
+};
+
+passport.deserializeUser(deserializeUser);
 
 // Serve the static files to be accessed by the docs app
 app.use(express.static(path.join(__dirname, '..', 'docs')));
 
-// Public Endpoints
-app.get(`${API_URL}`, (req, res) => {
+const welcomeApi = (req: Request, res: Response) => {
     return res.status(200).send('Welcome to the TEACHING-WEBSITE-API V1.0');
-});
+};
+
+// Public Endpoints
+app.get(`${API_URL}`, welcomeApi);
 
 const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
@@ -113,7 +117,7 @@ const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) =
     passport.authenticate('oauth-bearer', { session: true })(req, res, next);
 };
 
-app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) => {
+const checkLogin = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (req.user) {
             return res.status(200).send('OK');
@@ -122,9 +126,11 @@ app.get(`${API_URL}/checklogin`, SessionOauthStrategy, async (req, res, next) =>
     } catch (error) {
         next(error);
     }
-});
+};
 
-app.post(`${API_URL}/logout`, async (req, res, next) => {
+app.get(`${API_URL}/checklogin`, SessionOauthStrategy, checkLogin);
+
+const logout = async (req: Request, res: Response, next: NextFunction) => {
     req.logout({ keepSessionInfo: false }, (err) => {
         if (err) {
             Logger.error(err);
@@ -135,7 +141,9 @@ app.post(`${API_URL}/logout`, async (req, res, next) => {
     Logger.info(req.session);
     // await prisma.sessions.delete({ where: { sid: req.session.id } });
     res.clearCookie(SESSION_KEY).send();
-});
+};
+
+app.post(`${API_URL}/logout`, logout);
 
 export const configure = (_app: typeof app) => {
     /**
