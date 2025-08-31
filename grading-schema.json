@@ -1,0 +1,108 @@
+{
+    "name": "grade",
+    "strict": true,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "a short summary of the provided content. Must not be longer than 200 characters."
+            },
+            "categories": {
+                "type": "object",
+                "properties": {
+                    "bibliography": {
+                        "type": "object",
+                        "description": "Are at least 3 sources of primary or secondary literature cited and used in the work?",
+                        "properties": {
+                            "grade": {
+                                "type": "number",
+                                "minimum": 1,
+                                "maximum": 6,
+                                "description": "The swiss school grade for this category, which ranges from 1-6 where grade 1 is the worst/failing mark, grade 4 is the minimum passing grade (sufficient performance), and grade 6 is the highest/excellent grade."
+                            },
+                            "sources": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "feedback": {
+                                "type": "object",
+                                "properties": {
+                                    "good": {
+                                        "type": "string"
+                                    },
+                                    "bad": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "good",
+                                    "bad"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "grade",
+                            "sources",
+                            "feedback"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "language": {
+                        "type": "object",
+                        "description": "Is the language precise and to the point, without unnecessary embellishments and easily understandable?",
+                        "properties": {
+                            "grade": {
+                                "type": "number",
+                                "minimum": 1,
+                                "maximum": 6,
+                                "description": "The swiss school grade for this category, which ranges from 1-6 where grade 1 is the worst/failing mark, grade 4 is the minimum passing grade (sufficient performance), and grade 6 is the highest/excellent grade."
+                            },
+                            "feedback": {
+                                "type": "object",
+                                "properties": {
+                                    "good": {
+                                        "type": "string"
+                                    },
+                                    "bad": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "good",
+                                    "bad"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "grade",
+                            "feedback"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "bibliography",
+                    "language"
+                ],
+                "additionalProperties": false
+            },
+            "final_grade": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 6,
+                "description": "The overall grade (swiss school) for the provided document, which ranges from 1-6 where grade 1 is the worst/failing mark, grade 4 is the minimum passing grade (sufficient performance), and grade 6 is the highest/excellent grade. This should be the summary of all evaluated categories"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "summary",
+            "categories",
+            "final_grade"
+        ]
+    }
+}
