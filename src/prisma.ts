@@ -1,3 +1,4 @@
+import { PrismaPg } from '@prisma/adapter-pg';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 const options: Prisma.PrismaClientOptions & {
@@ -23,7 +24,11 @@ if (process.env.LOG) {
         }
     ];
 }
-const prisma = new PrismaClient(options);
+
+const connectionString = `${process.env.DATABASE_URL}`;
+
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ ...options, adapter: adapter });
 prisma.$connect();
 
 if (process.env.LOG) {
