@@ -30,7 +30,6 @@
     "global": "^4.4.0",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "openai": "^5.0.1",
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.5",
     "socket.io": "^4.8.1",
