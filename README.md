@@ -86,6 +86,7 @@ to format all typescript files.
 | `SENTRY_ORG`           | Error Tracking: Sentry Organisation, e.g. your sentry username.                                                                                                                                 |                                                     |
 | `SENTRY_DSN`           | Error Tracking: Sentry DSN.                                                                                                                                                                     |                                                     |
 | `SENTRY_AUTH_TOKEN`    | Error Tracking: Auth token for uploading sourcemaps to sentry. Get it by configuring your app with `npx @sentry/wizard@latest -i sourcemaps`.                                                   |                                                     |
+| `SENTRY_TRACES_SAMPLE_RATE` | Sampling rate for Sentry traces.                                                                                                                                                              | `0.1` (default)                                   |
 
 \* When using MSAL Auth, use your `localAccountId` (check your local-storage when signed in, eg. at https://ofi.gbsl.website).<br/>
 \*\* To change users, clear LocalStorage to delete the API key created upon first authentication.<br/>
