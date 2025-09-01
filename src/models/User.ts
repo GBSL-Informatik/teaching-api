@@ -2,7 +2,7 @@ import { Prisma, PrismaClient, User as DbUser, Role, User } from '@prisma/client
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
-import _ from 'lodash';
+import _ from 'es-toolkit/compat';
 const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName']);
 
 const RoleAccessLevel: { [key in Role]: number } = {

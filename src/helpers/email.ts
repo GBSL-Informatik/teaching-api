@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _ from 'es-toolkit/compat';
 
 export const getNameFromEmail = (email?: string) => {
     const name = (email || '').split('@')[0] || '';
