@@ -1,14 +1,15 @@
+import './instrumentation';
 import app, { configure, sessionMiddleware } from './app';
 import http from 'http';
 import Logger from './utils/logger';
 import { Server } from 'socket.io';
-import { ClientToServerEvents, IoEvent, ServerToClientEvents } from './routes/socketEventTypes';
+import { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
 import passport from 'passport';
 import EventRouter from './routes/socketEvents';
 import { NextFunction, Request, Response } from 'express';
-import * as Sentry from '@sentry/node';
 import { HTTP403Error } from './utils/errors/Errors';
 import { CORS_ORIGIN } from './utils/originConfig';
+import * as Sentry from '@sentry/node';
 
 const PORT = process.env.PORT || 3002;
 
@@ -24,13 +25,6 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
     pingTimeout: 20_000,
     transports: ['websocket', 'webtransport' /* , 'polling' */]
 });
-if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
-    Sentry.init({
-        dsn: process.env.SENTRY_DSN,
-        tracesSampleRate: 0.1,
-        integrations: [Sentry.postgresIntegration()]
-    });
-}
 
 // convert a connect middleware to a Socket.IO middleware
 io.use((socket, next) => {

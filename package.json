@@ -22,8 +22,8 @@
   "dependencies": {
     "@prisma/adapter-pg": "^6.15.0",
     "@prisma/client": "^6.15.0",
-    "@sentry/cli": "^2.43.0",
-    "@sentry/node": "^9.12.0",
+    "@sentry/cli": "^2.52.0",
+    "@sentry/node": "^10.8.0",
     "connect-pg-simple": "^9.0.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
