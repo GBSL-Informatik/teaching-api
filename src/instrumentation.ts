@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
     }
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
-        tracesSampleRate: samplingRate,
-        integrations: [Sentry.prismaIntegration()]
+        tracesSampleRate: samplingRate
     });
+    Sentry.addIntegration(Sentry.prismaIntegration());
 }
