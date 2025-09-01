@@ -1,2 +1,2 @@
-web: export NODE_ENV=production && node dist/src/server.js
+web: NODE_ENV=production node dist/src/server.js
 release: npx prisma migrate deploy
