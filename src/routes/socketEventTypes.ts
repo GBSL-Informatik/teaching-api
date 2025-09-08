@@ -52,6 +52,10 @@ export interface ChangedDocument {
     updatedAt: Date;
 }
 
+export interface StreamedDynamicDocument extends ChangedDocument {
+    roomId: string;
+}
+
 export interface ConnectedClients {
     rooms: [string, number][];
     type: 'full' | 'update';
@@ -98,6 +102,7 @@ export type Notification =
 export enum IoClientEvent {
     JOIN_ROOM = 'JOIN_ROOM',
     LEAVE_ROOM = 'LEAVE_ROOM',
+    STREAM_UPDATE = 'STREAM_UPDATE',
     ACTION = 'ACTION'
 }
 
@@ -120,4 +125,5 @@ export interface ClientToServerEvents {
     [IoClientEvent.JOIN_ROOM]: (roomId: string, callback: (joined: boolean) => void) => void;
     [IoClientEvent.LEAVE_ROOM]: (roomId: string, callback: (left: boolean) => void) => void;
     [IoClientEvent.ACTION]: (action: Action, callback: (ok: boolean) => void) => void;
+    [IoClientEvent.STREAM_UPDATE]: (payload: StreamedDynamicDocument) => void;
 }
