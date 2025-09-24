@@ -27,7 +27,7 @@
     "connect-pg-simple": "^9.0.1",
     "cors": "^2.8.5",
     "es-toolkit": "^1.39.10",
-    "express": "^4.19.2",
+    "express": "^5",
     "express-session": "^1.18.0",
     "global": "^4.4.0",
     "morgan": "^1.10.0",
