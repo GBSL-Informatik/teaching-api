@@ -8,28 +8,16 @@ export const user: RequestHandler = async (req, res) => {
 };
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
-    try {
-        const user = await User.findModel(req.params.id);
-        res.json(user);
-    } catch (error) {
-        next(error);
-    }
+    const user = await User.findModel(req.params.id);
+    res.json(user);
 };
 
 export const update: RequestHandler<{ id: string }, any, { data: DbUser }> = async (req, res, next) => {
-    try {
-        const model = await User.updateModel(req.user!, req.params.id, req.body.data);
-        res.status(200).json(model);
-    } catch (error) {
-        next(error);
-    }
+    const model = await User.updateModel(req.user!, req.params.id, req.body.data);
+    res.status(200).json(model);
 };
 
 export const all: RequestHandler = async (req, res, next) => {
-    try {
-        const users = await User.all(req.user!);
-        res.json(users);
-    } catch (error) {
-        next(error);
-    }
+    const users = await User.all(req.user!);
+    res.json(users);
 };

@@ -10,56 +10,44 @@ export const createAllowedAction: RequestHandler<any, any, Prisma.AllowedActionC
     res,
     next
 ) => {
-    try {
-        const { action, documentType } = req.body;
-        const record = await prisma.allowedAction.create({
-            data: {
-                action: action,
-                documentType: documentType
-            }
-        });
-        res.notifications = [
-            {
-                event: IoEvent.NEW_RECORD,
-                message: { type: RecordType.AllowedAction, record: record },
-                to: IoRoom.ADMIN
-            }
-        ];
-        res.status(200).json(record);
-    } catch (error) {
-        next(error);
-    }
+    const { action, documentType } = req.body;
+    const record = await prisma.allowedAction.create({
+        data: {
+            action: action,
+            documentType: documentType
+        }
+    });
+    res.notifications = [
+        {
+            event: IoEvent.NEW_RECORD,
+            message: { type: RecordType.AllowedAction, record: record },
+            to: IoRoom.ADMIN
+        }
+    ];
+    res.status(200).json(record);
 };
 
 export const allowedActions: RequestHandler = async (req, res, next) => {
-    try {
-        const actions = await prisma.allowedAction.findMany({});
-        res.json(actions);
-    } catch (error) {
-        next(error);
-    }
+    const actions = await prisma.allowedAction.findMany({});
+    res.json(actions);
 };
 
 export const destroyAllowedAction: RequestHandler<{ id: string }> = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        if (!id) {
-            throw new HTTP403Error('unknown id');
-        }
-        const action = await prisma.allowedAction.delete({
-            where: {
-                id: req.params.id
-            }
-        });
-        res.notifications = [
-            {
-                event: IoEvent.DELETED_RECORD,
-                message: { type: RecordType.Document, id: action.id },
-                to: IoRoom.ADMIN
-            }
-        ];
-        res.status(204).send();
-    } catch (error) {
-        next(error);
+    const { id } = req.params;
+    if (!id) {
+        throw new HTTP403Error('unknown id');
     }
+    const action = await prisma.allowedAction.delete({
+        where: {
+            id: req.params.id
+        }
+    });
+    res.notifications = [
+        {
+            event: IoEvent.DELETED_RECORD,
+            message: { type: RecordType.Document, id: action.id },
+            to: IoRoom.ADMIN
+        }
+    ];
+    res.status(204).send();
 };

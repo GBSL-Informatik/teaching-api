@@ -118,14 +118,10 @@ const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) =
 };
 
 const checkLogin = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        if (req.user) {
-            return res.status(200).send('OK');
-        }
-        throw new HTTP401Error();
-    } catch (error) {
-        next(error);
+    if (req.user) {
+        return res.status(200).send('OK');
     }
+    throw new HTTP401Error();
 };
 
 app.get(`${API_URL}/checklogin`, SessionOauthStrategy, checkLogin);
