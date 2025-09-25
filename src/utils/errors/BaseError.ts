@@ -8,6 +8,7 @@ export enum HttpStatusCode {
 }
 
 export default class BaseError extends Error {
+    public readonly isHttpError = true;
     public readonly name: string;
     public readonly statusCode: HttpStatusCode;
     public readonly isOperational: boolean;

@@ -10,7 +10,7 @@ import router from './routes/router';
 import routeGuard, { PUBLIC_GET_ACCESS, PUBLIC_GET_ACCESS_REGEX, createAccessRules } from './auth/guard';
 import authConfig from './routes/authConfig';
 import { type User } from '@prisma/client';
-import { HttpStatusCode } from './utils/errors/BaseError';
+import BaseError, { HttpStatusCode } from './utils/errors/BaseError';
 import { HTTP401Error } from './utils/errors/Errors';
 import connectPgSimple from 'connect-pg-simple';
 import Logger from './utils/logger';
@@ -80,14 +80,14 @@ export const sessionMiddleware = session({
     }
 });
 
-app.use(sessionMiddleware);
+// app.use(sessionMiddleware);
 
-app.use(passport.initialize());
+// app.use(passport.initialize());
 
 /** alias for passport.authenticate('session'); e.g. to use the session... */
 app.use(passport.session());
 
-passport.use(strategyForEnvironment());
+// passport.use(strategyForEnvironment());
 
 passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -140,6 +140,25 @@ const logout = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 app.post(`${API_URL}/logout`, logout);
+
+const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    if ((err as BaseError).isHttpError) {
+        const httpErr = err as BaseError;
+        res.status(httpErr.statusCode).send({
+            errors: [
+                {
+                    name: httpErr.name,
+                    message: httpErr.message,
+                    status: httpErr.statusCode,
+                    isOperational: httpErr.isOperational
+                }
+            ]
+        });
+    } else {
+        res.status(500).send({ errors: [{ name: err.name, message: err.message }] });
+    }
+    Logger.error(err);
+};
 
 export const configure = (_app: typeof app) => {
     /**
@@ -213,6 +232,7 @@ export const configure = (_app: typeof app) => {
         routeGuard(AccessRules), // route guard middleware
         router // the router with all the routes
     );
+    _app.use(errorHandler);
 };
 
 if (process.env.NODE_ENV === 'test') {
