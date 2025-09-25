@@ -47,7 +47,6 @@ app.use(
 
 // received packages should be presented in the JSON format
 app.use(express.json({ limit: '5mb' }));
-
 app.use(morganMiddleware);
 
 const store = new (connectPgSimple(session))({

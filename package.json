@@ -1,7 +1,8 @@
 {
   "name": "teaching-website-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "dist/src/server.js",
   "repository": "https://github.com/GBSL-Informatik/teaching-website-backend.git",
   "author": "GBSL Informatik",
   "license": "CC-BY-SA",
