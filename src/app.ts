@@ -1,28 +1,21 @@
-import express, { NextFunction, Request, Response } from "express";
-import session from "express-session";
-import prisma from "@/prisma";
-import path from "path";
-import cors from "cors";
-import morganMiddleware from "./middleware/morgan.middleware";
-import passport from "passport";
-import router from "./routes/router";
-import routeGuard, {
-  PUBLIC_GET_ACCESS,
-  PUBLIC_GET_ACCESS_REGEX,
-  createAccessRules,
-} from "./auth/guard";
-import authConfig from "./routes/authConfig";
-import { type User } from "@prisma/client";
-import BaseError, { HttpStatusCode } from "./utils/errors/BaseError";
-import { HTTP401Error } from "./utils/errors/Errors";
-import connectPgSimple from "connect-pg-simple";
-import Logger from "./utils/logger";
-import type {
-  ClientToServerEvents,
-  ServerToClientEvents,
-} from "./routes/socketEventTypes";
-import type { Server } from "socket.io";
-import { CORS_ORIGIN, SAME_SITE } from "./utils/originConfig";
+import express, { NextFunction, Request, Response } from 'express';
+import session from 'express-session';
+import prisma from '@/prisma';
+import path from 'path';
+import cors from 'cors';
+import morganMiddleware from './middleware/morgan.middleware';
+import passport from 'passport';
+import router from './routes/router';
+import routeGuard, { PUBLIC_GET_ACCESS, PUBLIC_GET_ACCESS_REGEX, createAccessRules } from './auth/guard';
+import authConfig from './routes/authConfig';
+import { type User } from '@prisma/client';
+import BaseError, { HttpStatusCode } from './utils/errors/BaseError';
+import { HTTP401Error } from './utils/errors/Errors';
+import connectPgSimple from 'connect-pg-simple';
+import Logger from './utils/logger';
+import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
+import type { Server } from 'socket.io';
+import { CORS_ORIGIN, SAME_SITE } from './utils/originConfig';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 
@@ -33,7 +26,7 @@ const AccessRules = createAccessRules(authConfig.accessMatrix);
  */
 
 const app = express();
-export const API_VERSION = "v1";
+export const API_VERSION = 'v1';
 export const API_URL = `/api/${API_VERSION}`;
 
 /**
@@ -44,20 +37,20 @@ export const API_URL = `/api/${API_VERSION}`;
 
 // ensure the server can call other domains: enable cross origin resource sharing (cors)
 app.use(
-  cors({
-    credentials: true,
-    origin: CORS_ORIGIN,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
-  })
+    cors({
+        credentials: true,
+        origin: CORS_ORIGIN,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
+    })
 );
 
 // received packages should be presented in the JSON format
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: '5mb' }));
 app.use(morganMiddleware);
 
 const store = new (connectPgSimple(session))({
-  conString: process.env.DATABASE_URL,
-  tableName: "sessions",
+    conString: process.env.DATABASE_URL,
+    tableName: 'sessions'
 });
 
 const SESSION_MAX_AGE = 2592000000 as const; // 1000 * 60 * 60 * 24 * 30 = 2592000000 = 30 days
@@ -65,24 +58,24 @@ const SESSION_MAX_AGE = 2592000000 as const; // 1000 * 60 * 60 * 24 * 30 = 25920
 /** make sure to have 1 (reverse) proxy in front of the application
  * as is the case with dokku (nginx)
  */
-app.set("trust proxy", 1);
+app.set('trust proxy', 1);
 
-const SESSION_KEY = `${process.env.APP_NAME || "twa"}ApiKey`;
+const SESSION_KEY = `${process.env.APP_NAME || 'twa'}ApiKey`;
 
 /** https://medium.com/developer-rants/how-to-handle-sessions-properly-in-express-js-with-heroku-c35ea8c0e500 */
 export const sessionMiddleware = session({
-  name: SESSION_KEY /** twa stands for "TeachingWebsiteApi" */,
-  store: store,
-  secret: process.env.SESSION_SECRET || "secret",
-  saveUninitialized: false,
-  resave: false,
-  proxy: process.env.NODE_ENV === "production",
-  cookie: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: SAME_SITE,
-    maxAge: SESSION_MAX_AGE, // 30 days
-  },
+    name: SESSION_KEY /** twa stands for "TeachingWebsiteApi" */,
+    store: store,
+    secret: process.env.SESSION_SECRET || 'secret',
+    saveUninitialized: false,
+    resave: false,
+    proxy: process.env.NODE_ENV === 'production',
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: SAME_SITE,
+        maxAge: SESSION_MAX_AGE // 30 days
+    }
 });
 
 // app.use(sessionMiddleware);
@@ -95,175 +88,153 @@ app.use(passport.session());
 // passport.use(strategyForEnvironment());
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+    done(null, user.id);
 });
 
-const deserializeUser = async (
-  id: string,
-  done: (err: any, user?: User | null) => void
-) => {
-  const user = await prisma.user.findUnique({ where: { id: id } });
-  done(null, user);
+const deserializeUser = async (id: string, done: (err: any, user?: User | null) => void) => {
+    const user = await prisma.user.findUnique({ where: { id: id } });
+    done(null, user);
 };
 
 passport.deserializeUser(deserializeUser);
 
 // Serve the static files to be accessed by the docs app
-app.use(express.static(path.join(__dirname, "..", "docs")));
+app.use(express.static(path.join(__dirname, '..', 'docs')));
 
 const welcomeApi = (req: Request, res: Response) => {
-  return res.status(200).send("Welcome to the TEACHING-WEBSITE-API V1.0");
+    return res.status(200).send('Welcome to the TEACHING-WEBSITE-API V1.0');
 };
 
 // Public Endpoints
 app.get(`${API_URL}`, welcomeApi);
 
-const SessionOauthStrategy = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  passport.authenticate("oauth-bearer", { session: true })(req, res, next);
+const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    passport.authenticate('oauth-bearer', { session: true })(req, res, next);
 };
 
 const checkLogin = async (req: Request, res: Response, next: NextFunction) => {
-  if (req.user) {
-    return res.status(200).send("OK");
-  }
-  throw new HTTP401Error();
+    if (req.user) {
+        return res.status(200).send('OK');
+    }
+    throw new HTTP401Error();
 };
 
 app.get(`${API_URL}/checklogin`, SessionOauthStrategy, checkLogin);
 
 const logout = async (req: Request, res: Response, next: NextFunction) => {
-  req.logout({ keepSessionInfo: false }, (err) => {
-    if (err) {
-      Logger.error(err);
-      return next(err);
-    }
-  });
-  Logger.info(req.user);
-  Logger.info(req.session);
-  // await prisma.sessions.delete({ where: { sid: req.session.id } });
-  res.clearCookie(SESSION_KEY).send();
+    req.logout({ keepSessionInfo: false }, (err) => {
+        if (err) {
+            Logger.error(err);
+            return next(err);
+        }
+    });
+    Logger.info(req.user);
+    Logger.info(req.session);
+    // await prisma.sessions.delete({ where: { sid: req.session.id } });
+    res.clearCookie(SESSION_KEY).send();
 };
 
 app.post(`${API_URL}/logout`, logout);
 
-const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if ((err as BaseError).isHttpError) {
-    const httpErr = err as BaseError;
-    res.status(httpErr.statusCode).send({
-      errors: [
-        {
-          name: httpErr.name,
-          message: httpErr.message,
-          status: httpErr.statusCode,
-          isOperational: httpErr.isOperational,
-        },
-      ],
-    });
-  } else {
-    res
-      .status(500)
-      .send({ errors: [{ name: err.name, message: err.message }] });
-  }
-  Logger.error(err);
+const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    if ((err as BaseError).isHttpError) {
+        const httpErr = err as BaseError;
+        res.status(httpErr.statusCode).send({
+            errors: [
+                {
+                    name: httpErr.name,
+                    message: httpErr.message,
+                    status: httpErr.statusCode,
+                    isOperational: httpErr.isOperational
+                }
+            ]
+        });
+    } else {
+        res.status(500).send({ errors: [{ name: err.name, message: err.message }] });
+    }
+    Logger.error(err);
 };
 
 export const configure = (_app: typeof app) => {
-  /**
-   * Notification Middleware
-   * when the response `res` contains a `notifications` property, the middleware will
-   * send the notification over SocketIO to the specififed rooms.
-   */
-  _app.use((req: Request, res, next) => {
-    res.on("finish", async () => {
-      if (res.statusCode >= 400) {
-        return;
-      }
-      const io = req.io as Server<ClientToServerEvents, ServerToClientEvents>;
-
-      if (res.notifications && io) {
-        res.notifications.forEach((notification) => {
-          const except: string[] = [];
-          /** ignore this socket */
-          if (!notification.toSelf) {
-            const socketID = req.headers["x-metadata-socketid"] as string;
-            if (socketID) {
-              except.push(socketID);
+    /**
+     * Notification Middleware
+     * when the response `res` contains a `notifications` property, the middleware will
+     * send the notification over SocketIO to the specififed rooms.
+     */
+    _app.use((req: Request, res, next) => {
+        res.on('finish', async () => {
+            if (res.statusCode >= 400) {
+                return;
             }
-          }
-          io.except(except)
-            .to(notification.to)
-            .emit(notification.event, notification.message as any);
-        });
-      }
-    });
-    next();
-  });
-  /**
-   * API Route Guard
-   * This middleware will check if the user is authenticated and has the required
-   * permissions to access the requested route.
-   */
-  _app.use(
-    `${API_URL}`,
-    (req, res, next) => {
-      if (req.isAuthenticated()) {
-        return next();
-      }
-      passport.authenticate(
-        "oauth-bearer",
-        { session: true },
-        (err: Error, user: User, info: any) => {
-          if (err) {
-            /**
-             * An error occurred during authorization. Send a Not Autohrized
-             * status code.
-             */
-            return res
-              .status(HttpStatusCode.UNAUTHORIZED)
-              .json({ error: err.message });
-          }
+            const io = req.io as Server<ClientToServerEvents, ServerToClientEvents>;
 
-          if (
-            !user &&
-            !(
-              PUBLIC_GET_ACCESS.has(req.path.toLowerCase()) ||
-              PUBLIC_GET_ACCESS_REGEX.some((regex) => regex.test(req.path))
-            )
-          ) {
-            // If no user object found, send a 401 response.
-            return res
-              .status(HttpStatusCode.UNAUTHORIZED)
-              .json({ error: "Unauthorized" });
-          }
-          req.user = user;
-          if (info) {
-            // access token payload will be available in req.authInfo downstream
-            req.authInfo = info;
-            return next();
-          }
-        }
-      )(req, res, next);
-    },
-    routeGuard(AccessRules), // route guard middleware
-    router // the router with all the routes
-  );
-  _app.use(errorHandler);
+            if (res.notifications && io) {
+                res.notifications.forEach((notification) => {
+                    const except: string[] = [];
+                    /** ignore this socket */
+                    if (!notification.toSelf) {
+                        const socketID = req.headers['x-metadata-socketid'] as string;
+                        if (socketID) {
+                            except.push(socketID);
+                        }
+                    }
+                    io.except(except)
+                        .to(notification.to)
+                        .emit(notification.event, notification.message as any);
+                });
+            }
+        });
+        next();
+    });
+    /**
+     * API Route Guard
+     * This middleware will check if the user is authenticated and has the required
+     * permissions to access the requested route.
+     */
+    _app.use(
+        `${API_URL}`,
+        (req, res, next) => {
+            if (req.isAuthenticated()) {
+                return next();
+            }
+            passport.authenticate('oauth-bearer', { session: true }, (err: Error, user: User, info: any) => {
+                if (err) {
+                    /**
+                     * An error occurred during authorization. Send a Not Autohrized
+                     * status code.
+                     */
+                    return res.status(HttpStatusCode.UNAUTHORIZED).json({ error: err.message });
+                }
+
+                if (
+                    !user &&
+                    !(
+                        PUBLIC_GET_ACCESS.has(req.path.toLowerCase()) ||
+                        PUBLIC_GET_ACCESS_REGEX.some((regex) => regex.test(req.path))
+                    )
+                ) {
+                    // If no user object found, send a 401 response.
+                    return res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized' });
+                }
+                req.user = user;
+                if (info) {
+                    // access token payload will be available in req.authInfo downstream
+                    req.authInfo = info;
+                    return next();
+                }
+            })(req, res, next);
+        },
+        routeGuard(AccessRules), // route guard middleware
+        router // the router with all the routes
+    );
+    _app.use(errorHandler);
 };
 
-if (process.env.NODE_ENV === "test") {
-  configure(app);
+if (process.env.NODE_ENV === 'test') {
+    configure(app);
 }
 
 export default app;

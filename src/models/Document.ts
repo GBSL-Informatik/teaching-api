@@ -120,7 +120,10 @@ function Document(db: PrismaClient['document']) {
                     where:
                         actor.role === Role.ADMIN
                             ? { id: _onBehalfOfUserId }
-                            : { id: _onBehalfOfUserId, ...whereStudentGroupAccess(actor.id, true) }
+                            : {
+                                  id: _onBehalfOfUserId,
+                                  ...whereStudentGroupAccess(actor.id, true)
+                              }
                 });
                 if (!onBehalfOfUser) {
                     throw new HTTP404Error('On Behalf Of user not found or no required access');

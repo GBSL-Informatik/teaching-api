@@ -28,7 +28,10 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
             const rooms = [...io.sockets.adapter.rooms.keys()].map(
                 (id) => [id, io.sockets.adapter.rooms.get(id)?.size || 0] as [string, number]
             );
-            io.to(IoRoom.ADMIN).emit(IoEvent.CONNECTED_CLIENTS, { rooms: rooms, type: 'full' });
+            io.to(IoRoom.ADMIN).emit(IoEvent.CONNECTED_CLIENTS, {
+                rooms: rooms,
+                type: 'full'
+            });
         }
         if (hasElevatedAccess(user.role)) {
             socket.on(IoClientEvent.ACTION, onAction(user, socket));
