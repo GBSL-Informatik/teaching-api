@@ -33,8 +33,6 @@
     "express-session": "^1.18.2",
     "global": "^4.4.0",
     "morgan": "^1.10.0",
-    "passport": "^0.7.0",
-    "passport-azure-ad": "^4.3.5",
     "socket.io": "^4.8.1",
     "winston": "^3.13.0"
   },
@@ -50,7 +48,6 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.14.6",
-    "@types/passport-azure-ad": "^4.3.6",
     "@typescript-eslint/eslint-plugin": "^8.44.1",
     "@typescript-eslint/parser": "^8.44.1",
     "dotenv-cli": "^7.4.2",

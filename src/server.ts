@@ -4,7 +4,7 @@ import http from 'http';
 import Logger from '@/utils/logger';
 import { Server } from 'socket.io';
 import { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
-import passport from 'passport';
+// import passport from 'passport';
 import EventRouter from './routes/socketEvents';
 import type { NextFunction, Request, Response } from 'express';
 import { HTTP403Error } from './utils/errors/Errors';

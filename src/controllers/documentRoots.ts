@@ -8,7 +8,7 @@ import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
 import { hasElevatedAccess } from '../models/User';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const document = await DocumentRoot.findModel(req.user!, req.params.id);
+    const document = await DocumentRoot.findModel((req as any).user!, req.params.id);
     res.json(document);
 };
 
@@ -17,7 +17,7 @@ export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async 
     if (ids.length === 0) {
         return res.json([]);
     }
-    const documents = await DocumentRoot.findManyModels(req.user!.id, ids);
+    const documents = await DocumentRoot.findManyModels((req as any).user!.id, ids);
     res.json(documents);
 };
 
@@ -30,7 +30,7 @@ export const findManyFor: RequestHandler<
     if (!req.params.id) {
         throw new HTTP400Error('Missing user id');
     }
-    const canLoad = req.user!.id === req.params.id || hasElevatedAccess(req.user?.role);
+    const canLoad = (req as any).user!.id === req.params.id || hasElevatedAccess((req as any).user?.role);
     if (!canLoad) {
         throw new HTTP403Error('Not Authorized');
     }
@@ -43,14 +43,14 @@ export const findManyFor: RequestHandler<
 };
 
 export const allDocuments: RequestHandler<any, any, any, { rids: string[] }> = async (req, res, next) => {
-    if (!hasElevatedAccess(req.user!.role)) {
+    if (!hasElevatedAccess((req as any).user!.role)) {
         throw new HTTP403Error('Not Authorized');
     }
     const ids = Array.isArray(req.query.rids) ? req.query.rids : [req.query.rids];
     if (ids.length === 0) {
         return res.json([]);
     }
-    const documents = await Document.allOfDocumentRoots(req.user!, ids);
+    const documents = await Document.allOfDocumentRoots((req as any).user!, ids);
     res.json(documents);
 };
 
@@ -77,7 +77,7 @@ export const create: RequestHandler<{ id: string }, any, CreateConfig | undefine
         {
             event: IoEvent.NEW_RECORD,
             message: { type: RecordType.DocumentRoot, record: documentRoot },
-            to: [...groupIds, ...userIds, sharedAccess, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
         }
     ];
     res.json(documentRoot);
@@ -106,12 +106,12 @@ export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (
 };
 
 export const permissions: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const permissions = await DocumentRoot.getPermissions(req.user!, req.params.id);
+    const permissions = await DocumentRoot.getPermissions((req as any).user!, req.params.id);
     res.json(permissions);
 };
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const model = await DocumentRoot.deleteModel(req.user!, req.params.id);
+    const model = await DocumentRoot.deleteModel((req as any).user!, req.params.id);
 
     res.notifications = [
         {

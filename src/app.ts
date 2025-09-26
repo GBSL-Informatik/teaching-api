@@ -4,7 +4,7 @@ import prisma from '@/prisma';
 import path from 'path';
 import cors from 'cors';
 import morganMiddleware from './middleware/morgan.middleware';
-import passport from 'passport';
+// import passport from 'passport';
 import router from './routes/router';
 import routeGuard, { PUBLIC_GET_ACCESS, PUBLIC_GET_ACCESS_REGEX, createAccessRules } from './auth/guard';
 import authConfig from './routes/authConfig';
@@ -83,20 +83,20 @@ export const sessionMiddleware = session({
 // app.use(passport.initialize());
 
 /** alias for passport.authenticate('session'); e.g. to use the session... */
-app.use(passport.session());
+// app.use(passport.session());
 
-// passport.use(strategyForEnvironment());
+// // passport.use(strategyForEnvironment());
 
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
+// passport.serializeUser((user, done) => {
+//     done(null, user.id);
+// });
 
 const deserializeUser = async (id: string, done: (err: any, user?: User | null) => void) => {
     const user = await prisma.user.findUnique({ where: { id: id } });
     done(null, user);
 };
 
-passport.deserializeUser(deserializeUser);
+// passport.deserializeUser(deserializeUser);
 
 // Serve the static files to be accessed by the docs app
 app.use(express.static(path.join(__dirname, '..', 'docs')));
@@ -109,30 +109,30 @@ const welcomeApi = (req: Request, res: Response) => {
 app.get(`${API_URL}`, welcomeApi);
 
 const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    passport.authenticate('oauth-bearer', { session: true })(req, res, next);
+    return next();
+    // if (req.isAuthenticated()) {
+    // }
+    // passport.authenticate('oauth-bearer', { session: true })(req, res, next);
 };
 
 const checkLogin = async (req: Request, res: Response, next: NextFunction) => {
-    if (req.user) {
-        return res.status(200).send('OK');
-    }
-    throw new HTTP401Error();
+    return res.status(200).send('OK');
+    // if (req.user) {
+    // }
+    // throw new HTTP401Error();
 };
 
 app.get(`${API_URL}/checklogin`, SessionOauthStrategy, checkLogin);
 
 const logout = async (req: Request, res: Response, next: NextFunction) => {
-    req.logout({ keepSessionInfo: false }, (err) => {
-        if (err) {
-            Logger.error(err);
-            return next(err);
-        }
-    });
-    Logger.info(req.user);
-    Logger.info(req.session);
+    // req.logout({ keepSessionInfo: false }, (err) => {
+    //     if (err) {
+    //         Logger.error(err);
+    //         return next(err);
+    //     }
+    // });
+    // Logger.info(req.user);
+    // Logger.info(req.session);
     // await prisma.sessions.delete({ where: { sid: req.session.id } });
     res.clearCookie(SESSION_KEY).send();
 };
@@ -197,35 +197,35 @@ export const configure = (_app: typeof app) => {
     _app.use(
         `${API_URL}`,
         (req, res, next) => {
-            if (req.isAuthenticated()) {
-                return next();
-            }
-            passport.authenticate('oauth-bearer', { session: true }, (err: Error, user: User, info: any) => {
-                if (err) {
-                    /**
-                     * An error occurred during authorization. Send a Not Autohrized
-                     * status code.
-                     */
-                    return res.status(HttpStatusCode.UNAUTHORIZED).json({ error: err.message });
-                }
+            return next();
+            //     if (req.isAuthenticated()) {
+            //     }
+            //     passport.authenticate('oauth-bearer', { session: true }, (err: Error, user: User, info: any) => {
+            //         if (err) {
+            //             /**
+            //              * An error occurred during authorization. Send a Not Autohrized
+            //              * status code.
+            //              */
+            //             return res.status(HttpStatusCode.UNAUTHORIZED).json({ error: err.message });
+            //         }
 
-                if (
-                    !user &&
-                    !(
-                        PUBLIC_GET_ACCESS.has(req.path.toLowerCase()) ||
-                        PUBLIC_GET_ACCESS_REGEX.some((regex) => regex.test(req.path))
-                    )
-                ) {
-                    // If no user object found, send a 401 response.
-                    return res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized' });
-                }
-                req.user = user;
-                if (info) {
-                    // access token payload will be available in req.authInfo downstream
-                    req.authInfo = info;
-                    return next();
-                }
-            })(req, res, next);
+            //         if (
+            //             !user &&
+            //             !(
+            //                 PUBLIC_GET_ACCESS.has(req.path.toLowerCase()) ||
+            //                 PUBLIC_GET_ACCESS_REGEX.some((regex) => regex.test(req.path))
+            //             )
+            //         ) {
+            //             // If no user object found, send a 401 response.
+            //             return res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized' });
+            //         }
+            //         req.user = user;
+            //         if (info) {
+            //             // access token payload will be available in req.authInfo downstream
+            //             req.authInfo = info;
+            //             return next();
+            //         }
+            //     })(req, res, next);
         },
         routeGuard(AccessRules), // route guard middleware
         router // the router with all the routes

@@ -4,17 +4,17 @@ import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
 import { CmsSettings as DbCmsSettings } from '@prisma/client';
 
 export const find: RequestHandler = async (req, res, next) => {
-    const settings = await CmsSettings.findModel(req.user!);
+    const settings = await CmsSettings.findModel((req as any).user!);
     res.json(settings);
 };
 
 export const update: RequestHandler<any, any, Partial<DbCmsSettings>> = async (req, res, next) => {
-    await CmsSettings.updateModel(req.user!, req.body);
+    await CmsSettings.updateModel((req as any).user!, req.body);
     res.status(204).send();
 };
 
 export const logout: RequestHandler<any, any, Partial<DbCmsSettings>> = async (req, res, next) => {
-    const model = await CmsSettings.logout(req.user!);
+    const model = await CmsSettings.logout((req as any).user!);
     if (!model) {
         res.status(204).send();
         return;
@@ -27,7 +27,7 @@ export const logout: RequestHandler<any, any, Partial<DbCmsSettings>> = async (r
         {
             event: IoEvent.CHANGED_RECORD,
             message: change,
-            to: [req.user!.id]
+            to: [(req as any).user!.id]
         }
     ];
 
@@ -36,7 +36,7 @@ export const logout: RequestHandler<any, any, Partial<DbCmsSettings>> = async (r
 
 export const githubToken: RequestHandler<any, any, any, { code: string }> = async (req, res, next) => {
     const { code } = req.query;
-    const model = await CmsSettings.fetchToken(req.user!.id, code);
+    const model = await CmsSettings.fetchToken((req as any).user!.id, code);
 
     const change: ChangedRecord<RecordType.CmsSettings> = {
         type: RecordType.CmsSettings,
@@ -46,7 +46,7 @@ export const githubToken: RequestHandler<any, any, any, { code: string }> = asyn
         {
             event: IoEvent.CHANGED_RECORD,
             message: change,
-            to: [req.user!.id]
+            to: [(req as any).user!.id]
         }
     ];
     res.status(200).json(model);

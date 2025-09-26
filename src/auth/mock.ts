@@ -1,17 +1,17 @@
 /* istanbul ignore file */
 import { Request } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
-import { Strategy, StrategyCreated, StrategyCreatedStatic } from 'passport';
+// import { Strategy, StrategyCreated, StrategyCreatedStatic } from 'passport';
 import { ParsedQs } from 'qs';
 import prisma from '../prisma';
 import Logger from '../utils/logger';
-class MockStrat extends Strategy {
+class MockStrat {
     name = 'oauth-bearer';
     constructor() {
-        super();
+        // super();
     }
     async authenticate(
-        this: StrategyCreated<this, this & StrategyCreatedStatic>,
+        this: any,
         req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
         options?: any
     ) {

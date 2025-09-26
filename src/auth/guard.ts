@@ -77,13 +77,13 @@ const routeGuard = (accessMatrix: AccessRegexRule[]) => {
         const reqPath = req.path.toLowerCase();
         /* istanbul ignore if */
         if (
-            !req.user &&
+            !(req as any).user &&
             !(PUBLIC_GET_ACCESS.has(reqPath) || PUBLIC_GET_ACCESS_REGEX.some((regex) => regex.test(reqPath)))
         ) {
             return res.status(HttpStatusCode.FORBIDDEN).json({ error: 'No roles claim found!' });
         }
 
-        if (!requestHasRequiredAttributes(accessMatrix, req.path, req.method, req.user?.role)) {
+        if (!requestHasRequiredAttributes(accessMatrix, req.path, req.method, (req as any).user?.role)) {
             return res
                 .status(HttpStatusCode.FORBIDDEN)
                 .json({ error: 'User does not have the role, method or path' });

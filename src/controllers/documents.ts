@@ -9,7 +9,7 @@ import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const document = await Document.findModel(req.user!, req.params.id);
+    const document = await Document.findModel((req as any).user!, req.params.id);
     res.json(document);
 };
 
@@ -23,7 +23,7 @@ export const create: RequestHandler<
     const { onBehalfOf, uniqueMain } = req.query;
     const onBehalfUserId = onBehalfOf === 'true' ? req.body.authorId : undefined;
     const { model, permissions } = await Document.createModel(
-        req.user!,
+        (req as any).user!,
         type,
         documentRootId,
         data,
@@ -44,7 +44,7 @@ export const create: RequestHandler<
         {
             event: IoEvent.NEW_RECORD,
             message: { type: RecordType.Document, record: model },
-            to: [...groupIds, ...userIds, sharedAccess, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving,
+            to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving,
         }
     ];
     res.status(200).json(model);
@@ -57,7 +57,12 @@ export const update: RequestHandler<
     { onBehalfOf?: 'true' }
 > = async (req, res, next) => {
     const { onBehalfOf } = req.query;
-    const model = await Document.updateModel(req.user!, req.params.id, req.body.data, onBehalfOf === 'true');
+    const model = await Document.updateModel(
+        (req as any).user!,
+        req.params.id,
+        req.body.data,
+        onBehalfOf === 'true'
+    );
     /**
      * Notifications to
      * - the user who updated the document
@@ -81,7 +86,7 @@ export const update: RequestHandler<
         {
             event: IoEvent.CHANGED_DOCUMENT,
             message: change,
-            to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
         }
     ];
 
@@ -111,7 +116,7 @@ export const linkTo: RequestHandler<{ id: string; parentId: string }, any, any> 
     if (req.params.id === req.params.parentId) {
         throw new HTTP403Error('Not allowed to link to self');
     }
-    const current = await Document.findModel(req.user!, req.params.id);
+    const current = await Document.findModel((req as any).user!, req.params.id);
     if (!current || !RWAccess.has(current.highestPermission)) {
         throw new HTTP404Error('Model not found');
     }
@@ -121,7 +126,7 @@ export const linkTo: RequestHandler<{ id: string; parentId: string }, any, any> 
             "No circular links allowed (trying to link a document to one of it's children)"
         );
     }
-    const linkTo = await Document.findModel(req.user!, req.params.parentId);
+    const linkTo = await Document.findModel((req as any).user!, req.params.parentId);
     if (!linkTo || NoneAccess.has(linkTo.highestPermission)) {
         throw new HTTP404Error('Model linking to not found');
     }
@@ -188,7 +193,7 @@ export const linkTo: RequestHandler<{ id: string; parentId: string }, any, any> 
                 type: RecordType.Document,
                 record: updated
             },
-            to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
         }
     ];
 
@@ -196,7 +201,7 @@ export const linkTo: RequestHandler<{ id: string; parentId: string }, any, any> 
 };
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const model = await Document.deleteModel(req.user!, req.params.id);
+    const model = await Document.deleteModel((req as any).user!, req.params.id);
 
     const groupIds = model.documentRoot.rootGroupPermissions
         .filter((p) => !NoneAccess.has(p.access))
@@ -209,7 +214,7 @@ export const destroy: RequestHandler<{ id: string }> = async (req, res, next) =>
         {
             event: IoEvent.DELETED_RECORD,
             message: { type: RecordType.Document, id: model.id },
-            to: [...groupIds, ...userIds, ...sharedAccess, IoRoom.ADMIN, req.user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            to: [...groupIds, ...userIds, ...sharedAccess, IoRoom.ADMIN, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
         }
     ];
     res.status(204).send();

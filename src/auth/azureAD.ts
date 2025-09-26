@@ -1,5 +1,5 @@
 import prisma from '../prisma';
-import { BearerStrategy, IBearerStrategyOptionWithRequest, VerifyBearerFunction } from 'passport-azure-ad';
+// import { BearerStrategy, IBearerStrategyOptionWithRequest, VerifyBearerFunction } from 'passport-azure-ad';
 import { getAuthInfo, userProps } from '../helpers/authInfo';
 import authConfig from '../routes/authConfig';
 import Logger from '../utils/logger';
@@ -17,7 +17,7 @@ const auth = {
     loggingLevel: authConfig.settings.loggingLevel
 };
 
-const options: IBearerStrategyOptionWithRequest = {
+const options = {
     identityMetadata: `https://${auth.authority}/${auth.tenantID}/${auth.version}/${auth.discovery}`,
     issuer: `https://${auth.authority}/${auth.tenantID}/${auth.version}`,
     clientID: auth.clientID,
@@ -29,7 +29,7 @@ const options: IBearerStrategyOptionWithRequest = {
     scope: auth.scope
 };
 
-const BearerVerify: VerifyBearerFunction = async (token, done) => {
+const BearerVerify = async (token: any, done: any) => {
     const { oid } = getAuthInfo(token);
     // @link https://medium.com/@prashantramnyc/node-js-with-passport-authentication-simplified-76ca65ee91e5
     const user = await prisma.user
@@ -46,7 +46,7 @@ const BearerVerify: VerifyBearerFunction = async (token, done) => {
     done(null, user, token);
 };
 
-export const getStrategy = () => {
-    const strategy = new BearerStrategy(options, BearerVerify);
-    return strategy;
-};
+// export const getStrategy = () => {
+//     const strategy = new BearerStrategy(options, BearerVerify);
+//     return strategy;
+// };
