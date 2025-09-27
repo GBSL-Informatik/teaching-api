@@ -1,23 +1,23 @@
 import { Access, PrismaClient, User } from '@prisma/client';
 import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
-import { documents as seedDocuments } from '@/prisma/seed-files/documents';
+import { documents as seedDocuments } from './seed-files/documents';
 import {
     ALL_USERS_GROUP_ID,
     CLASS_GROUP_ID,
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
-} from '@/prisma/seed-files/student-groups';
+} from './seed-files/student-groups';
 import {
     documentRoots as seedDocumentRoots,
     NONE_EXAM_DOCUMENT_ID,
     RW_EXERCISE_IMPSUM_DOCUMENT_ROOT_ID,
     RO_VISIBILITY_WRAPPER_DOCUMENT_ROOT_ID,
     RW_EXERCISE_LOREM_DOCUMENT_ROOT_ID
-} from '@/prisma/seed-files/document-roots';
+} from './seed-files/document-roots';
 import {
     rootUserPermissions as seedRootUserPermissions,
     rootGroupPermissions as seedRootGroupPermissions
-} from '@/prisma/seed-files/document-root-permissions';
+} from './seed-files/document-root-permissions';
 
 const prisma = new PrismaClient();
 
