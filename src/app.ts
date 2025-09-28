@@ -10,7 +10,9 @@ import routeGuard, { PUBLIC_GET_ACCESS, PUBLIC_GET_ACCESS_REGEX, createAccessRul
 import authConfig from './routes/authConfig';
 import { type User } from '@prisma/client';
 import BaseError, { HttpStatusCode } from './utils/errors/BaseError';
-import { HTTP401Error } from './utils/errors/Errors';
+import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
+import { auth } from './auth';
+
 import connectPgSimple from 'connect-pg-simple';
 import Logger from './utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
@@ -44,57 +46,17 @@ app.use(
     })
 );
 
+// make sure to configure *before* the json middleware
+app.all('/api/auth/{*route}', toNodeHandler(auth));
+
 // received packages should be presented in the JSON format
 app.use(express.json({ limit: '5mb' }));
 app.use(morganMiddleware);
-
-const store = new (connectPgSimple(session))({
-    conString: process.env.DATABASE_URL,
-    tableName: 'sessions'
-});
-
-const SESSION_MAX_AGE = 2592000000 as const; // 1000 * 60 * 60 * 24 * 30 = 2592000000 = 30 days
 
 /** make sure to have 1 (reverse) proxy in front of the application
  * as is the case with dokku (nginx)
  */
 app.set('trust proxy', 1);
-
-const SESSION_KEY = `${process.env.APP_NAME || 'twa'}ApiKey`;
-
-/** https://medium.com/developer-rants/how-to-handle-sessions-properly-in-express-js-with-heroku-c35ea8c0e500 */
-export const sessionMiddleware = session({
-    name: SESSION_KEY /** twa stands for "TeachingWebsiteApi" */,
-    store: store,
-    secret: process.env.SESSION_SECRET || 'secret',
-    saveUninitialized: false,
-    resave: false,
-    proxy: process.env.NODE_ENV === 'production',
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: SAME_SITE,
-        maxAge: SESSION_MAX_AGE // 30 days
-    }
-});
-
-// app.use(sessionMiddleware);
-
-// app.use(passport.initialize());
-
-/** alias for passport.authenticate('session'); e.g. to use the session... */
-// app.use(passport.session());
-
-// // passport.use(strategyForEnvironment());
-
-// passport.serializeUser((user, done) => {
-//     done(null, user.id);
-// });
-
-const deserializeUser = async (id: string, done: (err: any, user?: User | null) => void) => {
-    const user = await prisma.user.findUnique({ where: { id: id } });
-    done(null, user);
-};
 
 // passport.deserializeUser(deserializeUser);
 
@@ -116,7 +78,12 @@ const SessionOauthStrategy = (req: Request, res: Response, next: NextFunction) =
 };
 
 const checkLogin = async (req: Request, res: Response, next: NextFunction) => {
-    return res.status(200).send('OK');
+    const session = await auth.api.getSession({
+        headers: fromNodeHeaders(req.headers)
+    });
+    return res.json(session);
+
+    // return res.status(200).send('OK');
     // if (req.user) {
     // }
     // throw new HTTP401Error();
