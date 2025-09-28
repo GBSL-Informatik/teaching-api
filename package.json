@@ -20,6 +20,7 @@
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist && sentry-cli sourcemaps upload --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist"
   },
   "dependencies": {
+    "@better-auth/sso": "^1.3.18",
     "@prisma/adapter-pg": "^6.16.2",
     "@prisma/client": "^6.16.2",
     "@sentry/cli": "^2.52.0",
