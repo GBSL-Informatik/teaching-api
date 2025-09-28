@@ -25,7 +25,7 @@ model User {
 
   firstName                       String                            @map("first_name")
   lastName                        String                            @map("last_name")
-  role                            Role                              @default(STUDENT) @map("role")
+  tdevRole                        Role                              @default(STUDENT) @map("tdev_role")
   documents                       Document[]                        @relation("documents")
   rootUserPermissions             RootUserPermission[]              @relation("root_user_to_user_permission")
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
