@@ -1,3 +1,4 @@
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions", "views", "relationJoins"]
@@ -36,6 +37,11 @@ model User {
   sessions Session[]
   accounts Account[]
 
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
   @@map("users")
 }
 
@@ -49,6 +55,8 @@ model Session {
   token     String
   createdAt DateTime
   updatedAt DateTime
+
+  impersonatedBy String?
 
   @@unique([token])
   @@map("sessions")
