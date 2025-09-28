@@ -1,4 +1,3 @@
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions", "views", "relationJoins"]
@@ -41,6 +40,8 @@ model User {
   banned     Boolean?  @default(false)
   banReason  String?
   banExpires DateTime?
+
+  ssoproviders SsoProvider[]
 
   @@map("users")
 }
@@ -92,6 +93,21 @@ model Verification {
   updatedAt DateTime?
 
   @@map("verifications")
+}
+
+model SsoProvider {
+  id             String  @id
+  issuer         String
+  oidcConfig     String?
+  samlConfig     String?
+  userId         String? @db.Uuid
+  user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerId     String
+  organizationId String?
+  domain         String
+
+  @@unique([providerId])
+  @@map("ssoProvider")
 }
 
 model CmsSettings {
