@@ -15,13 +15,17 @@ datasource db {
 }
 
 model User {
-  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                           String                            @unique
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @default("")
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
   firstName                       String                            @map("first_name")
   lastName                        String                            @map("last_name")
   role                            Role                              @default(STUDENT) @map("role")
-  createdAt                       DateTime                          @default(now()) @map("created_at")
-  updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
   documents                       Document[]                        @relation("documents")
   rootUserPermissions             RootUserPermission[]              @relation("root_user_to_user_permission")
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
@@ -29,7 +33,57 @@ model User {
   cmsSettings                     CmsSettings?
   studentGroups                   UserStudentGroup[]                @relation("user_student_groups")
 
+  sessions Session[]
+  accounts Account[]
+
   @@map("users")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+
+  @@unique([token])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String    @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  expiresAt             DateTime?
+  password              String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  @@map("verifications")
 }
 
 model CmsSettings {
@@ -152,18 +206,10 @@ model RootUserPermission {
   @@map("root_user_permissions")
 }
 
-model Sessions {
-  sid    String   @id @db.VarChar
-  sess   Json     @db.Json
-  expire DateTime @db.Timestamp(6)
-
-  @@index([expire], map: "IDX_session_expire")
-  @@map("sessions")
-}
-
 // This is a view ranked by the highest access rank.
 // This is used to create the DocumentUserPermissions view and should
 // not be used directly.
+
 view view_AllDocumentUserPermissions {
   documentRootId        String               @map("document_root_id") @db.Uuid
   userId                String               @map("user_id") @db.Uuid
