@@ -296,7 +296,15 @@ dokku letsencrypt:enable dev-teaching-api
 ## when it succeeds, re-enable the cloudflare proxy for domain.tld...
 ```
 
-### Speed Improvements
+## Dump from production
+
+```bash
+# inside shell of VSCode DevContainer (with configured dokku git remote)
+dokku postgres:export dev-teaching-api > tdev-backup.dump
+pg_restore -h localhost --verbose --clean --no-owner --no-privileges -U postgres -d teaching_api < tdev-backup.dump
+```
+
+## Speed Improvements
 If the API and the Database are running on the same server, you can improve the speed by disabling the tcp connection for the database. This can be done by setting the `DATABASE_URL` to `postgresql://teaching_website:teaching_website@localhost/teaching_website?sslmode=disable`.
 
 ## Troubleshooting

@@ -7,5 +7,5 @@ dist/
 build/
 # Sentry Config File
 .sentryclirc
-
+*.dump
 src/generated/prisma
