@@ -2,7 +2,7 @@ import { User } from '@prisma/client';
 import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import prisma from '../../prisma';
-import { Role } from 'src/models/User';
+import { Role } from '../../models/User';
 
 const onAction: (
     user: User,

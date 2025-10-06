@@ -1,4 +1,7 @@
 {  
   "extends": "./tsconfig",
+  "compilerOptions": {
+    "skipLibCheck": true, // better-auth failures for sqlite, timer and zod, try turning on later...
+  },
   "exclude": ["**/*.test.*", "**/__mocks__/*", "**/__tests__/*"]
 }

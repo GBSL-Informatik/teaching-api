@@ -6,7 +6,7 @@ import StudentGroup from '../../models/StudentGroup';
 import onStreamUpdate from './streamUpdate.handler';
 import DocumentRoot from '../../models/DocumentRoot';
 import { highestAccess, RWAccess } from '../../helpers/accessPolicy';
-import { Role } from 'src/models/User';
+import { Role } from '../../models/User';
 type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, any>;
 
 const isDocumentRoot = (roomId: string) => {

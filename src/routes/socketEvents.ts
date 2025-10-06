@@ -27,7 +27,6 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
             return socket.disconnect();
         }
         const user = session.user as User;
-        console.log(`Socket.io user`, user);
         socket.join(user.id);
         if (!user) {
             return socket.disconnect();

@@ -1,4 +1,4 @@
-import { Role } from 'src/models/User';
+import { Role } from '../models/User';
 
 interface Credentials {
     tenantID: string;
