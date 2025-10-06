@@ -34,7 +34,6 @@ export const auth = betterAuth({
             authority: 'https://login.microsoftonline.com', // Authentication authority URL
             prompt: 'select_account', // Forces account selection,
             mapProfileToUser: (profile) => {
-                console.log('MSFT Profile:', profile);
                 const email = (profile.email || profile.preferred_username)?.toLowerCase();
                 const name = getNameFromMsftProfile(profile);
                 return {

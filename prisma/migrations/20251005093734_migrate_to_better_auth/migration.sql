@@ -5,7 +5,8 @@
 
 */
 -- AlterTable
-ALTER TABLE "public"."users" ADD COLUMN     "ban_expires" TIMESTAMP(3),
+ALTER TABLE "public"."users" 
+ADD COLUMN     "ban_expires" TIMESTAMP(3),
 ADD COLUMN     "ban_reason" TEXT,
 ADD COLUMN     "banned" BOOLEAN DEFAULT false,
 ADD COLUMN     "email_verified" BOOLEAN NOT NULL DEFAULT false,
@@ -17,7 +18,9 @@ UPDATE "public"."users" SET "trole" = 'admin' WHERE "role" = 'ADMIN';
 UPDATE "public"."users" SET "trole" = 'teacher' WHERE "role" = 'TEACHER';
 
 ALTER TABLE "public"."users"
-DROP COLUMN "role",
+DROP COLUMN "role";
+
+ALTER TABLE "public"."users"
 ADD COLUMN     "role" TEXT NOT NULL DEFAULT 'student';
 
 UPDATE "public"."users" SET "role" = trole;
