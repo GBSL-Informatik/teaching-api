@@ -1,7 +1,8 @@
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import prisma from '../../prisma';
+import { Role } from 'src/models/User';
 
 const onAction: (
     user: User,
@@ -20,16 +21,9 @@ const onAction: (
               .findMany({
                   where: {
                       id: { in: navRequest.roomIds },
-                      users: {
-                          some: {
-                              userId: user.id,
-                              isAdmin: true
-                          }
-                      }
+                      users: { some: { userId: user.id, isAdmin: true } }
                   },
-                  select: {
-                      id: true
-                  }
+                  select: { id: true }
               })
               .then((sg) => {
                   return sg.map((group) => group.id);
@@ -42,30 +36,11 @@ const onAction: (
                       .findMany({
                           where: {
                               AND: [
-                                  {
-                                      users: {
-                                          some: {
-                                              userId: { in: navRequest.userIds }
-                                          }
-                                      }
-                                  },
-                                  {
-                                      users: {
-                                          some: {
-                                              userId: user.id,
-                                              isAdmin: true
-                                          }
-                                      }
-                                  }
+                                  { users: { some: { userId: { in: navRequest.userIds } } } },
+                                  { users: { some: { userId: user.id, isAdmin: true } } }
                               ]
                           },
-                          select: {
-                              users: {
-                                  select: {
-                                      userId: true
-                                  }
-                              }
-                          }
+                          select: { users: { select: { userId: true } } }
                       })
                       .then((studentGroups) => {
                           return studentGroups

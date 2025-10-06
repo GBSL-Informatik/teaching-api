@@ -25,7 +25,6 @@ model User {
 
   firstName                       String                            @map("first_name")
   lastName                        String                            @map("last_name")
-  tdevRole                        Role                              @default(STUDENT) @map("tdev_role")
   documents                       Document[]                        @relation("documents")
   rootUserPermissions             RootUserPermission[]              @relation("root_user_to_user_permission")
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
@@ -36,10 +35,10 @@ model User {
   sessions Session[]
   accounts Account[]
 
-  role       String?
+  role       String    @default("student")
   banned     Boolean?  @default(false)
-  banReason  String?
-  banExpires DateTime?
+  banReason  String?   @map("ban_reason")
+  banExpires DateTime? @map("ban_expires")
 
   ssoproviders SsoProvider[]
 
@@ -47,67 +46,69 @@ model User {
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  ipAddress String?
-  userAgent String?
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
   userId    String   @map("user_id") @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  impersonatedBy String?
+  impersonatedBy String? @map("impersonated_by") @db.Uuid
 
-  @@unique([token])
+  @@index([userId])
+  @@index([userId, token])
   @@map("sessions")
 }
 
 model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
   userId                String    @db.Uuid
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  expiresAt             DateTime?
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  expiresAt             DateTime? @map("expires_at")
   password              String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
   scope                 String?
-  createdAt             DateTime
-  updatedAt             DateTime
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
 
+  @@index([userId])
   @@map("accounts")
 }
 
 model Verification {
-  id         String   @id
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   identifier String
   value      String
-  expiresAt  DateTime
+  expiresAt  DateTime @map("expires_at")
 
-  createdAt DateTime?
-  updatedAt DateTime?
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at")
 
+  @@index([identifier])
   @@map("verifications")
 }
 
 model SsoProvider {
-  id             String  @id
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   issuer         String
-  oidcConfig     String?
-  samlConfig     String?
-  userId         String? @db.Uuid
+  oidcConfig     String? @map("oidc_config")
+  samlConfig     String? @map("saml_config")
+  userId         String? @map("user_id") @db.Uuid
   user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  providerId     String
-  organizationId String?
+  providerId     String  @unique @map("provider_id")
+  organizationId String? @map("organization_id")
   domain         String
 
-  @@unique([providerId])
-  @@map("ssoProvider")
+  @@map("ssoProviders")
 }
 
 model CmsSettings {
@@ -296,10 +297,4 @@ enum Access {
   RO_User
   RW_User
   None_User
-}
-
-enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
 }

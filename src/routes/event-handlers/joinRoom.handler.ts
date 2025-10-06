@@ -1,4 +1,4 @@
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../socketEventTypes';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import prisma from '../../prisma';
@@ -6,6 +6,7 @@ import StudentGroup from '../../models/StudentGroup';
 import onStreamUpdate from './streamUpdate.handler';
 import DocumentRoot from '../../models/DocumentRoot';
 import { highestAccess, RWAccess } from '../../helpers/accessPolicy';
+import { Role } from 'src/models/User';
 type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, any>;
 
 const isDocumentRoot = (roomId: string) => {
@@ -29,21 +30,7 @@ const findDocumentRoot = (user: User, roomId: string) => {
 
 const findStudentGroup = (userId: string, roomId: string) => {
     return prisma.studentGroup.findFirst({
-        where: {
-            users: {
-                some: {
-                    AND: [
-                        {
-                            userId: userId,
-                            isAdmin: true
-                        },
-                        {
-                            userId: roomId
-                        }
-                    ]
-                }
-            }
-        }
+        where: { users: { some: { AND: [{ userId: userId, isAdmin: true }, { userId: roomId }] } } }
     });
 };
 

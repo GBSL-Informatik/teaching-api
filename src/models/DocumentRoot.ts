@@ -6,15 +6,14 @@ import {
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
-    User,
-    Role
+    User
 } from '@prisma/client';
 import { ApiDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy';
-import { hasElevatedAccess, whereStudentGroupAccess } from './User';
+import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User';
 
 export type ApiDocumentRoot = DbDocumentRoot & {
     documents: ApiDocument[];
@@ -52,19 +51,11 @@ export interface UpdateConfig {
 }
 
 const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermission => {
-    return {
-        id: permission.id,
-        access: permission.access,
-        groupId: permission.studentGroupId
-    };
+    return { id: permission.id, access: permission.access, groupId: permission.studentGroupId };
 };
 
 const prepareUserPermission = (permission: RootUserPermission): ApiUserPermission => {
-    return {
-        id: permission.id,
-        access: permission.access,
-        userId: permission.userId
-    };
+    return { id: permission.id, access: permission.access, userId: permission.userId };
 };
 
 const { ADMIN_USER_GROUP_ID } = process.env;
@@ -73,12 +64,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
         async findModel(actor: User, id: string): Promise<ApiDocumentRoot | null> {
             const documentRoot = (await prisma.view_UsersDocuments.findUnique({
-                where: {
-                    id_userId: {
-                        id: id,
-                        userId: actor.id
-                    }
-                }
+                where: { id_userId: { id: id, userId: actor.id } }
             })) as ApiDocumentRoot | null;
             if (!documentRoot) {
                 /**
@@ -86,25 +72,11 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                  * In this case, we have to load the document root directly.
                  */
                 const docRoot = await db.findUnique({
-                    where: {
-                        id: id
-                    },
+                    where: { id: id },
                     include: {
-                        rootUserPermissions: {
-                            where: {
-                                userId: actor.id
-                            }
-                        },
+                        rootUserPermissions: { where: { userId: actor.id } },
                         rootGroupPermissions: {
-                            where: {
-                                studentGroup: {
-                                    users: {
-                                        some: {
-                                            userId: actor.id
-                                        }
-                                    }
-                                }
-                            }
+                            where: { studentGroup: { users: { some: { userId: actor.id } } } }
                         }
                     }
                 });
@@ -127,12 +99,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             ignoreMissingRoots: boolean = false
         ): Promise<ApiDocumentRoot[] | null> {
             const documentRoots = (await prisma.view_UsersDocuments.findMany({
-                where: {
-                    id: {
-                        in: ids
-                    },
-                    userId: actorId
-                },
+                where: { id: { in: ids }, userId: actorId },
                 relationLoadStrategy: 'query'
             })) as unknown as ApiDocumentRoot[];
             const response = documentRoots
@@ -150,27 +117,11 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
              */
             if (missingDocumentRoots.length > 0 && !ignoreMissingRoots) {
                 const docRoots = await db.findMany({
-                    where: {
-                        id: {
-                            in: missingDocumentRoots
-                        }
-                    },
+                    where: { id: { in: missingDocumentRoots } },
                     include: {
-                        rootUserPermissions: {
-                            where: {
-                                userId: actorId
-                            }
-                        },
+                        rootUserPermissions: { where: { userId: actorId } },
                         rootGroupPermissions: {
-                            where: {
-                                studentGroup: {
-                                    users: {
-                                        some: {
-                                            userId: actorId
-                                        }
-                                    }
-                                }
-                            }
+                            where: { studentGroup: { users: { some: { userId: actorId } } } }
                         }
                     }
                 });
@@ -193,10 +144,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 ADMIN_USER_GROUP_ID &&
                 !groupPermissions.some((gp) => gp.groupId === ADMIN_USER_GROUP_ID)
             ) {
-                groupPermissions.push({
-                    groupId: ADMIN_USER_GROUP_ID,
-                    access: Access.RW_DocumentRoot
-                });
+                groupPermissions.push({ groupId: ADMIN_USER_GROUP_ID, access: Access.RW_DocumentRoot });
             }
             const model = await db.create({
                 data: {
@@ -225,10 +173,7 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                           }
                         : undefined
                 },
-                include: {
-                    rootGroupPermissions: true,
-                    rootUserPermissions: true
-                }
+                include: { rootGroupPermissions: true, rootUserPermissions: true }
             });
 
             return {
@@ -241,17 +186,9 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
         },
         async updateModel(id: string, data: UpdateConfig): Promise<ApiDocumentRootWithoutDocuments> {
             const model = await db.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    access: asDocumentRootAccess(data.access),
-                    sharedAccess: data.sharedAccess
-                },
-                include: {
-                    rootGroupPermissions: true,
-                    rootUserPermissions: true
-                }
+                where: { id: id },
+                data: { access: asDocumentRootAccess(data.access), sharedAccess: data.sharedAccess },
+                include: { rootGroupPermissions: true, rootUserPermissions: true }
             });
 
             return {
@@ -269,30 +206,16 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             const userPermissions = await prisma.rootUserPermission.findMany({
                 where:
                     actor.role === Role.ADMIN
-                        ? {
-                              documentRootId: id
-                          }
-                        : {
-                              documentRootId: id,
-                              user: whereStudentGroupAccess(actor.id, true)
-                          }
+                        ? { documentRootId: id }
+                        : { documentRootId: id, user: whereStudentGroupAccess(actor.id, true) }
             });
             const groupPermissions = await prisma.rootGroupPermission.findMany({
                 where:
                     actor.role === Role.ADMIN
-                        ? {
-                              documentRootId: id
-                          }
+                        ? { documentRootId: id }
                         : {
                               documentRootId: id,
-                              studentGroup: {
-                                  users: {
-                                      some: {
-                                          userId: actor.id,
-                                          isAdmin: true
-                                      }
-                                  }
-                              }
+                              studentGroup: { users: { some: { userId: actor.id, isAdmin: true } } }
                           }
             });
             return {
@@ -311,22 +234,10 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
             }
 
             const model = await db.delete({
-                where: {
-                    id: id
-                },
+                where: { id: id },
                 include: {
-                    rootGroupPermissions: {
-                        select: {
-                            access: true,
-                            studentGroupId: true
-                        }
-                    },
-                    rootUserPermissions: {
-                        select: {
-                            access: true,
-                            userId: true
-                        }
-                    }
+                    rootGroupPermissions: { select: { access: true, studentGroupId: true } },
+                    rootUserPermissions: { select: { access: true, userId: true } }
                 }
             });
             return model;

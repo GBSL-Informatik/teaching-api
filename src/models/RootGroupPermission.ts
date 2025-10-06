@@ -1,16 +1,12 @@
-import { Access, PrismaClient, RootGroupPermission as DbGroupPermission, User, Role } from '@prisma/client';
+import { Access, PrismaClient, RootGroupPermission as DbGroupPermission, User } from '@prisma/client';
 import prisma from '../prisma';
 import { asGroupAccess } from '../helpers/accessPolicy';
-import { hasElevatedAccess } from './User';
+import { hasElevatedAccess, Role } from './User';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 
 // TODO: Consider checking existence of documentRoot / studentGroup to provide better error messages / exceptions.
 
-export type ApiGroupPermission = {
-    id: string;
-    groupId: string;
-    access: Access;
-};
+export type ApiGroupPermission = { id: string; groupId: string; access: Access };
 
 export type CompleteApiGroupPermission = {
     id: string;
@@ -29,15 +25,7 @@ function asCompleteApiRecord(dbResult: DbGroupPermission): CompleteApiGroupPermi
 }
 const ensureAccessOrThrow = async (actor: User, groupId: string) => {
     const group = await prisma.studentGroup.findUnique({
-        where: {
-            id: groupId,
-            users: {
-                some: {
-                    userId: actor.id,
-                    isAdmin: true
-                }
-            }
-        }
+        where: { id: groupId, users: { some: { userId: actor.id, isAdmin: true } } }
     });
     if (!group) {
         throw new HTTP403Error('Not authorized');
@@ -81,14 +69,7 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
                 await ensureAccessOrThrow(actor, record.studentGroupId);
             }
 
-            const result = await db.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    access: asGroupAccess(access)
-                }
-            });
+            const result = await db.update({ where: { id: id }, data: { access: asGroupAccess(access) } });
             return asCompleteApiRecord(result);
         },
 
@@ -104,11 +85,7 @@ function RootGroupPermission(db: PrismaClient['rootGroupPermission']) {
                 await ensureAccessOrThrow(actor, record.studentGroupId);
             }
 
-            const result = await db.delete({
-                where: {
-                    id: id
-                }
-            });
+            const result = await db.delete({ where: { id: id } });
             return asCompleteApiRecord(result);
         }
     });

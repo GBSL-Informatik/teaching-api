@@ -1,18 +1,15 @@
-import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User, Role } from '@prisma/client';
+import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
-import { hasElevatedAccess } from './User';
+import { hasElevatedAccess, Role } from './User';
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['description', 'name'],
     ['parentId']
 );
 
-export type ApiStudentGroup = DbStudentGroup & {
-    userIds: string[];
-    adminIds: string[];
-};
+export type ApiStudentGroup = DbStudentGroup & { userIds: string[]; adminIds: string[] };
 
 function asApiRecord(
     record: DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }
@@ -62,24 +59,8 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
         async findModel(actor: User, id: string): Promise<ApiStudentGroup | null> {
             const adminAccess = actor.role === Role.ADMIN;
             const model = await db.findUnique({
-                where: adminAccess
-                    ? { id }
-                    : {
-                          id: id,
-                          users: {
-                              some: {
-                                  userId: actor.id
-                              }
-                          }
-                      },
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                where: adminAccess ? { id } : { id: id, users: { some: { userId: actor.id } } },
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return asApiRecord(model);
         },
@@ -95,29 +76,16 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 typeof sanitized.parentId === 'string' ? sanitized.parentId : sanitized.parentId?.set;
             if (parentId && actor.role !== Role.ADMIN) {
                 const isParentAdmin = await prisma.userStudentGroup.findFirst({
-                    where: {
-                        studentGroupId: parentId,
-                        userId: actor.id,
-                        isAdmin: true
-                    }
+                    where: { studentGroupId: parentId, userId: actor.id, isAdmin: true }
                 });
                 if (!isParentAdmin) {
                     throw new HTTP403Error('Not authorized to create subgroup in this group');
                 }
             }
             const result = await db.update({
-                where: {
-                    id: id
-                },
+                where: { id: id },
                 data: sanitized,
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return asApiRecord(result);
         },
@@ -143,32 +111,16 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
 
             /** remove fields not updatable*/
             const result = await db.update({
-                where: {
-                    id: id
-                },
+                where: { id: id },
                 data: {
                     users: {
                         update: {
-                            where: {
-                                id: {
-                                    userId: userId,
-                                    studentGroupId: record.id
-                                }
-                            },
-                            data: {
-                                isAdmin: isAdmin
-                            }
+                            where: { id: { userId: userId, studentGroupId: record.id } },
+                            data: { isAdmin: isAdmin }
                         }
                     }
                 },
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return asApiRecord(result)!;
         },
@@ -180,32 +132,16 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             }
             /** remove fields not updatable*/
             const result = await db.update({
-                where: {
-                    id: id
-                },
+                where: { id: id },
                 data: {
                     users: {
                         connectOrCreate: {
-                            where: {
-                                id: {
-                                    userId: userId,
-                                    studentGroupId: record.id
-                                }
-                            },
-                            create: {
-                                userId: userId
-                            }
+                            where: { id: { userId: userId, studentGroupId: record.id } },
+                            create: { userId: userId }
                         }
                     }
                 },
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return asApiRecord(result)!;
         },
@@ -220,27 +156,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             }
             /** remove fields not updatable*/
             const result = await db.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    users: {
-                        delete: {
-                            id: {
-                                userId: userId,
-                                studentGroupId: record.id
-                            }
-                        }
-                    }
-                },
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                where: { id: id },
+                data: { users: { delete: { id: { userId: userId, studentGroupId: record.id } } } },
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return asApiRecord(result)!;
         },
@@ -255,14 +173,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             // user IDs should be provided, otherwise the frontend will not be able to relate the groups to the users
             const all = await db.findMany({
                 ...(actor.role === Role.ADMIN ? {} : { where: { users: { some: { userId: actor.id } } } }),
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return all.map((group) => asApiRecord(group)!);
         },
@@ -278,11 +189,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             }
             if (actor.role !== Role.ADMIN && parentId) {
                 const isParentAdmin = await prisma.userStudentGroup.findFirst({
-                    where: {
-                        studentGroupId: parentId,
-                        userId: actor.id,
-                        isAdmin: true
-                    }
+                    where: { studentGroupId: parentId, userId: actor.id, isAdmin: true }
                 });
                 if (!isParentAdmin) {
                     throw new HTTP403Error('Not authorized to create subgroup in this group');
@@ -293,21 +200,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     name: name,
                     description: description,
                     parentId: parentId,
-                    users: {
-                        create: {
-                            userId: actor.id,
-                            isAdmin: true
-                        }
-                    }
+                    users: { create: { userId: actor.id, isAdmin: true } }
                 },
-                include: {
-                    users: {
-                        select: {
-                            userId: true,
-                            isAdmin: true
-                        }
-                    }
-                }
+                include: { users: { select: { userId: true, isAdmin: true } } }
             });
             return asApiRecord(model)!;
         },
@@ -317,11 +212,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
-            return db.delete({
-                where: {
-                    id: id
-                }
-            });
+            return db.delete({ where: { id: id } });
         }
     });
 }

@@ -1,4 +1,4 @@
-import { User as DbUser, Role } from '@prisma/client';
+import { User as DbUser } from '@prisma/client';
 import { RequestHandler } from 'express';
 import User from '../models/User';
 import Logger from '../utils/logger';

@@ -1,4 +1,4 @@
-import { Access, Document as DbDocument, PrismaClient, Role, User } from '@prisma/client';
+import { Access, Document as DbDocument, PrismaClient, User } from '@prisma/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { JsonObject } from '@prisma/client/runtime/library';
@@ -7,11 +7,9 @@ import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';
 import { ApiUserPermission } from './RootUserPermission';
 import Logger from '../utils/logger';
-import { hasElevatedAccess, whereStudentGroupAccess } from './User';
+import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User';
 
-type AccessCheckableDocument = DbDocument & {
-    documentRoot: AccessCheckableDocumentRoot;
-};
+type AccessCheckableDocument = DbDocument & { documentRoot: AccessCheckableDocumentRoot };
 
 export type ApiDocument = DbDocument;
 
@@ -71,28 +69,14 @@ function Document(db: PrismaClient['document']) {
         async findModel(actor: User, id: string): Promise<DocumentWithPermission | null> {
             return db
                 .findUnique({
-                    where: {
-                        id: id
-                    },
+                    where: { id: id },
                     include: {
                         documentRoot: {
                             include: {
                                 rootGroupPermissions: {
-                                    where: {
-                                        studentGroup: {
-                                            users: {
-                                                some: {
-                                                    userId: actor.id
-                                                }
-                                            }
-                                        }
-                                    }
+                                    where: { studentGroup: { users: { some: { userId: actor.id } } } }
                                 },
-                                rootUserPermissions: {
-                                    where: {
-                                        user: actor
-                                    }
-                                }
+                                rootUserPermissions: { where: { user: actor } }
                             }
                         }
                     }
@@ -120,10 +104,7 @@ function Document(db: PrismaClient['document']) {
                     where:
                         actor.role === Role.ADMIN
                             ? { id: _onBehalfOfUserId }
-                            : {
-                                  id: _onBehalfOfUserId,
-                                  ...whereStudentGroupAccess(actor.id, true)
-                              }
+                            : { id: _onBehalfOfUserId, ...whereStudentGroupAccess(actor.id, true) }
                 });
                 if (!onBehalfOfUser) {
                     throw new HTTP404Error('On Behalf Of user not found or no required access');
@@ -150,11 +131,7 @@ function Document(db: PrismaClient['document']) {
             }
             if (uniqueMain) {
                 const mainDoc = await db.findFirst({
-                    where: {
-                        documentRootId: documentRootId,
-                        authorId: authorId,
-                        type: type
-                    }
+                    where: { documentRootId: documentRootId, authorId: authorId, type: type }
                 });
                 if (mainDoc) {
                     Logger.warn(
@@ -181,23 +158,9 @@ function Document(db: PrismaClient['document']) {
                         documentRoot: {
                             include: {
                                 rootGroupPermissions: {
-                                    where: {
-                                        studentGroup: {
-                                            users: {
-                                                some: {
-                                                    userId: authorId
-                                                }
-                                            }
-                                        }
-                                    }
+                                    where: { studentGroup: { users: { some: { userId: authorId } } } }
                                 },
-                                rootUserPermissions: {
-                                    where: {
-                                        user: {
-                                            id: authorId
-                                        }
-                                    }
-                                }
+                                rootUserPermissions: { where: { user: { id: authorId } } }
                             }
                         }
                     }
@@ -210,11 +173,7 @@ function Document(db: PrismaClient['document']) {
             const canCreate = RWAccess.has(model.highestPermission);
             if (!canCreate && !onBehalfOf) {
                 Logger.info(`❌ New Model [${model.document.id}]: ${model.highestPermission}`);
-                db.delete({
-                    where: {
-                        id: model.document.id
-                    }
-                });
+                db.delete({ where: { id: model.document.id } });
                 throw new HTTP403Error('Insufficient access permission');
             }
             return {
@@ -244,10 +203,7 @@ function Document(db: PrismaClient['document']) {
                     where:
                         actor.role === Role.ADMIN
                             ? { id }
-                            : {
-                                  id: id,
-                                  author: whereStudentGroupAccess(actor.id, true)
-                              }
+                            : { id: id, author: whereStudentGroupAccess(actor.id, true) }
                 });
                 if (!record) {
                     throw new HTTP404Error('Document not found');
@@ -269,27 +225,13 @@ function Document(db: PrismaClient['document']) {
              * only the data field is allowed to be updated
              */
             const model = (await db.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    data: docData
-                },
+                where: { id: id },
+                data: { data: docData },
                 include: {
                     documentRoot: {
                         include: {
-                            rootGroupPermissions: {
-                                select: {
-                                    access: true,
-                                    studentGroupId: true
-                                }
-                            },
-                            rootUserPermissions: {
-                                select: {
-                                    access: true,
-                                    userId: true
-                                }
-                            }
+                            rootGroupPermissions: { select: { access: true, studentGroupId: true } },
+                            rootUserPermissions: { select: { access: true, userId: true } }
                         }
                     }
                 }
@@ -311,24 +253,12 @@ function Document(db: PrismaClient['document']) {
             }
 
             const model = (await db.delete({
-                where: {
-                    id: id
-                },
+                where: { id: id },
                 include: {
                     documentRoot: {
                         include: {
-                            rootGroupPermissions: {
-                                select: {
-                                    access: true,
-                                    studentGroupId: true
-                                }
-                            },
-                            rootUserPermissions: {
-                                select: {
-                                    access: true,
-                                    userId: true
-                                }
-                            }
+                            rootGroupPermissions: { select: { access: true, studentGroupId: true } },
+                            rootUserPermissions: { select: { access: true, userId: true } }
                         }
                     }
                 }
@@ -341,20 +271,12 @@ function Document(db: PrismaClient['document']) {
                 throw new HTTP403Error('Not authorized');
             }
             if (actor.role === Role.ADMIN) {
-                return db.findMany({
-                    where: {
-                        documentRootId: {
-                            in: documentRootIds
-                        }
-                    }
-                });
+                return db.findMany({ where: { documentRootId: { in: documentRootIds } } });
             }
             // only include documents where the author is in the same group as the actor.
             const documents = await db.findMany({
                 where: {
-                    documentRootId: {
-                        in: documentRootIds
-                    },
+                    documentRootId: { in: documentRootIds },
                     author: whereStudentGroupAccess(actor.id, true)
                 }
             });
