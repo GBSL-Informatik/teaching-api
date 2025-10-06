@@ -7,7 +7,7 @@
   "license": "CC-BY-SA",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register --exec ts-node ./src/server.ts --files",
-    "build": "tsc --build ./tsconfig.build.json",
+    "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
     "start": "cross-env NODE_ENV=production node ./dist/src/server.js",
     "lint": "eslint . --ignore-pattern node_modules --fix",
     "format": "prettier --write ./**/*.{ts,json}",
