@@ -10,6 +10,7 @@
     // "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "skipLibCheck": true, // better auth checks for sqlite...
     "outDir": "dist",
     "sourceMap": true,
     "strict": true,
