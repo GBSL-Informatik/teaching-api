@@ -62,7 +62,7 @@ allowedOrigins.forEach((origin) => {
 // Add Netlify deploy previews if enabled
 if (netlifyProjectName) {
     CORS_ORIGIN.push(new RegExp(`https://deploy-preview-\\d+--${netlifyProjectName}\\.netlify\\.app$`, 'i'));
-    CORS_ORIGIN_STRINGIFIED.push(`https://*.${netlifyProjectName}.netlify.app`);
+    CORS_ORIGIN_STRINGIFIED.push(`https://*${netlifyProjectName}.netlify.app`);
 }
 
 export const SAME_SITE = allowedOrigins.length > 1 || netlifyProjectName ? 'none' : 'strict';
