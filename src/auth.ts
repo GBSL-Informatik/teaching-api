@@ -6,6 +6,7 @@ import { sso } from '@better-auth/sso';
 import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
 import { getNameFromEmail } from './helpers/email';
 import type { MicrosoftEntraIDProfile } from 'better-auth/social-providers';
+import Logger from './utils/logger';
 
 // If your Prisma file is located elsewhere, you can change the path
 
@@ -69,6 +70,12 @@ export const auth = betterAuth({
         // oAuthProxy()
     ],
     logger: {
-        level: 'info'
+        level: 'info',
+        log: (level, message, ...args) => {
+            // Custom logging implementation
+            Logger.info(
+                `[${level}] ${message}: ${args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(', ')}`
+            );
+        }
     }
 });
