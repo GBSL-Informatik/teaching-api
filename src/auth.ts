@@ -49,7 +49,10 @@ export const auth = betterAuth({
     },
     trustedOrigins: CORS_ORIGIN_STRINGIFIED,
     database: prismaAdapter(prisma, { provider: 'postgresql', usePlural: false }),
-    advanced: { cookiePrefix: 'express-bootstrap', database: { generateId: false, useNumberId: false } },
+    advanced: {
+        cookiePrefix: process.env.APP_NAME ?? 'tdev',
+        database: { generateId: false, useNumberId: false }
+    },
     user: {
         additionalFields: {
             firstName: { type: 'string', required: false, input: false },
