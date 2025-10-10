@@ -64,5 +64,8 @@ export const auth = betterAuth({
         admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }),
         sso(),
         oAuthProxy()
-    ]
+    ],
+    logger: {
+        level: 'info'
+    }
 });
