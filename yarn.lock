@@ -48,10 +48,10 @@
   resolved "https://registry.yarnpkg.com/@babel/helper-validator-identifier/-/helper-validator-identifier-7.27.1.tgz#a7054dcc145a967dd4dc8fee845a57c1316c9df8"
   integrity sha512-D2hP9eA+Sqx1kBZgzxZh0y1trbuU+JoDkiEwqhQ36nodYqJwyEIhPSdMNd7lOm/4io72luTPWH20Yda0xOuUow==
 
-"@better-auth/core@1.3.26":
-  version "1.3.26"
-  resolved "https://registry.yarnpkg.com/@better-auth/core/-/core-1.3.26.tgz#32ffae583124437b4929672cdb007d6543aaf156"
-  integrity sha512-S5ooXaOcn9eLV3/JayfbMsAB5PkfoTRaRrtpb5djwvI/UAJOgLyjqhd+rObsBycovQ/nPQvMKjzyM/G1oBKngA==
+"@better-auth/core@1.3.27":
+  version "1.3.27"
+  resolved "https://registry.yarnpkg.com/@better-auth/core/-/core-1.3.27.tgz#4d8723529286b3bdd3a3a4715b79a09966774a7e"
+  integrity sha512-3Sfdax6MQyronY+znx7bOsfQHI6m1SThvJWb0RDscFEAhfqLy95k1sl+/PgGyg0cwc2cUXoEiAOSqYdFYrg3vA==
   dependencies:
     better-call "1.0.19"
     zod "^4.1.5"
@@ -73,7 +73,7 @@
   resolved "https://registry.yarnpkg.com/@better-auth/utils/-/utils-0.3.0.tgz#066c5ce82bf393421547dd887b14a6899310003d"
   integrity sha512-W+Adw6ZA6mgvnSnhOki270rwJ42t4XzSK6YWGF//BbVXL6SwCLWfyzBc1lN2m/4RM28KubdBKQ4X5VMoLRNPQw==
 
-"@better-fetch/fetch@^1.1.18", "@better-fetch/fetch@^1.1.4":
+"@better-fetch/fetch@1.1.18", "@better-fetch/fetch@^1.1.18", "@better-fetch/fetch@^1.1.4":
   version "1.1.18"
   resolved "https://registry.yarnpkg.com/@better-fetch/fetch/-/fetch-1.1.18.tgz#4ddc65a703c65e6036947ff335e635a5a38e6225"
   integrity sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA==
@@ -2283,14 +2283,14 @@ basic-auth@^2.0.1, basic-auth@~2.0.1:
   dependencies:
     safe-buffer "5.1.2"
 
-better-auth@^1.3.18:
-  version "1.3.26"
-  resolved "https://registry.yarnpkg.com/better-auth/-/better-auth-1.3.26.tgz#0828bcc4eb994539ccce3e21c4179a974248c959"
-  integrity sha512-umaOGmv29yF4sD6o2zlW6B0Oayko5yD/A8mKJOFDDEIoVP/pR7nJ/2KsqKy+xvBpnDsKdrZseqA8fmczPviUHw==
+better-auth@^1.3.27:
+  version "1.3.27"
+  resolved "https://registry.yarnpkg.com/better-auth/-/better-auth-1.3.27.tgz#d5a6758de0258250279c8206d7e26d0b7b93d168"
+  integrity sha512-SwiGAJ7yU6dBhNg0NdV1h5M8T5sa7/AszZVc4vBfMDrLLmvUfbt9JoJ0uRUJUEdKRAAxTyl9yA+F3+GhtAD80w==
   dependencies:
-    "@better-auth/core" "1.3.26"
+    "@better-auth/core" "1.3.27"
     "@better-auth/utils" "0.3.0"
-    "@better-fetch/fetch" "^1.1.18"
+    "@better-fetch/fetch" "1.1.18"
     "@noble/ciphers" "^2.0.0"
     "@noble/hashes" "^2.0.0"
     "@simplewebauthn/browser" "^13.1.2"
@@ -7446,7 +7446,7 @@ zip-stream@^4.1.0:
     compress-commons "^4.1.2"
     readable-stream "^3.6.0"
 
-zod@^4.1.11, zod@^4.1.5:
+zod@^4.1.5:
   version "4.1.12"
   resolved "https://registry.yarnpkg.com/zod/-/zod-4.1.12.tgz#64f1ea53d00eab91853195653b5af9eee68970f0"
   integrity sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==
