@@ -15,7 +15,7 @@ const level = () => {
     const isDevelopment = env === 'development';
     const isProd = env === 'production';
     if (isProd) {
-        return 'http';
+        return 'debug';
     }
     return isDevelopment ? 'debug' : 'warn';
 };
