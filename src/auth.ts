@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import prisma from './prisma';
-import { admin, oneTimeToken } from 'better-auth/plugins';
+import { admin, oneTimeToken, oAuthProxy } from 'better-auth/plugins';
 import { sso } from '@better-auth/sso';
 import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
 import { getNameFromEmail } from './helpers/email';
@@ -55,5 +55,13 @@ export const auth = betterAuth({
             lastName: { type: 'string', required: false, input: false }
         }
     },
-    plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }), sso()]
+    plugins: [
+        oneTimeToken(),
+        admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }),
+        sso(),
+        oAuthProxy({
+            productionURL: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : undefined, // Main App
+            currentURL: process.env.FRONTEND_URL || 'http://localhost:3000' // Current instance
+        })
+    ]
 });
