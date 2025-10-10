@@ -37,9 +37,9 @@ export const API_URL = `/api/${API_VERSION}`;
 // ensure the server can call other domains: enable cross origin resource sharing (cors)
 app.use(
     cors({
-        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
         origin: CORS_ORIGIN,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
+        credentials: true
     })
 );
 

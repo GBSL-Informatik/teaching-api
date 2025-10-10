@@ -53,7 +53,8 @@ export const auth = betterAuth({
     advanced: {
         cookiePrefix: process.env.APP_NAME ?? 'tdev',
         crossSubDomainCookies: {
-            enabled: true
+            enabled: true,
+            domain: '.gbsl.website'
         },
         database: { generateId: false, useNumberId: false }
     },
