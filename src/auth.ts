@@ -33,6 +33,7 @@ export const auth = betterAuth({
             tenantId: process.env.MSAL_TENANT_ID || 'common', // Use 'common' for multi-tenant applications
             authority: 'https://login.microsoftonline.com', // Authentication authority URL
             prompt: 'select_account', // Forces account selection,
+            redirectURI: `${process.env.API_URL}/auth/callback/microsoft`,
             mapProfileToUser: (profile) => {
                 const email = (profile.email || profile.preferred_username)?.toLowerCase();
                 const name = getNameFromMsftProfile(profile);
@@ -59,9 +60,6 @@ export const auth = betterAuth({
         oneTimeToken(),
         admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }),
         sso(),
-        oAuthProxy({
-            productionURL: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : undefined, // Main App
-            currentURL: process.env.FRONTEND_URL || 'http://localhost:3000' // Current instance
-        })
+        oAuthProxy()
     ]
 });
