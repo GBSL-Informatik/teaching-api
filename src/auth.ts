@@ -30,7 +30,6 @@ export const auth = betterAuth({
         microsoft: {
             clientId: process.env.MSAL_CLIENT_ID as string,
             clientSecret: process.env.MSAL_CLIENT_SECRET as string,
-            // Optional
             tenantId: process.env.MSAL_TENANT_ID || 'common', // Use 'common' for multi-tenant applications
             authority: 'https://login.microsoftonline.com', // Authentication authority URL
             prompt: 'select_account', // Forces account selection,
