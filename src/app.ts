@@ -48,13 +48,13 @@ app.use(
  * as is the case with dokku (nginx)
  */
 app.set('trust proxy', 1);
+app.use(morganMiddleware);
 
 // make sure to configure *before* the json middleware
 app.all('/api/auth/{*any}', toNodeHandler(auth));
 
 // received packages should be presented in the JSON format
 app.use(express.json({ limit: '5mb' }));
-app.use(morganMiddleware);
 
 // passport.deserializeUser(deserializeUser);
 
