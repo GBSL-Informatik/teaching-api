@@ -38,10 +38,16 @@ export const API_URL = `/api/${API_VERSION}`;
 app.use(
     cors({
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-        origin: CORS_ORIGIN,
-        credentials: true
+        origin: ['https://teaching-dev.gbsl.website', 'https://teaching-dev-api.gbsl.website'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-metadata-sid']
     })
 );
+
+/** make sure to have 1 (reverse) proxy in front of the application
+ * as is the case with dokku (nginx)
+ */
+app.set('trust proxy', 1);
 
 // make sure to configure *before* the json middleware
 app.all('/api/auth/{*any}', toNodeHandler(auth));
@@ -49,11 +55,6 @@ app.all('/api/auth/{*any}', toNodeHandler(auth));
 // received packages should be presented in the JSON format
 app.use(express.json({ limit: '5mb' }));
 app.use(morganMiddleware);
-
-/** make sure to have 1 (reverse) proxy in front of the application
- * as is the case with dokku (nginx)
- */
-app.set('trust proxy', 1);
 
 // passport.deserializeUser(deserializeUser);
 
