@@ -54,7 +54,6 @@ export const auth = betterAuth({
         cookiePrefix: COOKIE_PREFIX,
         crossSubDomainCookies: {
             enabled: true
-            // domain: '.gbsl.website'
         },
         database: { generateId: false, useNumberId: false }
     },

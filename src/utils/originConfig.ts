@@ -38,11 +38,15 @@ allowedOrigins.forEach((origin) => {
         CORS_ORIGIN_STRINGIFIED.push(`http://${origin}`);
         return CORS_ORIGIN.push(`http://${origin}`);
     }
+    if (process.env.BETTER_AUTH_URL) {
+        CORS_ORIGIN_STRINGIFIED.push(`${process.env.BETTER_AUTH_URL}`);
+        CORS_ORIGIN.push(`${process.env.BETTER_AUTH_URL}`);
+    }
 
     if (allowSubdomains) {
         if (origin.startsWith('http')) {
             const [protocol, host] = origin.split('://');
-            CORS_ORIGIN_STRINGIFIED.push(`$${protocol}://*.${host}`, origin);
+            CORS_ORIGIN_STRINGIFIED.push(`${protocol}://*.${host}`, origin);
         } else {
             CORS_ORIGIN_STRINGIFIED.push(`*.${origin}`, `https://${origin}`);
         }

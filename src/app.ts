@@ -38,9 +38,8 @@ export const API_URL = `/api/${API_VERSION}`;
 app.use(
     cors({
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-        origin: ['https://teaching-dev.gbsl.website', 'https://teaching-dev-api.gbsl.website'],
+        origin: CORS_ORIGIN,
         credentials: true
-        // allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-metadata-sid']
     })
 );
 
