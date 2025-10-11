@@ -39,8 +39,8 @@ app.use(
     cors({
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
         origin: ['https://teaching-dev.gbsl.website', 'https://teaching-dev-api.gbsl.website'],
-        credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-metadata-sid']
+        credentials: true
+        // allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-metadata-sid']
     })
 );
 
