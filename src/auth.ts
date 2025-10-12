@@ -47,7 +47,7 @@ export const auth = betterAuth({
             }
         }
     },
-    trustedOrigins: CORS_ORIGIN_STRINGIFIED,
+    trustedOrigins: [...CORS_ORIGIN_STRINGIFIED, 'https://deploy-preview-246--teaching-dev.netlify.app'],
     database: prismaAdapter(prisma, { provider: 'postgresql', usePlural: false }),
     advanced: {
         cookiePrefix: COOKIE_PREFIX,

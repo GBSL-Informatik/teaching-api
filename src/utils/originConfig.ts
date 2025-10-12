@@ -52,7 +52,7 @@ allowedOrigins.forEach((origin) => {
         }
         // Escape dots and create regex for domain with optional subdomains
         const escapedDomain = origin.replace(/\./g, '\\.');
-        CORS_ORIGIN.push(new RegExp(`^https?://(.*\\.)?${escapedDomain}$`, 'i'));
+        CORS_ORIGIN.push(new RegExp(`^https?:\/\/(.*\\.)?${escapedDomain}$`, 'i'));
     } else {
         // Add exact domain match (ensuring it has protocol)
         if (!origin.startsWith('http')) {
@@ -65,7 +65,9 @@ allowedOrigins.forEach((origin) => {
 
 // Add Netlify deploy previews if enabled
 if (netlifyProjectName) {
-    CORS_ORIGIN.push(new RegExp(`https://deploy-preview-\\d+--${netlifyProjectName}\\.netlify\\.app$`, 'i'));
+    CORS_ORIGIN.push(
+        new RegExp(`^https:\/\/deploy-preview-\\d+--${netlifyProjectName}\\.netlify\\.app$`, 'i')
+    );
     CORS_ORIGIN_STRINGIFIED.push(`https://*--${netlifyProjectName}.netlify.app`);
 }
 
