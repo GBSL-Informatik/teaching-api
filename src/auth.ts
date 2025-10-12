@@ -24,6 +24,9 @@ const getNameFromMsftProfile = (profile: MicrosoftEntraIDProfile) => {
     return getNameFromEmail(profile.email || profile.preferred_username);
 };
 
+const HAS_PROVIDER_GH = !!process.env.BETTER_AUTH_GITHUB_ID && !!process.env.BETTER_AUTH_GITHUB_SECRET;
+const HAS_PROVIDER_MSFT = !!process.env.MSAL_CLIENT_ID && !!process.env.MSAL_CLIENT_SECRET;
+
 export const auth = betterAuth({
     user: {
         additionalFields: {
@@ -31,41 +34,59 @@ export const auth = betterAuth({
             lastName: { type: 'string', required: true, input: true }
         }
     },
+    account: {
+        encryptOAuthTokens: false,
+        accountLinking: {
+            enabled: true,
+            trustedProviders: ['github', 'microsoft', 'email-password'],
+            allowDifferentEmails: true
+        }
+    },
     emailAndPassword: {
-        enabled: true
+        enabled: true,
+        disableSignUp: true,
+        revokeSessionsOnPasswordReset: true
     },
     socialProviders: {
-        github: {
-            clientId: process.env.BETTER_AUTH_GITHUB_ID!,
-            clientSecret: process.env.BETTER_AUTH_GITHUB_SECRET!,
-            mapProfileToUser: (profile) => {
-                const [firstName, lastName] = profile.name.split(' ');
-                return {
-                    ...profile,
-                    firstName: firstName || '',
-                    lastName: lastName || ''
-                };
-            }
-        },
-        microsoft: {
-            clientId: process.env.MSAL_CLIENT_ID as string,
-            clientSecret: process.env.MSAL_CLIENT_SECRET as string,
-            tenantId: process.env.MSAL_TENANT_ID || 'common', // Use 'common' for multi-tenant applications
-            authority: 'https://login.microsoftonline.com', // Authentication authority URL
-            prompt: 'select_account', // Forces account selection,
-            responseMode: 'query',
-            mapProfileToUser: (profile) => {
-                const email = (profile.email || profile.preferred_username)?.toLowerCase();
-                const name = getNameFromMsftProfile(profile);
-                return {
-                    id: profile.oid,
-                    email: email,
-                    firstName: name.firstName || '',
-                    lastName: name.lastName || ''
-                    // You can extract and map other fields as needed
-                };
-            }
-        }
+        ...(HAS_PROVIDER_GH
+            ? {
+                  github: {
+                      clientId: process.env.BETTER_AUTH_GITHUB_ID!,
+                      clientSecret: process.env.BETTER_AUTH_GITHUB_SECRET!,
+                      mapProfileToUser: (profile) => {
+                          const [firstName, lastName] = profile.name.split(' ');
+                          return {
+                              ...profile,
+                              firstName: firstName || '',
+                              lastName: lastName || ''
+                          };
+                      }
+                  }
+              }
+            : {}),
+        ...(HAS_PROVIDER_MSFT
+            ? {
+                  microsoft: {
+                      clientId: process.env.MSAL_CLIENT_ID as string,
+                      clientSecret: process.env.MSAL_CLIENT_SECRET as string,
+                      tenantId: process.env.MSAL_TENANT_ID || 'common', // Use 'common' for multi-tenant applications
+                      authority: 'https://login.microsoftonline.com', // Authentication authority URL
+                      prompt: 'select_account', // Forces account selection,
+                      responseMode: 'query',
+                      mapProfileToUser: (profile) => {
+                          const email = (profile.email || profile.preferred_username)?.toLowerCase();
+                          const name = getNameFromMsftProfile(profile);
+                          return {
+                              id: profile.oid,
+                              email: email,
+                              firstName: name.firstName || '',
+                              lastName: name.lastName || ''
+                              // You can extract and map other fields as needed
+                          };
+                      }
+                  }
+              }
+            : {})
     },
     trustedOrigins: CORS_ORIGIN_STRINGIFIED,
     database: prismaAdapter(prisma, { provider: 'postgresql', usePlural: false }),
@@ -74,14 +95,16 @@ export const auth = betterAuth({
         crossSubDomainCookies: {
             enabled: true
         },
-        cookies: {
-            session_token: {
-                attributes: {
-                    sameSite: 'none',
-                    secure: true
-                }
-            }
-        },
+        cookies: process.env.NETLIFY_PROJECT_NAME
+            ? {
+                  session_token: {
+                      attributes: {
+                          sameSite: 'none',
+                          secure: true
+                      }
+                  }
+              }
+            : undefined,
         database: { generateId: false, useNumberId: false }
     },
     plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }), sso()],
