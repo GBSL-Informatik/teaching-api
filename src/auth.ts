@@ -34,7 +34,7 @@ export const auth = betterAuth({
             authority: 'https://login.microsoftonline.com', // Authentication authority URL
             prompt: 'select_account', // Forces account selection,
             responseMode: 'query',
-            redirectURI: process.env.BETTER_AUTH_URL,
+            redirectURI: `${process.env.BETTER_AUTH_URL}/api/auth/callback/microsoft`,
             mapProfileToUser: (profile) => {
                 const email = (profile.email || profile.preferred_username)?.toLowerCase();
                 const name = getNameFromMsftProfile(profile);
