@@ -59,8 +59,8 @@ export const auth = betterAuth({
             secure: true,
             partitioned: true // New browser standards will mandate this for foreign cookies
         },
-        database: { generateId: false, useNumberId: false }
-        // disableCSRFCheck: true
+        database: { generateId: false, useNumberId: false },
+        disableCSRFCheck: true
     },
     user: {
         additionalFields: {
