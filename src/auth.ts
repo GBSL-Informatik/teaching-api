@@ -25,6 +25,15 @@ const getNameFromMsftProfile = (profile: MicrosoftEntraIDProfile) => {
 };
 
 export const auth = betterAuth({
+    user: {
+        additionalFields: {
+            firstName: { type: 'string', required: true, input: true },
+            lastName: { type: 'string', required: true, input: true }
+        }
+    },
+    emailAndPassword: {
+        enabled: true
+    },
     socialProviders: {
         github: {
             clientId: process.env.BETTER_AUTH_GITHUB_ID!,
@@ -74,12 +83,6 @@ export const auth = betterAuth({
             }
         },
         database: { generateId: false, useNumberId: false }
-    },
-    user: {
-        additionalFields: {
-            firstName: { type: 'string', required: false, input: false },
-            lastName: { type: 'string', required: false, input: false }
-        }
     },
     plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }), sso()],
     logger: {
