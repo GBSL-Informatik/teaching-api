@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import prisma from './prisma';
-import { admin, oneTimeToken } from 'better-auth/plugins';
+import { admin, oneTimeToken, oAuthProxy } from 'better-auth/plugins';
 import { sso } from '@better-auth/sso';
 import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
 import { getNameFromEmail } from './helpers/email';
@@ -34,6 +34,7 @@ export const auth = betterAuth({
             authority: 'https://login.microsoftonline.com', // Authentication authority URL
             prompt: 'select_account', // Forces account selection,
             responseMode: 'query',
+            redirectURI: process.env.BETTER_AUTH_URL,
             mapProfileToUser: (profile) => {
                 const email = (profile.email || profile.preferred_username)?.toLowerCase();
                 const name = getNameFromMsftProfile(profile);
@@ -68,7 +69,12 @@ export const auth = betterAuth({
             lastName: { type: 'string', required: false, input: false }
         }
     },
-    plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }), sso()],
+    plugins: [
+        oneTimeToken(),
+        admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }),
+        sso(),
+        oAuthProxy()
+    ],
     logger: {
         level: 'info',
         log: (level, message, ...args) => {
