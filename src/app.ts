@@ -38,7 +38,7 @@ export const API_URL = `/api/${API_VERSION}`;
 app.use(
     cors({
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-        origin: [...CORS_ORIGIN, 'https://deploy-preview-246--teaching-dev.netlify.app'],
+        origin: CORS_ORIGIN,
         credentials: true
     })
 );
