@@ -23,7 +23,7 @@ const netlifyProjectName = process.env.NETLIFY_PROJECT_NAME;
 export const CORS_ORIGIN: (string | RegExp)[] = [];
 export const CORS_ORIGIN_STRINGIFIED: string[] = [];
 
-const isLoclhost = (origin: string) => {
+const isLocalhost = (origin: string) => {
     return origin.startsWith('localhost') || origin.startsWith('127.0.0.1');
 };
 
@@ -34,7 +34,7 @@ allowedOrigins.forEach((origin) => {
     if (!origin) {
         return;
     }
-    if (isLoclhost(origin)) {
+    if (isLocalhost(origin)) {
         CORS_ORIGIN_STRINGIFIED.push(`http://${origin}`);
         return CORS_ORIGIN.push(`http://${origin}`);
     }
