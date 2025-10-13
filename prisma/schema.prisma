@@ -67,7 +67,7 @@ model Account {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   accountId             String    @map("account_id")
   providerId            String    @map("provider_id")
-  userId                String    @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?   @map("access_token")
   refreshToken          String?   @map("refresh_token")
