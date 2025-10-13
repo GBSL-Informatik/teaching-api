@@ -116,13 +116,11 @@ export const auth = betterAuth({
     },
     hooks: {
         after: createAuthMiddleware(async (ctx) => {
-            console.log(ctx.path, ctx.body);
+            const userId = ctx.body?.userId as string | undefined;
             switch (ctx.path) {
                 case '/admin/update-user':
-                case '/admin/ban-user':
                 case '/admin/unban-user':
                 case '/admin/set-user-password':
-                    const { userId } = ctx.body as { userId?: string };
                     if (userId) {
                         const user = await User.findModel(userId);
                         if (user) {
@@ -137,6 +135,21 @@ export const auth = betterAuth({
                         }
                     }
                     break;
+                case '/admin/ban-user':
+                    if (userId) {
+                        const user = await User.findModel(userId);
+                        if (user) {
+                            notify({
+                                to: [IoRoom.ADMIN],
+                                event: IoEvent.CHANGED_RECORD,
+                                message: {
+                                    type: RecordType.User,
+                                    record: user
+                                }
+                            });
+                            getIo().to(user.id).emit(IoEvent.ACTION, 'nav-reload');
+                        }
+                    }
                 default:
                     return;
             }
