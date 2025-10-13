@@ -24,6 +24,7 @@ ALTER TABLE "public"."users"
 ADD COLUMN     "role" TEXT NOT NULL DEFAULT 'student';
 
 UPDATE "public"."users" SET "role" = trole;
+UPDATE "public"."users" SET "name" = CONCAT(first_name, ' ', last_name) WHERE name = '';
 
 ALTER TABLE "public"."users"
 DROP COLUMN "trole";
