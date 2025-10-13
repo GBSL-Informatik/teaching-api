@@ -6,7 +6,7 @@ import { HTTP403Error } from '../utils/errors/Errors';
 import prisma from '../prisma';
 import { auth } from '../auth';
 import { fromNodeHeaders } from 'better-auth/node';
-import User, { hasElevatedAccess } from 'src/models/User';
+import User, { hasElevatedAccess } from '../models/User';
 
 export const createAllowedAction: RequestHandler<any, any, Prisma.AllowedActionCreateInput> = async (
     req,
