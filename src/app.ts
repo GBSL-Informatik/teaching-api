@@ -98,7 +98,6 @@ export const configure = (_app: typeof app) => {
                 return;
             }
             const io = req.io as Server<ClientToServerEvents, ServerToClientEvents>;
-
             if (res.notifications && io) {
                 res.notifications.forEach((notification) => {
                     const except: string[] = [];

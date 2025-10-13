@@ -6,7 +6,7 @@ import { HTTP403Error } from '../utils/errors/Errors';
 import prisma from '../prisma';
 import { auth } from '../auth';
 import { fromNodeHeaders } from 'better-auth/node';
-import { hasElevatedAccess } from 'src/models/User';
+import User, { hasElevatedAccess } from 'src/models/User';
 
 export const createAllowedAction: RequestHandler<any, any, Prisma.AllowedActionCreateInput> = async (
     req,
@@ -77,8 +77,7 @@ export const linkUserPassword: RequestHandler<{ id: string }, any, { pw: string 
         data: {
             providerId: 'credential',
             accountId: user.id,
-            user: { connect: { id: user.id } },
-            password: '' // will be set by better-auth
+            user: { connect: { id: user.id } }
         }
     });
     const data = await auth.api.setUserPassword({
@@ -94,7 +93,18 @@ export const linkUserPassword: RequestHandler<{ id: string }, any, { pw: string 
         });
         throw new HTTP403Error('could not set password');
     }
-    res.status(201).json({ success: true });
+    const updated = await User.findModel(req.params.id);
+    if (updated) {
+        res.notifications = [
+            {
+                event: IoEvent.CHANGED_RECORD,
+                message: { type: RecordType.User, record: updated },
+                to: [IoRoom.ADMIN, user.id],
+                toSelf: true
+            }
+        ];
+    }
+    res.status(201).json(updated);
 };
 
 export const revokeUserPassword: RequestHandler<{ id: string }> = async (req, res, next) => {
@@ -118,5 +128,16 @@ export const revokeUserPassword: RequestHandler<{ id: string }> = async (req, re
     await prisma.account.deleteMany({
         where: { id: { in: toDelete.map((a) => a.id) } }
     });
+    const updated = await User.findModel(req.params.id);
+    if (updated) {
+        res.notifications = [
+            {
+                event: IoEvent.CHANGED_RECORD,
+                message: { type: RecordType.User, record: updated },
+                to: [IoRoom.ADMIN, user.id],
+                toSelf: true
+            }
+        ];
+    }
     res.status(204).send();
 };

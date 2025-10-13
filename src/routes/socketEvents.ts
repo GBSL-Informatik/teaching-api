@@ -21,7 +21,6 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         const token = socket.handshake.auth.token;
 
         const session = await auth.api.verifyOneTimeToken({ body: { token } }).catch(() => null);
-        console.log(`Socket.io connection ${session?.user?.email}`, token);
 
         if (!session?.user) {
             return socket.disconnect();
@@ -32,7 +31,6 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
             return socket.disconnect();
         }
         socket.join(user.id);
-
         if (user.role === Role.ADMIN) {
             socket.join(IoRoom.ADMIN);
             const rooms = [...io.sockets.adapter.rooms.keys()].map(

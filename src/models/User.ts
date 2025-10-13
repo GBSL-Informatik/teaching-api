@@ -33,13 +33,37 @@ export const whereStudentGroupAccess = (userId: string, isAdmin?: boolean) => ({
     }
 });
 
+export type ApiUser = DbUser & { authProviders?: string[] };
+
+export const prepareUser = (
+    user: (DbUser & { accounts: { providerId: string }[] }) | null | undefined,
+    includeAuthProvidersFor?: string
+): ApiUser | null => {
+    if (!user) {
+        return null;
+    }
+    if (!includeAuthProvidersFor || user.id === includeAuthProvidersFor) {
+        (user as unknown as ApiUser).authProviders = (user.accounts || []).map((a) => a.providerId);
+    }
+    delete (user as any).accounts;
+    return user;
+};
+
+const prepareUsers = (
+    users: (DbUser & { accounts: { providerId: string }[] })[] | null | undefined
+): ApiUser[] => {
+    return users?.filter((u) => !!u).map((u) => prepareUser(u)!) || [];
+};
+
 function User(db: PrismaClient['user']) {
     return Object.assign(db, {
-        async findModel(id: string): Promise<DbUser | null> {
-            return db.findUnique({ where: { id } });
+        async findModel(id: string): Promise<ApiUser | null> {
+            return db
+                .findUnique({ where: { id }, include: { accounts: { select: { providerId: true } } } })
+                .then(prepareUser);
         },
 
-        async updateModel(actor: DbUser, id: string, data: Partial<DbUser>): Promise<DbUser> {
+        async updateModel(actor: DbUser, id: string, data: Partial<DbUser>): Promise<ApiUser> {
             const record = await db.findUnique({ where: { id: id } });
             if (!record) {
                 throw new HTTP404Error('User not found');
@@ -53,25 +77,36 @@ function User(db: PrismaClient['user']) {
             }
             /** remove fields not updatable*/
             const sanitized = getData(data, false, record.id === actor.id ? false : elevatedAccess);
-            return db.update({ where: { id: id }, data: sanitized });
+            return db
+                .update({
+                    where: { id: id },
+                    data: sanitized,
+                    include: { accounts: { select: { providerId: true } } }
+                })
+                .then((u) => prepareUser(u)!);
         },
 
-        async all(actor: DbUser): Promise<DbUser[]> {
+        async all(actor: DbUser): Promise<ApiUser[]> {
             if (hasElevatedAccess(actor.role)) {
                 /**
                  * Admins and teachers can see all users.
                  * Reason: teachers need to add new users to their student groups
                  */
-                return db.findMany({});
+                return db
+                    .findMany({
+                        include: { accounts: { select: { providerId: true } } }
+                    })
+                    .then(prepareUsers);
             }
             const users = await db.findMany({
                 where: { OR: [{ id: actor.id }, whereStudentGroupAccess(actor.id)] },
+                include: { accounts: { select: { providerId: true } } },
                 distinct: ['id']
             });
-            return users;
+            return users.filter((u) => !!u).map((u) => prepareUser(u, actor.id)!);
         },
 
-        async setRole(actor: DbUser, userId: string, role: Role): Promise<DbUser> {
+        async setRole(actor: DbUser, userId: string, role: Role): Promise<ApiUser> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
@@ -94,7 +129,13 @@ function User(db: PrismaClient['user']) {
             if (recordLevel === undefined || actorLevel < recordLevel) {
                 throw new HTTP403Error('Not allowed to change the role of user with a higher role');
             }
-            return db.update({ where: { id: userId }, data: { role: role } });
+            return db
+                .update({
+                    where: { id: userId },
+                    data: { role: role },
+                    include: { accounts: { select: { providerId: true } } }
+                })
+                .then((u) => prepareUser(u)!);
         }
     });
 }
