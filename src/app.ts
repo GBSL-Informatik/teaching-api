@@ -2,7 +2,6 @@ import express, { NextFunction, Request, Response } from 'express';
 import path from 'path';
 import cors from 'cors';
 import morganMiddleware from './middleware/morgan.middleware';
-// import passport from 'passport';
 import router from './routes/router';
 import routeGuard, { createAccessRules } from './auth/guard';
 import authConfig from './routes/authConfig';
@@ -12,9 +11,8 @@ import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
 import { auth } from './auth';
 
 import Logger from './utils/logger';
-import type { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
-import type { Server } from 'socket.io';
 import { CORS_ORIGIN } from './utils/originConfig';
+import { notify } from './socketIoServer';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 
@@ -97,20 +95,9 @@ export const configure = (_app: typeof app) => {
             if (res.statusCode >= 400) {
                 return;
             }
-            const io = req.io as Server<ClientToServerEvents, ServerToClientEvents>;
-            if (res.notifications && io) {
+            if (res.notifications) {
                 res.notifications.forEach((notification) => {
-                    const except: string[] = [];
-                    /** ignore this socket */
-                    if (!notification.toSelf) {
-                        const socketID = req.headers['x-metadata-sid'] as string;
-                        if (socketID) {
-                            except.push(socketID);
-                        }
-                    }
-                    io.except(except)
-                        .to(notification.to)
-                        .emit(notification.event, notification.message as any);
+                    notify(notification, req.headers['x-metadata-sid'] as string);
                 });
             }
         });

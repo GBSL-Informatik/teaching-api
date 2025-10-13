@@ -1,12 +1,16 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import prisma from './prisma';
-import { admin, oneTimeToken } from 'better-auth/plugins';
+import { admin, createAuthMiddleware, oneTimeToken } from 'better-auth/plugins';
 import { sso } from '@better-auth/sso';
 import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
 import { getNameFromEmail } from './helpers/email';
 import type { MicrosoftEntraIDProfile } from 'better-auth/social-providers';
 import Logger from './utils/logger';
+import { getIo, notify } from './socketIoServer';
+import User from './models/User';
+import { IoRoom } from './routes/socketEvents';
+import { IoEvent, RecordType } from './routes/socketEventTypes';
 
 // If your Prisma file is located elsewhere, you can change the path
 
@@ -109,6 +113,34 @@ export const auth = betterAuth({
               }
             : undefined,
         database: { generateId: false, useNumberId: false }
+    },
+    hooks: {
+        after: createAuthMiddleware(async (ctx) => {
+            console.log(ctx.path, ctx.body);
+            switch (ctx.path) {
+                case '/admin/update-user':
+                case '/admin/ban-user':
+                case '/admin/unban-user':
+                case '/admin/set-user-password':
+                    const { userId } = ctx.body as { userId?: string };
+                    if (userId) {
+                        const user = await User.findModel(userId);
+                        if (user) {
+                            notify({
+                                to: [user.id, IoRoom.ADMIN],
+                                event: IoEvent.CHANGED_RECORD,
+                                message: {
+                                    type: RecordType.User,
+                                    record: user
+                                }
+                            });
+                        }
+                    }
+                    break;
+                default:
+                    return;
+            }
+        })
     },
     plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }), sso()],
     logger: {

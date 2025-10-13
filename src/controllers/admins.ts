@@ -93,18 +93,7 @@ export const linkUserPassword: RequestHandler<{ id: string }, any, { pw: string 
         });
         throw new HTTP403Error('could not set password');
     }
-    const updated = await User.findModel(req.params.id);
-    if (updated) {
-        res.notifications = [
-            {
-                event: IoEvent.CHANGED_RECORD,
-                message: { type: RecordType.User, record: updated },
-                to: [IoRoom.ADMIN, user.id],
-                toSelf: true
-            }
-        ];
-    }
-    res.status(201).json(updated);
+    res.status(201).send();
 };
 
 export const revokeUserPassword: RequestHandler<{ id: string }> = async (req, res, next) => {
