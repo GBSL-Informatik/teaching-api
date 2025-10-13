@@ -4,7 +4,7 @@ import { IoRoom } from '../routes/socketEvents';
 import { Prisma } from '@prisma/client';
 import { HTTP403Error } from '../utils/errors/Errors';
 import prisma from '../prisma';
-import { auth } from 'src/auth';
+import { auth } from '../auth';
 import { fromNodeHeaders } from 'better-auth/node';
 import { hasElevatedAccess } from 'src/models/User';
 
