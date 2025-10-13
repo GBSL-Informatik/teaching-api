@@ -1,19 +1,5 @@
 import { Role } from '../models/User';
 
-interface Credentials {
-    tenantID: string;
-    clientID: string;
-}
-interface Metadata {
-    authority: string;
-    discovery: string;
-    version: string;
-}
-interface Settings {
-    validateIssuer: boolean;
-    passReqToCallback: boolean;
-    loggingLevel: 'info' | 'warn' | 'error';
-}
 export interface AccessMatrix {
     [key: string]: {
         path: string;
@@ -22,20 +8,10 @@ export interface AccessMatrix {
 }
 
 interface Config {
-    credentials: Credentials;
-    metadata: Metadata;
-    settings: Settings;
     accessMatrix: AccessMatrix;
 }
 
 const authConfig: Config = {
-    credentials: { tenantID: process.env.MSAL_TENANT_ID || '', clientID: process.env.MSAL_CLIENT_ID || '' },
-    metadata: {
-        authority: 'login.microsoftonline.com',
-        discovery: '.well-known/openid-configuration',
-        version: 'v2.0'
-    },
-    settings: { validateIssuer: true, passReqToCallback: false, loggingLevel: 'warn' },
     accessMatrix: {
         checklogin: { path: '/checklogin', access: [{ methods: ['GET'], minRole: Role.STUDENT }] },
         user: { path: '/user', access: [{ methods: ['GET', 'POST'], minRole: Role.STUDENT }] },
