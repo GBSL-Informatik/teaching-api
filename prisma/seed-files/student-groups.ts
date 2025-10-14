@@ -24,4 +24,12 @@ const studentGroups: Prisma.StudentGroupUncheckedCreateWithoutChildrenInput[] = 
     }
 ];
 
+if (process.env.ADMIN_USER_GROUP_ID) {
+    studentGroups.push({
+        name: 'Administrators',
+        description: 'Group containing all admin users',
+        id: process.env.ADMIN_USER_GROUP_ID
+    });
+}
+
 export { studentGroups };
