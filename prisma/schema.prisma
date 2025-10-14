@@ -40,8 +40,6 @@ model User {
   banReason  String?   @map("ban_reason")
   banExpires DateTime? @map("ban_expires")
 
-  ssoproviders SsoProvider[]
-
   @@map("users")
 }
 
@@ -95,20 +93,6 @@ model Verification {
 
   @@index([identifier])
   @@map("verifications")
-}
-
-model SsoProvider {
-  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  issuer         String
-  oidcConfig     String? @map("oidc_config")
-  samlConfig     String? @map("saml_config")
-  userId         String? @map("user_id") @db.Uuid
-  user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  providerId     String  @unique @map("provider_id")
-  organizationId String? @map("organization_id")
-  domain         String
-
-  @@map("ssoProviders")
 }
 
 model CmsSettings {

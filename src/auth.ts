@@ -2,7 +2,6 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import prisma from './prisma';
 import { admin, createAuthMiddleware, oneTimeToken } from 'better-auth/plugins';
-import { sso } from '@better-auth/sso';
 import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
 import { getNameFromEmail } from './helpers/email';
 import type { MicrosoftEntraIDProfile } from 'better-auth/social-providers';
@@ -155,7 +154,7 @@ export const auth = betterAuth({
             }
         })
     },
-    plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] }), sso()],
+    plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] })],
     logger: {
         level: 'info',
         log: (level, message, ...args) => {

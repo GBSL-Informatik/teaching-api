@@ -302,6 +302,7 @@ dokku letsencrypt:enable dev-teaching-api
 # inside shell of VSCode DevContainer (with configured dokku git remote)
 dokku postgres:export dev-teaching-api > tdev-backup.dump
 pg_restore -h localhost --verbose --clean --no-owner --no-privileges -U postgres -d teaching_api < tdev-backup.dump
+# when ai-pr was once merged/deployed to the db, run `delete from _prisma_migrations where migration_name ilike '%_ai_%';`
 ```
 
 ## Speed Improvements

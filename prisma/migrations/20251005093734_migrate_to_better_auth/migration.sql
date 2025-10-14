@@ -79,20 +79,6 @@ CREATE TABLE "public"."verifications" (
     CONSTRAINT "verifications_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "public"."ssoProviders" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "issuer" TEXT NOT NULL,
-    "oidc_config" TEXT,
-    "saml_config" TEXT,
-    "user_id" UUID,
-    "provider_id" TEXT NOT NULL,
-    "organization_id" TEXT,
-    "domain" TEXT NOT NULL,
-
-    CONSTRAINT "ssoProviders_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "sessions_token_key" ON "public"."sessions"("token");
 
@@ -108,14 +94,8 @@ CREATE INDEX "accounts_user_id_idx" ON "public"."accounts"("user_id");
 -- CreateIndex
 CREATE INDEX "verifications_identifier_idx" ON "public"."verifications"("identifier");
 
--- CreateIndex
-CREATE UNIQUE INDEX "ssoProviders_provider_id_key" ON "public"."ssoProviders"("provider_id");
-
 -- AddForeignKey
 ALTER TABLE "public"."sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."ssoProviders" ADD CONSTRAINT "ssoProviders_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
