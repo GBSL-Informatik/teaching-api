@@ -4,14 +4,14 @@
   "main": "server.js",
   "repository": "https://github.com/GBSL-Informatik/teaching-website-backend.git",
   "author": "GBSL Informatik",
-  "license": "CC-BY-SA",
+  "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register --exec ts-node ./src/server.ts --files",
     "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
     "start": "cross-env NODE_ENV=production node ./dist/src/server.js",
     "lint": "eslint . --ignore-pattern node_modules --fix",
     "format": "prettier --write ./**/*.{ts,json}",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check ./**/*.{ts,json}",
     "db:migrate": "yarn prisma migrate deploy",
     "db:migrate:dev": "yarn prisma migrate dev",
     "db:seed": "yarn prisma db seed",
@@ -36,11 +36,6 @@
     "socket.io": "^4.8.1",
     "winston": "^3.13.0"
   },
-  "prisma": {
-    "schema": "./prisma/schema.prisma",
-    "seed": "dotenv -- ts-node prisma/seed.ts",
-    "reset": "dotenv -- ts-node prisma/reset.ts"
-  },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^10.9.1",
     "@types/cors": "^2.8.17",
@@ -55,7 +50,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
-    "prisma": "^6.16.2",
+    "prisma": "^6.17.1",
     "prisma-dbml-generator": "^0.12.0",
     "prisma-docs-generator": "^0.8.0",
     "prisma-erd-generator": "^2.1.0",
