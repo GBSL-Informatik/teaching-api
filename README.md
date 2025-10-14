@@ -10,7 +10,6 @@ Setup your local env - inside the devcontainer **you should not set** `DATABASE_
 ```bash
 USER_ID="<your uuid>"
 USER_EMAIL="<your mail>"
-USER_ROLE="ADMIN"
 NO_AUTH="true"
 ```
 

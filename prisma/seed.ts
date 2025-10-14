@@ -93,6 +93,23 @@ async function main() {
             }
         }
     });
+    if (process.env.USER_ID && process.env.USER_EMAIL && process.env.ADMIN_USER_GROUP_ID) {
+        await prisma.studentGroup.update({
+            where: { id: ALL_USERS_GROUP_ID },
+            data: {
+                users: {
+                    connectOrCreate: seedUsers
+                        .filter((u) => u.role === 'admin')
+                        .map((user) => ({
+                            where: {
+                                id: { studentGroupId: ALL_USERS_GROUP_ID, userId: user.id! }
+                            },
+                            create: { userId: user.id! }
+                        }))
+                }
+            }
+        });
+    }
 }
 
 main()
