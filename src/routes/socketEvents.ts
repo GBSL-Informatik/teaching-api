@@ -1,14 +1,15 @@
 /* istanbul ignore file */
 
-import { Role, type User } from '@prisma/client';
+import { type User } from '@prisma/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
 import { ClientToServerEvents, IoEvent, IoClientEvent, ServerToClientEvents } from './socketEventTypes';
 import StudentGroup from '../models/StudentGroup';
-import { hasElevatedAccess } from '../models/User';
+import { hasElevatedAccess, Role } from '../models/User';
 import onAction from './event-handlers/action.handler';
 import onJoinRoom from './event-handlers/joinRoom.handler';
 import onLeaveRoom from './event-handlers/leaveRoom.handler';
+import { auth } from '../auth';
 
 export enum IoRoom {
     ADMIN = 'admin',
@@ -17,12 +18,19 @@ export enum IoRoom {
 
 const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => {
     io.on('connection', async (socket) => {
-        const user = (socket.request as { user?: User }).user;
+        const token = socket.handshake.auth.token;
+
+        const session = await auth.api.verifyOneTimeToken({ body: { token } }).catch(() => null);
+
+        if (!session?.user) {
+            return socket.disconnect();
+        }
+        const user = session.user as User;
+        socket.join(user.id);
         if (!user) {
             return socket.disconnect();
         }
         socket.join(user.id);
-
         if (user.role === Role.ADMIN) {
             socket.join(IoRoom.ADMIN);
             const rooms = [...io.sockets.adapter.rooms.keys()].map(
@@ -44,17 +52,15 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
     });
 
     io.on('disconnect', (socket) => {
-        const { user } = socket.request as { user?: User };
-        Logger.info(`Socket.io disconnect ${user?.email}`);
+        Logger.info(`Socket.io disconnect ${socket.id}`);
     });
 
     io.on('error', (socket) => {
-        Logger.error(`Socket.io error`);
+        Logger.error(`Socket.io error ${socket.id}`);
     });
 
     io.on('reconnect', (socket) => {
-        const { user } = socket.request as { user?: User };
-        Logger.info(`Socket.io reconnect ${user?.email}`);
+        Logger.info(`Socket.io reconnect ${socket.id}`);
     });
 
     io.of('/').adapter.on('join-room', (room, id) => {

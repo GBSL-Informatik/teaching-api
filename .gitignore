@@ -4,7 +4,8 @@ node_modules
 docs/prisma/**/*
 docs/*.svg
 dist/
+build/
 # Sentry Config File
 .sentryclirc
-
+*.dump
 src/generated/prisma

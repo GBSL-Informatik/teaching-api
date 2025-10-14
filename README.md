@@ -296,16 +296,17 @@ dokku letsencrypt:enable dev-teaching-api
 ## when it succeeds, re-enable the cloudflare proxy for domain.tld...
 ```
 
-### Speed Improvements
+## Dump from production
+
+```bash
+# inside shell of VSCode DevContainer (with configured dokku git remote)
+dokku postgres:export dev-teaching-api > tdev-backup.dump
+pg_restore -h localhost --verbose --clean --no-owner --no-privileges -U postgres -d teaching_api < tdev-backup.dump
+# when ai-pr was once merged/deployed to the db, run `delete from _prisma_migrations where migration_name ilike '%_ai_%';`
+```
+
+## Speed Improvements
 If the API and the Database are running on the same server, you can improve the speed by disabling the tcp connection for the database. This can be done by setting the `DATABASE_URL` to `postgresql://teaching_website:teaching_website@localhost/teaching_website?sslmode=disable`.
-
-## Troubleshooting
-
-> [!Caution]
-> Authentication Error: When your API can not authenticate requests
->  - set the debug level in authConfig to 'info' and check the logs
->  - when it is a 401 error and the issue is about `Strategy.prototype.jwtVerify can not verify the token`, ensure to set `"requestedAccessTokenVersion": 2` in the API manifest (!! **not** in the Frontend's manifest, there it must still be `null` !!)
-
 
 ## CMS
 

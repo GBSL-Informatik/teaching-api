@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node';
 import Logger from './utils/logger';
-
+import dotenv from 'dotenv';
+dotenv.config();
 if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
     Logger.info('Initializing Sentry');
     let samplingRate = 0.1;

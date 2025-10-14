@@ -1,58 +1,15 @@
 import './instrumentation';
-import app, { configure, sessionMiddleware } from './app';
+import app, { configure } from './app';
+import { initialize as initializeSocketIo } from './socketIoServer';
 import http from 'http';
-import Logger from './utils/logger';
-import { Server } from 'socket.io';
-import { ClientToServerEvents, ServerToClientEvents } from './routes/socketEventTypes';
-import passport from 'passport';
-import EventRouter from './routes/socketEvents';
-import { NextFunction, Request, Response } from 'express';
-import { HTTP403Error } from './utils/errors/Errors';
-import { CORS_ORIGIN } from './utils/originConfig';
+import type { Request } from 'express';
 import * as Sentry from '@sentry/node';
+import Logger from './utils/logger';
 
 const PORT = process.env.PORT || 3002;
 
 const server = http.createServer(app);
-
-const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
-    cors: {
-        origin: CORS_ORIGIN,
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
-    },
-    pingInterval: 15_000,
-    pingTimeout: 20_000,
-    transports: ['websocket', 'webtransport' /* , 'polling' */]
-});
-
-// convert a connect middleware to a Socket.IO middleware
-io.use((socket, next) => {
-    sessionMiddleware(socket.request as Request, {} as Response, next as NextFunction);
-});
-io.use((socket, next) => {
-    passport.initialize()(socket.request as Request, {} as Response, next as NextFunction);
-});
-io.use((socket, next) => {
-    passport.session()(socket.request as Request, {} as Response, next as NextFunction);
-});
-
-EventRouter(io);
-
-// only allow authenticated users in socketio
-io.use((socket, next) => {
-    if ((socket.request as any).user) {
-        next();
-    } else {
-        next(new HTTP403Error('unauthorized'));
-    }
-});
-
-// Make io accessible to our router
-app.use((req: Request, res, next) => {
-    req.io = io;
-    next();
-});
+initializeSocketIo(server);
 
 configure(app);
 

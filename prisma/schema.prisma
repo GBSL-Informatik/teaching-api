@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions", "views", "relationJoins", "queryCompiler", "driverAdapters"]
+  previewFeatures = ["postgresqlExtensions", "views", "relationJoins"]
 }
 
 generator docs {
@@ -15,13 +15,16 @@ datasource db {
 }
 
 model User {
-  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                           String                            @unique
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @default("")
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
   firstName                       String                            @map("first_name")
   lastName                        String                            @map("last_name")
-  role                            Role                              @default(STUDENT) @map("role")
-  createdAt                       DateTime                          @default(now()) @map("created_at")
-  updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
   documents                       Document[]                        @relation("documents")
   rootUserPermissions             RootUserPermission[]              @relation("root_user_to_user_permission")
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
@@ -29,7 +32,67 @@ model User {
   cmsSettings                     CmsSettings?
   studentGroups                   UserStudentGroup[]                @relation("user_student_groups")
 
+  sessions Session[]
+  accounts Account[]
+
+  role       String    @default("student")
+  banned     Boolean?  @default(false)
+  banReason  String?   @map("ban_reason")
+  banExpires DateTime? @map("ban_expires")
+
   @@map("users")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  impersonatedBy String? @map("impersonated_by") @db.Uuid
+
+  @@index([userId])
+  @@index([userId, token])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  expiresAt             DateTime? @map("expires_at")
+  password              String?
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
 }
 
 model CmsSettings {
@@ -152,18 +215,10 @@ model RootUserPermission {
   @@map("root_user_permissions")
 }
 
-model Sessions {
-  sid    String   @id @db.VarChar
-  sess   Json     @db.Json
-  expire DateTime @db.Timestamp(6)
-
-  @@index([expire], map: "IDX_session_expire")
-  @@map("sessions")
-}
-
 // This is a view ranked by the highest access rank.
 // This is used to create the DocumentUserPermissions view and should
 // not be used directly.
+
 view view_AllDocumentUserPermissions {
   documentRootId        String               @map("document_root_id") @db.Uuid
   userId                String               @map("user_id") @db.Uuid
@@ -226,10 +281,4 @@ enum Access {
   RO_User
   RW_User
   None_User
-}
-
-enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
 }

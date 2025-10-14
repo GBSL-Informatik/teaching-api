@@ -37,7 +37,13 @@ import {
     allDocuments,
     destroy as deleteDocumentRoot
 } from '../controllers/documentRoots';
-import { allowedActions, createAllowedAction, destroyAllowedAction } from '../controllers/admins';
+import {
+    allowedActions,
+    createAllowedAction,
+    destroyAllowedAction,
+    linkUserPassword,
+    revokeUserPassword
+} from '../controllers/admins';
 import {
     githubToken,
     find as findCmsSettings,
@@ -106,6 +112,8 @@ router.delete('/documents/:id', deleteDocument);
 router.get('/admin/allowedActions', allowedActions);
 router.post('/admin/allowedActions', createAllowedAction);
 router.delete('/admin/allowedActions/:id', destroyAllowedAction);
+router.post('/admin/users/:id/linkUserPassword', linkUserPassword);
+router.post('/admin/users/:id/revokeUserPassword', revokeUserPassword);
 
 router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);

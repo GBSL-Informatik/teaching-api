@@ -21,8 +21,9 @@ const netlifyProjectName = process.env.NETLIFY_PROJECT_NAME;
 
 // Build the CORS origin array
 export const CORS_ORIGIN: (string | RegExp)[] = [];
+export const CORS_ORIGIN_STRINGIFIED: string[] = [];
 
-const isLoclhost = (origin: string) => {
+const isLocalhost = (origin: string) => {
     return origin.startsWith('localhost') || origin.startsWith('127.0.0.1');
 };
 
@@ -33,26 +34,41 @@ allowedOrigins.forEach((origin) => {
     if (!origin) {
         return;
     }
-    if (isLoclhost(origin)) {
+    if (isLocalhost(origin)) {
+        CORS_ORIGIN_STRINGIFIED.push(`http://${origin}`);
         return CORS_ORIGIN.push(`http://${origin}`);
+    }
+    if (process.env.BETTER_AUTH_URL) {
+        CORS_ORIGIN_STRINGIFIED.push(`${process.env.BETTER_AUTH_URL}`);
+        CORS_ORIGIN.push(`${process.env.BETTER_AUTH_URL}`);
     }
 
     if (allowSubdomains) {
+        if (origin.startsWith('http')) {
+            const [protocol, host] = origin.split('://');
+            CORS_ORIGIN_STRINGIFIED.push(`${protocol}://*.${host}`, origin);
+        } else {
+            CORS_ORIGIN_STRINGIFIED.push(`*.${origin}`, `https://${origin}`);
+        }
         // Escape dots and create regex for domain with optional subdomains
         const escapedDomain = origin.replace(/\./g, '\\.');
-        CORS_ORIGIN.push(new RegExp(`^https?://(.*\\.)?${escapedDomain}$`, 'i'));
+        CORS_ORIGIN.push(new RegExp(`^https?:\/\/(.*\\.)?${escapedDomain}$`, 'i'));
     } else {
         // Add exact domain match (ensuring it has protocol)
         if (!origin.startsWith('http')) {
             origin = `https://${origin}`;
         }
+        CORS_ORIGIN_STRINGIFIED.push(origin);
         CORS_ORIGIN.push(origin);
     }
 });
 
 // Add Netlify deploy previews if enabled
 if (netlifyProjectName) {
-    CORS_ORIGIN.push(new RegExp(`https://deploy-preview-\\d+--${netlifyProjectName}\\.netlify\\.app$`, 'i'));
+    CORS_ORIGIN.push(
+        new RegExp(`^https:\/\/deploy-preview-\\d+--${netlifyProjectName}\\.netlify\\.app$`, 'i')
+    );
+    CORS_ORIGIN_STRINGIFIED.push(`https://*--${netlifyProjectName}.netlify.app`);
 }
 
 export const SAME_SITE = allowedOrigins.length > 1 || netlifyProjectName ? 'none' : 'strict';

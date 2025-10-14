@@ -56,7 +56,9 @@ async function main() {
         data: {
             users: {
                 connectOrCreate: allUsersGroupMembers.map((user) => ({
-                    where: { id: { studentGroupId: ALL_USERS_GROUP_ID, userId: user.id } },
+                    where: {
+                        id: { studentGroupId: ALL_USERS_GROUP_ID, userId: user.id }
+                    },
                     create: { userId: user.id }
                 }))
             }
@@ -68,11 +70,15 @@ async function main() {
             users: {
                 connectOrCreate: [
                     {
-                        where: { id: { studentGroupId: CLASS_GROUP_ID, userId: FOO_BAR_ID } },
+                        where: {
+                            id: { studentGroupId: CLASS_GROUP_ID, userId: FOO_BAR_ID }
+                        },
                         create: { userId: FOO_BAR_ID }
                     },
                     {
-                        where: { id: { studentGroupId: CLASS_GROUP_ID, userId: FOO_BAR_ID } },
+                        where: {
+                            id: { studentGroupId: CLASS_GROUP_ID, userId: FOO_BAR_ID }
+                        },
                         create: { userId: TEST_USER_ID }
                     }
                 ]
@@ -85,7 +91,9 @@ async function main() {
             users: {
                 connectOrCreate: [
                     {
-                        where: { id: { studentGroupId: PROJECT_GROUP_ID, userId: FOO_BAR_ID } },
+                        where: {
+                            id: { studentGroupId: PROJECT_GROUP_ID, userId: FOO_BAR_ID }
+                        },
                         create: { userId: FOO_BAR_ID }
                     }
                 ]

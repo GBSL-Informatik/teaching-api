@@ -1,24 +1,17 @@
-import { Access, PrismaClient, Role } from '@prisma/client';
+import { Access, PrismaClient } from '@prisma/client';
 import prisma from '../prisma';
 import { RootUserPermission as DbRootUserPermission, User } from '@prisma/client';
 import { asUserAccess } from '../helpers/accessPolicy';
-import { hasElevatedAccess, whereStudentGroupAccess } from './User';
+import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 
-export type ApiUserPermission = {
-    id: string;
-    userId: string;
-    access: Access;
-};
+export type ApiUserPermission = { id: string; userId: string; access: Access };
 
 const ensureAccessOrThrow = async (actor: User, userId: string) => {
     const user = await prisma.user.findUnique({
-        where: {
-            id: userId,
-            ...whereStudentGroupAccess(actor.id, true)
-        }
+        where: { id: userId, ...whereStudentGroupAccess(actor.id, true) }
     });
     if (!user) {
         throw new HTTP403Error('Not authorized');
@@ -40,11 +33,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
                 await ensureAccessOrThrow(actor, userId);
             }
             const result = await db.create({
-                data: {
-                    documentRootId: documentRootId,
-                    userId: userId,
-                    access: asUserAccess(access)
-                }
+                data: { documentRootId: documentRootId, userId: userId, access: asUserAccess(access) }
             });
             return result;
         },
@@ -60,14 +49,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             if (actor.role === Role.TEACHER) {
                 await ensureAccessOrThrow(actor, record.userId);
             }
-            const result = await db.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    access: asUserAccess(access)
-                }
-            });
+            const result = await db.update({ where: { id: id }, data: { access: asUserAccess(access) } });
             return result;
         },
 
@@ -82,11 +64,7 @@ function RootUserPermission(db: PrismaClient['rootUserPermission']) {
             if (actor.role === Role.TEACHER) {
                 await ensureAccessOrThrow(actor, record.userId);
             }
-            const result = await db.delete({
-                where: {
-                    id: id
-                }
-            });
+            const result = await db.delete({ where: { id: id } });
             return result;
         }
     });
