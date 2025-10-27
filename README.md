@@ -300,7 +300,11 @@ dokku letsencrypt:enable dev-teaching-api
 ```bash
 # inside shell of VSCode DevContainer (with configured dokku git remote)
 dokku postgres:export dev-teaching-api > tdev-backup.dump
+psql -U postgres -h localhost -c 'drop database if exists teaching_api;'
+psql -U postgres -h localhost -c 'create database teaching_api;'
 pg_restore -h localhost --verbose --clean --no-owner --no-privileges -U postgres -d teaching_api < tdev-backup.dump
+yarn run prisma migrate dev
+
 # when ai-pr was once merged/deployed to the db, run `delete from _prisma_migrations where migration_name ilike '%_ai_%';`
 ```
 

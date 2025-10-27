@@ -4,7 +4,7 @@ import prisma from './prisma';
 import { admin, createAuthMiddleware, oneTimeToken } from 'better-auth/plugins';
 import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
 import { getNameFromEmail } from './helpers/email';
-import type { MicrosoftEntraIDProfile } from 'better-auth/social-providers';
+import type { GithubProfile, MicrosoftEntraIDProfile } from 'better-auth/social-providers';
 import Logger from './utils/logger';
 import { getIo, notify } from './socketIoServer';
 import User from './models/User';
@@ -25,6 +25,19 @@ const getNameFromMsftProfile = (profile: MicrosoftEntraIDProfile) => {
         }
     }
     return getNameFromEmail(profile.email || profile.preferred_username);
+};
+
+const getNameFromGithubProfile = (profile: GithubProfile) => {
+    if (profile.name) {
+        const parts = profile.name.split(', ')[0]?.split(' ') || [];
+        if (parts.length > 1) {
+            const firstName = parts.pop()!;
+            const lastName = parts.join(' ');
+            return { firstName, lastName };
+        }
+    }
+    const { firstName, lastName } = getNameFromEmail(profile.email);
+    return { firstName: firstName ?? profile.login, lastName: lastName ?? profile.login };
 };
 
 const HAS_PROVIDER_GH = !!process.env.BETTER_AUTH_GITHUB_ID && !!process.env.BETTER_AUTH_GITHUB_SECRET;
@@ -60,11 +73,11 @@ export const auth = betterAuth({
                       clientId: process.env.BETTER_AUTH_GITHUB_ID!,
                       clientSecret: process.env.BETTER_AUTH_GITHUB_SECRET!,
                       mapProfileToUser: (profile) => {
-                          const [firstName, lastName] = profile.name.split(' ');
+                          const name = getNameFromGithubProfile(profile);
                           return {
                               ...profile,
-                              firstName: firstName || '',
-                              lastName: lastName || ''
+                              firstName: name.firstName || '',
+                              lastName: name.lastName || ''
                           };
                       }
                   }
