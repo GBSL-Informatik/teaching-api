@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import { IoEvent, RecordType } from '../routes/socketEventTypes';
 import { IoRoom } from '../routes/socketEvents';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../prisma/generated/client';
 import { HTTP403Error } from '../utils/errors/Errors';
 import prisma from '../prisma';
 import { auth } from '../auth';

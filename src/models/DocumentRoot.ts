@@ -7,7 +7,7 @@ import {
     RootGroupPermission,
     RootUserPermission,
     User
-} from '@prisma/client';
+} from '../../prisma/generated/client';
 import { ApiDocument } from './Document';
 import { ApiUserPermission } from './RootUserPermission';
 import { ApiGroupPermission } from './RootGroupPermission';

@@ -1,4 +1,4 @@
-import { Access } from '@prisma/client';
+import { Access } from '../../prisma/generated/client';
 import { RequestHandler } from 'express';
 import RootUserPermission from '../models/RootUserPermission';
 import { HTTP400Error } from '../utils/errors/Errors';

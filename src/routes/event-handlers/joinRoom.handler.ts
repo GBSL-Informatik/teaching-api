@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { User } from '../../../prisma/generated/client';
 import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../socketEventTypes';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import prisma from '../../prisma';

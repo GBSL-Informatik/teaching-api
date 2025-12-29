@@ -1,4 +1,9 @@
-import { Access, PrismaClient, RootGroupPermission as DbGroupPermission, User } from '@prisma/client';
+import {
+    Access,
+    PrismaClient,
+    RootGroupPermission as DbGroupPermission,
+    User
+} from '../../prisma/generated/client';
 import prisma from '../prisma';
 import { asGroupAccess } from '../helpers/accessPolicy';
 import { hasElevatedAccess, Role } from './User';

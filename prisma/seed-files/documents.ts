@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/client';
 import { FOO_BAR_ID, TEST_USER_ID } from './users';
 
 const { USER_EMAIL, USER_ID } = process.env;

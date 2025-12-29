@@ -1,7 +1,7 @@
-import { Access, Document as DbDocument, PrismaClient, User } from '@prisma/client';
+import { Access, Document as DbDocument, PrismaClient, User } from '../../prisma/generated/client';
+import type { JsonObject } from '@prisma/client/runtime/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
-import { JsonObject } from '@prisma/client/runtime/library';
 import DocumentRoot, { AccessCheckableDocumentRoot } from './DocumentRoot';
 import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy';
 import { ApiGroupPermission } from './RootGroupPermission';

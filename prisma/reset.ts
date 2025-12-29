@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from './generated/client';
 import prisma from '../src/prisma';
 
 async function main() {

@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, CmsSettings as DbCmsSettings, User } from '@prisma/client';
+import { Prisma, PrismaClient, CmsSettings as DbCmsSettings, User } from '../../prisma/generated/client';
 import prisma from '../prisma';
 import { createDataExtractor } from '../helpers/dataExtractor';
 import Logger from '../utils/logger';

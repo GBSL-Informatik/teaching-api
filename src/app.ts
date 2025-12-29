@@ -5,7 +5,7 @@ import morganMiddleware from './middleware/morgan.middleware';
 import router from './routes/router';
 import routeGuard, { createAccessRules } from './auth/guard';
 import authConfig from './routes/authConfig';
-import { type User } from '@prisma/client';
+import { type User } from '../prisma/generated/client';
 import BaseError from './utils/errors/BaseError';
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
 import { auth } from './auth';

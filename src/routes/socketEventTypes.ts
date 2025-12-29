@@ -1,4 +1,4 @@
-import { AllowedAction, CmsSettings, Prisma } from '@prisma/client';
+import { AllowedAction, CmsSettings, Prisma } from '../../prisma/generated/client';
 import { ApiDocument } from '../models/Document';
 import { ApiUserPermission } from '../models/RootUserPermission';
 import { ApiGroupPermission } from '../models/RootGroupPermission';

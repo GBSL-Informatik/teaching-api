@@ -1,4 +1,4 @@
-import { Access, PrismaClient, User } from '@prisma/client';
+import { Access, PrismaClient, User } from './generated/client';
 import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
 import { documents as seedDocuments } from './seed-files/documents';
 import {

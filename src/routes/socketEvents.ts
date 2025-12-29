@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 
-import { type User } from '@prisma/client';
+import { type User } from '../../prisma/generated/client';
 import { Server } from 'socket.io';
 import Logger from '../utils/logger';
 import { ClientToServerEvents, IoEvent, IoClientEvent, ServerToClientEvents } from './socketEventTypes';

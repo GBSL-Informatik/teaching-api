@@ -1,6 +1,10 @@
-import { Access, PrismaClient } from '@prisma/client';
+import {
+    Access,
+    PrismaClient,
+    RootUserPermission as DbRootUserPermission,
+    User
+} from '../../prisma/generated/client';
 import prisma from '../prisma';
-import { RootUserPermission as DbRootUserPermission, User } from '@prisma/client';
 import { asUserAccess } from '../helpers/accessPolicy';
 import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';

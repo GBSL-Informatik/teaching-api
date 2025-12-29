@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/client';
 
 export const FOO_BAR_ID = '96651c13-3af6-4cc0-b242-ea38d438dc41';
 export const TEST_USER_ID = '4b6d8b5d-3b6c-4c8b-8d3c-6f2c3f6e2b4b';

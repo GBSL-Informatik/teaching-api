@@ -1,7 +1,6 @@
-import { User as DbUser } from '@prisma/client';
+import { User as DbUser } from '../../prisma/generated/client';
 import { RequestHandler } from 'express';
 import User from '../models/User';
-import Logger from '../utils/logger';
 
 export const user: RequestHandler = async (req, res) => {
     res.json((req as any).user);

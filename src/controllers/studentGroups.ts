@@ -1,4 +1,4 @@
-import { StudentGroup as DbStudentGroup } from '@prisma/client';
+import { StudentGroup as DbStudentGroup } from '../../prisma/generated/client';
 import { RequestHandler } from 'express';
 import StudentGroup from '../models/StudentGroup';
 import { IoEvent, RecordType } from '../routes/socketEventTypes';

@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, User as DbUser } from '@prisma/client';
+import { Prisma, PrismaClient, User as DbUser } from '../../prisma/generated/client';
 import prisma from '../prisma';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
 import { createDataExtractor } from '../helpers/dataExtractor';
