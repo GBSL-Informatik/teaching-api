@@ -100,6 +100,21 @@ cp .example.env .env
 ## Dev Services
 
 ## Database
+
+### Database Views
+
+The access policies and users documents are implemented as database views. To keep track of views and changes, make sure to use `yarn db:migrate-views` when changing views:
+
+1. Edit or create a new view file in `prisma/view-migrations/views/`.
+2. Make sure the dependencies are correct in [migrate.config.yml](prisma/view-migrations/migrate.config.yml).
+3. Run `yarn db:migrate-views` to create a new migration for the changed views (this won't run `prisma migrate:dev`, it only creates the migration files).
+4. Eventually change the [schema.prisma](prisma/schema.prisma) file to reflect changes in the views (e.g. new fields).
+5. Run `yarn run prisma migrate:dev` to create a new migration for the schema changes.
+
+> [!WARNING]
+> Never edit views directly in a prisma migration file (under `prisma/migrations/`), as these files are auto-generated and will be overwritten the next time `yarn db:migrate-views` is run.
+
+
 ### Docker Compose
 
 Run `scripts/purge_dev_services.sh` or the `purge_dev_services` run config to remove all containers **and volumes** associated with the dev services.
