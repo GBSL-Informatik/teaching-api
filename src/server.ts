@@ -1,8 +1,7 @@
-import './instrumentation';
+import './instrumentation.js';
 import app, { configure } from './app.js';
 import { initialize as initializeSocketIo } from './socketIoServer.js';
 import http from 'http';
-import type { Request } from 'express';
 import * as Sentry from '@sentry/node';
 import Logger from './utils/logger.js';
 
