@@ -3,11 +3,11 @@ import {
     PrismaClient,
     RootUserPermission as DbRootUserPermission,
     User
-} from '../../prisma/generated/client';
-import prisma from '../prisma';
-import { asUserAccess } from '../helpers/accessPolicy';
-import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User';
-import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+} from '../../prisma/generated/client.js';
+import prisma from '../prisma.js';
+import { asUserAccess } from '../helpers/accessPolicy.js';
+import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User.js';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 
 // TODO: Consider checking existence of documentRoot / user to provide better error messages / exceptions.
 

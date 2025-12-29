@@ -1,4 +1,4 @@
-import { Prisma } from '../generated/client';
+import { Prisma } from '../generated/client.js';
 
 export const ALL_USERS_GROUP_ID = '8f60f838-940a-4ab3-bb65-405308b0db6c';
 export const CLASS_GROUP_ID = '106c9621-aed4-4592-a267-0670b5fe420c';

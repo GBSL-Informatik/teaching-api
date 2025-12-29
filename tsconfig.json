@@ -4,9 +4,9 @@
       "require": ["tsconfig-paths/register"]
   },
   "compilerOptions": {
-    "target": "es6",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     // "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": ".",

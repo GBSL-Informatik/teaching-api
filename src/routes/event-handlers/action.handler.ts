@@ -1,8 +1,8 @@
-import { User } from '../../../prisma/generated/client';
-import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes';
+import { User } from '../../../prisma/generated/client.js';
+import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes.js';
 import type { DefaultEventsMap, Socket } from 'socket.io';
-import prisma from '../../prisma';
-import { Role } from '../../models/User';
+import prisma from '../../prisma.js';
+import { Role } from '../../models/User.js';
 
 const onAction: (
     user: User,

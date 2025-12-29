@@ -1,4 +1,4 @@
-import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes';
+import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes.js';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 
 const onStreamUpdate: (

@@ -1,17 +1,17 @@
-import { Access, PrismaClient, User } from './generated/client';
-import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users';
-import { documents as seedDocuments } from './seed-files/documents';
+import { Access, PrismaClient, User } from './generated/client.js';
+import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users.js';
+import { documents as seedDocuments } from './seed-files/documents.js';
 import {
     ALL_USERS_GROUP_ID,
     CLASS_GROUP_ID,
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
-} from './seed-files/student-groups';
-import { documentRoots as seedDocumentRoots } from './seed-files/document-roots';
+} from './seed-files/student-groups.js';
+import { documentRoots as seedDocumentRoots } from './seed-files/document-roots.js';
 import {
     rootUserPermissions as seedRootUserPermissions,
     rootGroupPermissions as seedRootGroupPermissions
-} from './seed-files/document-root-permissions';
+} from './seed-files/document-root-permissions.js';
 
 const prisma = new PrismaClient();
 

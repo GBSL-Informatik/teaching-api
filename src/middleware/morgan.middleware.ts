@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import morgan, { StreamOptions } from 'morgan';
 
-import Logger from '../utils/logger';
+import Logger from '../utils/logger.js';
 
 // Override the stream method by telling
 // Morgan to use our custom logger instead of the console.log.

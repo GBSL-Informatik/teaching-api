@@ -1,11 +1,11 @@
 import { RequestHandler } from 'express';
-import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot';
-import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes';
-import { IoRoom } from '../routes/socketEvents';
-import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors';
-import Document from '../models/Document';
-import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy';
-import { hasElevatedAccess } from '../models/User';
+import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot.js';
+import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes.js';
+import { IoRoom } from '../routes/socketEvents.js';
+import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors.js';
+import Document from '../models/Document.js';
+import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy.js';
+import { hasElevatedAccess } from '../models/User.js';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     const document = await DocumentRoot.findModel((req as any).user!, req.params.id);

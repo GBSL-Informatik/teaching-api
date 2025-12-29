@@ -1,4 +1,4 @@
-import { Role } from '../models/User';
+import { Role } from '../models/User.js';
 
 export interface AccessMatrix {
     [key: string]: {

@@ -1,4 +1,4 @@
-import { Prisma } from '../generated/client';
+import { Prisma } from '../generated/client.js';
 
 const rootUserPermissions: Prisma.RootUserPermissionCreateManyInput[] = [];
 

@@ -1,7 +1,7 @@
-import { StudentGroup as DbStudentGroup } from '../../prisma/generated/client';
+import { StudentGroup as DbStudentGroup } from '../../prisma/generated/client.js';
 import { RequestHandler } from 'express';
-import StudentGroup from '../models/StudentGroup';
-import { IoEvent, RecordType } from '../routes/socketEventTypes';
+import StudentGroup from '../models/StudentGroup.js';
+import { IoEvent, RecordType } from '../routes/socketEventTypes.js';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     const group = await StudentGroup.findModel((req as any).user!, req.params.id);

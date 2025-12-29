@@ -1,11 +1,11 @@
-import { Document as DbDocument, Prisma } from '../../prisma/generated/client';
+import { Document as DbDocument, Prisma } from '../../prisma/generated/client.js';
 import { RequestHandler } from 'express';
-import Document from '../models/Document';
-import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes';
-import { IoRoom } from '../routes/socketEvents';
-import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy';
-import prisma from '../prisma';
-import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
+import Document from '../models/Document.js';
+import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes.js';
+import { IoRoom } from '../routes/socketEvents.js';
+import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy.js';
+import prisma from '../prisma.js';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 import type { JsonObject } from '@prisma/client/runtime/client';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {

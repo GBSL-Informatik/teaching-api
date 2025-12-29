@@ -1,4 +1,4 @@
-import BaseError, { HttpStatusCode } from './BaseError';
+import BaseError, { HttpStatusCode } from './BaseError.js';
 export class HTTP400Error extends BaseError {
     constructor(description = 'bad request') {
         super('BAD REQUEST', HttpStatusCode.BAD_REQUEST, description, true);

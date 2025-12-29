@@ -1,4 +1,4 @@
-import { Access } from '../../prisma/generated/client';
+import { Access } from '../../prisma/generated/client.js';
 
 export const NoneAccess = new Set<Access | undefined>([
     Access.None_DocumentRoot,

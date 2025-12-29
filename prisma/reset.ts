@@ -1,5 +1,5 @@
-import { Prisma } from './generated/client';
-import prisma from '../src/prisma';
+import { Prisma } from './generated/client.js';
+import prisma from '../src/prisma.js';
 
 async function main() {
     const { DATABASE_URL } = process.env;

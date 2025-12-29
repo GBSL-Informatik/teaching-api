@@ -1,8 +1,8 @@
 import { Server } from 'socket.io';
 import type http from 'http';
-import type { ClientToServerEvents, ServerToClientEvents, Notification } from './routes/socketEventTypes';
-import { CORS_ORIGIN } from './utils/originConfig';
-import EventRouter from './routes/socketEvents';
+import type { ClientToServerEvents, ServerToClientEvents, Notification } from './routes/socketEventTypes.js';
+import { CORS_ORIGIN } from './utils/originConfig.js';
+import EventRouter from './routes/socketEvents.js';
 
 let _io: Server<ClientToServerEvents, ServerToClientEvents>;
 
