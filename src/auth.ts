@@ -10,6 +10,8 @@ import { getIo, notify } from './socketIoServer.js';
 import User from './models/User.js';
 import { IoRoom } from './routes/socketEvents.js';
 import { IoEvent, RecordType } from './routes/socketEventTypes.js';
+import { adminAc, userAc } from 'better-auth/plugins/admin/access';
+import { teacher } from './auth/permissions.js';
 
 // If your Prisma file is located elsewhere, you can change the path
 
@@ -167,7 +169,18 @@ export const auth = betterAuth({
             }
         })
     },
-    plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] })],
+    plugins: [
+        oneTimeToken(),
+        admin({
+            roles: {
+                admin: adminAc,
+                teacher: teacher,
+                student: userAc
+            },
+            defaultRole: 'student',
+            adminRoles: ['teacher', 'admin']
+        })
+    ],
     logger: {
         level: 'info',
         log: (level, message, ...args) => {
