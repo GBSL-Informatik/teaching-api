@@ -1,0 +1,8 @@
+- name: view__users_documents
+  depends_on:
+      - view__document_user_permissions
+- name: view__document_user_permissions
+  depends_on:
+      - view__all_document_user_permissions
+- name: view__all_document_user_permissions
+  depends_on: []
