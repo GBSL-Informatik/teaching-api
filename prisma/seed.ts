@@ -12,8 +12,7 @@ import {
     rootUserPermissions as seedRootUserPermissions,
     rootGroupPermissions as seedRootGroupPermissions
 } from './seed-files/document-root-permissions.js';
-
-const prisma = new PrismaClient();
+import prisma from '../src/prisma.js';
 
 const { USER_ID, USER_EMAIL } = process.env;
 
