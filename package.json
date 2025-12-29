@@ -15,7 +15,7 @@
     "format:check": "prettier --check ./**/*.{ts,json}",
     "db:migrate": "yarn prisma migrate deploy",
     "db:migrate:dev": "yarn prisma migrate dev",
-    "db:migrate-view": "ts-node -r dotenv/config ./prisma/view-migrations/create-view-migration.ts",
+    "db:migrate-view": "tsx -r dotenv/config ./prisma/view-migrations/create-view-migration.ts",
     "db:seed": "yarn prisma db seed",
     "db:reset": "dotenv -- ts-node prisma/reset.ts",
     "db:recreate": "yarn run db:reset && yarn run db:migrate && yarn run db:seed",
