@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "types": ["node"],
+    "skipLibCheck": true,
     "typeRoots": [
       "./src/types",
       "./node_modules/@types/",
