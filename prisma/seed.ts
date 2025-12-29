@@ -1,4 +1,3 @@
-import { Access, PrismaClient, User } from './generated/client.js';
 import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users.js';
 import { documents as seedDocuments } from './seed-files/documents.js';
 import {
@@ -8,10 +7,6 @@ import {
     studentGroups as seedStudentGroups
 } from './seed-files/student-groups.js';
 import { documentRoots as seedDocumentRoots } from './seed-files/document-roots.js';
-import {
-    rootUserPermissions as seedRootUserPermissions,
-    rootGroupPermissions as seedRootGroupPermissions
-} from './seed-files/document-root-permissions.js';
 import prisma from '../src/prisma.js';
 
 const { USER_ID, USER_EMAIL } = process.env;
@@ -24,6 +19,7 @@ async function main() {
     const users = await prisma.user.createMany({
         data: seedUsers.map((user) => ({ ...user, email: user.email.toLowerCase() }))
     });
+    console.log('Created users:\n' + seedUsers.map((u) => `- ${u.email}`).join('\n'));
 
     const documentRoots = await prisma.documentRoot.createMany({
         data: seedDocumentRoots
@@ -36,6 +32,8 @@ async function main() {
     const groups = await prisma.studentGroup.createMany({
         data: seedStudentGroups
     });
+
+    console.log('Created student groups:\n' + seedStudentGroups.map((g) => `- ${g.name}`).join('\n'));
 
     /** Connect users and student groups. */
     // TODO: Is there a more elegant way to add entries to the implicit _StudentGroupToUser join table?
