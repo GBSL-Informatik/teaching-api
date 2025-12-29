@@ -17,19 +17,7 @@
       "./src/types",
       "./node_modules/@types/",
       "./src/@types/"
-    ],
-    "plugins": [
-      {
-        "transform": "typescript-transform-paths"
-      },
-      {
-        "transform": "typescript-transform-paths",
-        "afterDeclarations": true
-      }
-    ],
-    "paths": {
-      "@/prisma/*": ["prisma/*"]
-    }
+    ]
   },
   "include": ["process.env.d.ts", "./**/*.ts"],
   "exclude": ["node_modules"]
