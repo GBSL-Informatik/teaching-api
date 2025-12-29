@@ -9,6 +9,12 @@ generator docs {
   output   = "../docs/prisma"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./erd.svg"
+  disabled = true
+}
+
 datasource db {
   provider   = "postgresql"
   extensions = [pg_trgm, pgcrypto]
