@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register --exec tsx ./src/server.ts",
     "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
-    "start": "cross-env NODE_ENV=production node ./dist/src/server.js",
+    "start": "cross-env NODE_ENV=production node --import ./dist/src/instrumentation.js ./dist/src/server.js",
     "lint": "eslint . --ignore-pattern node_modules --fix",
     "format": "prettier --write ./**/*.{ts,json}",
     "format:check": "prettier --check ./**/*.{ts,json}",

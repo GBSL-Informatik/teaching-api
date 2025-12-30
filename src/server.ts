@@ -1,4 +1,3 @@
-import './instrumentation.js';
 import app, { configure } from './app.js';
 import { initialize as initializeSocketIo } from './socketIoServer.js';
 import http from 'http';
