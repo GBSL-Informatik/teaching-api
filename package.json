@@ -65,7 +65,7 @@
     "typescript": "^5.9.2"
   },
   "engines": {
-    "node": "^24.12.0"
+    "node": ">=24.12.0"
   },
   "optionalDependencies": {
     "puppeteer": "^24.34.0"
