@@ -1,12 +1,8 @@
 {
-  "ts-node": {
-      "transpileOnly": true,
-      "require": ["tsconfig-paths/register"]
-  },
   "compilerOptions": {
-    "target": "es6",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     // "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
@@ -16,23 +12,12 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "types": ["node"],
+    "skipLibCheck": true,
     "typeRoots": [
       "./src/types",
       "./node_modules/@types/",
       "./src/@types/"
-    ],
-    "plugins": [
-      {
-        "transform": "typescript-transform-paths"
-      },
-      {
-        "transform": "typescript-transform-paths",
-        "afterDeclarations": true
-      }
-    ],
-    "paths": {
-      "@/prisma/*": ["prisma/*"]
-    }
+    ]
   },
   "include": ["process.env.d.ts", "./**/*.ts"],
   "exclude": ["node_modules"]

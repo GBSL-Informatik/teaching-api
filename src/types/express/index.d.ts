@@ -1,5 +1,5 @@
-import type { User as pUser } from '@prisma/client';
-import type { Notification } from '../../routes/socketEventTypes';
+import type { User as pUser } from '../../../prisma/generated/client.js';
+import type { Notification } from '../../routes/socketEventTypes.js';
 
 // to make the file a module and avoid a TypeScript error
 export {};

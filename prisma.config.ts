@@ -1,14 +1,13 @@
 import 'dotenv/config';
-import path from 'node:path';
+import { defineConfig, env } from 'prisma/config';
 
-import type { PrismaConfig } from 'prisma';
-
-export default {
-    experimental: {
-        adapter: true
-    },
+export default defineConfig({
+    schema: 'prisma/schema.prisma',
     migrations: {
-        seed: 'dotenv -- ts-node prisma/seed.ts'
+        path: 'prisma/migrations',
+        seed: 'tsx prisma/seed.ts'
+    },
+    datasource: {
+        url: env('DATABASE_URL')
     }
-    // now you can use process.env variables
-} satisfies PrismaConfig;
+});

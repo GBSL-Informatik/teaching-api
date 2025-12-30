@@ -1,10 +1,9 @@
-import './instrumentation';
-import app, { configure } from './app';
-import { initialize as initializeSocketIo } from './socketIoServer';
+import './instrumentation.js';
+import app, { configure } from './app.js';
+import { initialize as initializeSocketIo } from './socketIoServer.js';
 import http from 'http';
-import type { Request } from 'express';
 import * as Sentry from '@sentry/node';
-import Logger from './utils/logger';
+import Logger from './utils/logger.js';
 
 const PORT = process.env.PORT || 3002;
 

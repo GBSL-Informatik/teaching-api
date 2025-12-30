@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/client.js';
 
 const documentRoots: Prisma.DocumentRootCreateInput[] = [];
 

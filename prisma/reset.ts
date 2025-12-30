@@ -1,17 +1,20 @@
-import { Prisma } from '@prisma/client';
-import prisma from '../src/prisma';
+import 'dotenv/config';
+import { Prisma } from './generated/client.js';
+import prisma from '../src/prisma.js';
 
 async function main() {
     const { DATABASE_URL } = process.env;
     const user = DATABASE_URL?.split(':')[1].split('//')[1];
+
+    console.log('User detected:', user);
     const dropTableSql = await prisma.$queryRaw<{ query: string }[]>(
         Prisma.sql`
             SELECT 'drop table if exists "' || tablename || '" cascade;' as query
             FROM pg_tables
-            WHERE tableowner = ${user};
+            WHERE tableowner = ${user}
+                AND schemaname NOT IN ('pg_catalog', 'information_schema');
         `
     );
-    console.log(dropTableSql);
     /** ensure drops happen sequential to prevent deadlocks (because of the cascade) */
     for (let i = 0; i < dropTableSql.length; i++) {
         const table = dropTableSql[i].query.split(' ')[4];
@@ -22,9 +25,11 @@ async function main() {
         Prisma.sql`
             SELECT 'drop type if exists "' || pg_type.typname || '" cascade;' as query
             FROM pg_type
-            JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace
+                JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace
+                LEFT JOIN pg_extension ON pg_extension.extnamespace = pg_namespace.oid
             WHERE pg_type.typowner = (SELECT usesysid FROM pg_user WHERE usename = ${user})
-                AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema');
+                AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
+                AND pg_type.typname NOT IN ('gtrgm', '_gtrgm');
         `
     );
     /** ensure drops happen sequential to prevent deadlocks (because of the cascade) */

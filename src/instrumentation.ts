@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import Logger from './utils/logger';
+import Logger from './utils/logger.js';
 import dotenv from 'dotenv';
 dotenv.config();
 if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {

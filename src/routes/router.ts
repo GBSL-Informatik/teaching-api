@@ -1,5 +1,5 @@
 import express from 'express';
-import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users';
+import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users.js';
 import {
     all as allStudentGroups,
     create as createStudentGroup,
@@ -9,24 +9,24 @@ import {
     addUser as addStudentGroupUser,
     removeUser as removeStudentGroupUser,
     setAdminRole as setStudentGroupAdminRole
-} from '../controllers/studentGroups';
+} from '../controllers/studentGroups.js';
 import {
     create as createUserPermission,
     destroy as deleteUserPermission,
     update as updateUserPermission
-} from '../controllers/rootUserPermissions';
+} from '../controllers/rootUserPermissions.js';
 import {
     create as createStudentGroupPermission,
     destroy as deleteStudentGroupPermission,
     update as updateStudentGroupPermission
-} from '../controllers/rootGroupPermissions';
+} from '../controllers/rootGroupPermissions.js';
 import {
     create as createDocument,
     destroy as deleteDocument,
     find as findDocument,
     update as updateDocument,
     linkTo as linkDocument
-} from '../controllers/documents';
+} from '../controllers/documents.js';
 import {
     create as createDocumentRoot,
     find as findDocumentRoot,
@@ -36,20 +36,20 @@ import {
     findManyFor as findManyDocumentRootsFor,
     allDocuments,
     destroy as deleteDocumentRoot
-} from '../controllers/documentRoots';
+} from '../controllers/documentRoots.js';
 import {
     allowedActions,
     createAllowedAction,
     destroyAllowedAction,
     linkUserPassword,
     revokeUserPassword
-} from '../controllers/admins';
+} from '../controllers/admins.js';
 import {
     githubToken,
     find as findCmsSettings,
     update as updateCmsSettings,
     logout as githubLogout
-} from '../controllers/cmsSettings';
+} from '../controllers/cmsSettings.js';
 
 // initialize router
 const router = express.Router();

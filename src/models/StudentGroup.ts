@@ -1,8 +1,8 @@
-import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '@prisma/client';
-import prisma from '../prisma';
-import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors';
-import { createDataExtractor } from '../helpers/dataExtractor';
-import { hasElevatedAccess, Role } from './User';
+import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '../../prisma/generated/client.js';
+import prisma from '../prisma.js';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
+import { createDataExtractor } from '../helpers/dataExtractor.js';
+import { hasElevatedAccess, Role } from './User.js';
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['description', 'name'],

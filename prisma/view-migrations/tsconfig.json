@@ -1,9 +1,8 @@
 {
     "compilerOptions": {
         "strict": true,
-        "lib": ["esnext", "dom"],
         "target": "esnext",
-        "module": "commonjs",
+        "module": "nodenext",
         "outDir": "../../dist/view-migrations",
         "rootDir": "./",
         "esModuleInterop": true,

@@ -1,6 +1,5 @@
 node_modules
 .env
-
 docs/prisma/**/*
 docs/*.svg
 dist/
@@ -9,3 +8,4 @@ build/
 .sentryclirc
 *.dump
 src/generated/prisma
+prisma/generated

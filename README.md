@@ -10,7 +10,6 @@ Setup your local env - inside the devcontainer **you should not set** `DATABASE_
 ```bash
 USER_ID="<your uuid>"
 USER_EMAIL="<your mail>"
-NO_AUTH="true"
 ```
 
 The `USER_ID` and `USER_EMAIL` are used only for seeding the database and are not strictly needed.

@@ -1,7 +1,7 @@
-import { Prisma, PrismaClient, CmsSettings as DbCmsSettings, User } from '@prisma/client';
-import prisma from '../prisma';
-import { createDataExtractor } from '../helpers/dataExtractor';
-import Logger from '../utils/logger';
+import { Prisma, PrismaClient, CmsSettings as DbCmsSettings, User } from '../../prisma/generated/client.js';
+import prisma from '../prisma.js';
+import { createDataExtractor } from '../helpers/dataExtractor.js';
+import Logger from '../utils/logger.js';
 const getData = createDataExtractor<Prisma.CmsSettingsUncheckedUpdateInput>(['activeBranch', 'activePath']);
 
 export type ApiCmsSettings = Omit<DbCmsSettings, 'refresh_token' | 'refresh_token_expires_at'> & {

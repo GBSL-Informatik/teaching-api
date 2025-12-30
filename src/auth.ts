@@ -1,15 +1,17 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import prisma from './prisma';
+import prisma from './prisma.js';
 import { admin, createAuthMiddleware, oneTimeToken } from 'better-auth/plugins';
-import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig';
-import { getNameFromEmail } from './helpers/email';
+import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig.js';
+import { getNameFromEmail } from './helpers/email.js';
 import type { GithubProfile, MicrosoftEntraIDProfile } from 'better-auth/social-providers';
-import Logger from './utils/logger';
-import { getIo, notify } from './socketIoServer';
-import User from './models/User';
-import { IoRoom } from './routes/socketEvents';
-import { IoEvent, RecordType } from './routes/socketEventTypes';
+import Logger from './utils/logger.js';
+import { getIo, notify } from './socketIoServer.js';
+import User from './models/User.js';
+import { IoRoom } from './routes/socketEvents.js';
+import { IoEvent, RecordType } from './routes/socketEventTypes.js';
+import { adminAc, userAc } from 'better-auth/plugins/admin/access';
+import { teacher } from './auth/permissions.js';
 
 // If your Prisma file is located elsewhere, you can change the path
 
@@ -167,7 +169,18 @@ export const auth = betterAuth({
             }
         })
     },
-    plugins: [oneTimeToken(), admin({ defaultRole: 'student', adminRoles: ['teacher', 'admin'] })],
+    plugins: [
+        oneTimeToken(),
+        admin({
+            roles: {
+                admin: adminAc,
+                teacher: teacher,
+                student: userAc
+            },
+            defaultRole: 'student',
+            adminRoles: ['teacher', 'admin']
+        })
+    ],
     logger: {
         level: 'info',
         log: (level, message, ...args) => {
