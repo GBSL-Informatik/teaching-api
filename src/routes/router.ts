@@ -61,6 +61,7 @@ router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
 /**
  * @optional ?ignoreMissingRoots: boolean
+ * @optional ?type: string -> filter included documents by provided type
  * @requires ?ids: string[]
  */
 router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
