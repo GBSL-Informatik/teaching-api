@@ -46,6 +46,10 @@ const HAS_PROVIDER_GH = !!process.env.BETTER_AUTH_GITHUB_ID && !!process.env.BET
 const HAS_PROVIDER_MSFT = !!process.env.MSAL_CLIENT_ID && !!process.env.MSAL_CLIENT_SECRET;
 
 export const auth = betterAuth({
+    rateLimit: {
+        window: 10, // time window in seconds
+        max: 1000 // max requests in the window
+    },
     user: {
         additionalFields: {
             firstName: { type: 'string', required: true, input: true },
