@@ -45,6 +45,29 @@ export const findManyFor: RequestHandler<
     res.json(documents);
 };
 
+export const findMultipleFor: RequestHandler<
+    { id: string /** userId */ },
+    any,
+    { documentRootIds: string[]; ignoreMissingRoots?: boolean; type?: string }
+> = async (req, res, next) => {
+    if (!req.params.id) {
+        throw new HTTP400Error('Missing user id');
+    }
+    const canLoad = req.user!.id === req.params.id || hasElevatedAccess(req.user?.role);
+    if (!canLoad) {
+        throw new HTTP403Error('Not Authorized');
+    }
+    const ids = req.body.documentRootIds;
+    if (ids.length === 0) {
+        return res.json([]);
+    }
+    const documents = await DocumentRoot.findManyModels(req.params.id, ids, {
+        ignoreMissingRoots: !!req.body.ignoreMissingRoots,
+        documentType: req.body.type && (req.body.type as string | undefined)
+    });
+    res.json(documents);
+};
+
 export const allDocuments: RequestHandler<any, any, any, { rids: string[] }> = async (req, res, next) => {
     if (!hasElevatedAccess((req as any).user!.role)) {
         throw new HTTP403Error('Not Authorized');
@@ -54,6 +77,26 @@ export const allDocuments: RequestHandler<any, any, any, { rids: string[] }> = a
         return res.json([]);
     }
     const documents = await Document.allOfDocumentRoots((req as any).user!, ids);
+    res.json(documents);
+};
+
+export const multipleDocuments: RequestHandler<
+    any,
+    any,
+    { documentRootIds: string[]; userId?: string }
+> = async (req, res, next) => {
+    const user = req.user;
+    if (!hasElevatedAccess(user.role)) {
+        throw new HTTP403Error('Not Authorized');
+    }
+    const ids = req.body.documentRootIds;
+    if (ids.length === 0) {
+        return res.json([]);
+    }
+    const documents = await Document.allOfDocumentRoots(
+        { role: user.role, id: req.body.userId ?? user.id },
+        ids
+    );
     res.json(documents);
 };
 

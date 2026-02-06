@@ -34,8 +34,10 @@ import {
     update as updateDocumentRoot,
     permissions as allPermissions,
     findManyFor as findManyDocumentRootsFor,
+    findMultipleFor as findMultipleDocumentRootsFor,
     allDocuments,
-    destroy as deleteDocumentRoot
+    destroy as deleteDocumentRoot,
+    multipleDocuments
 } from '../controllers/documentRoots.js';
 import {
     allowedActions,
@@ -60,11 +62,18 @@ router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
 /**
+ * TODO: remove once [post] /users/:id/documentRoots is established and clients are updated
+ *
  * @optional ?ignoreMissingRoots: boolean
  * @optional ?type: string -> filter included documents by provided type
  * @requires ?ids: string[]
  */
 router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
+/**
+ * a post endpoint to prevent issues with long query strings when requesting
+ * many document roots for a user
+ */
+router.post('/users/:id/documentRoots', findMultipleDocumentRootsFor);
 
 router.get('/studentGroups', allStudentGroups);
 router.post('/studentGroups', createStudentGroup);
@@ -93,18 +102,23 @@ router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
 router.delete('/documentRoots/:id', deleteDocumentRoot);
 router.get('/documentRoots/:id/permissions', allPermissions);
-/**
- * TODO: Reactivate once the controller's permissions are updated.
- * router.get('/documents', allDocuments);
- */
 router.post('/documents', createDocument);
 
 /**
+ * TODO: remove once /documents/multiple is established and clients are updated
+ *
  * @adminOnly --> handle in controller
  * Returns all documents which are linked to the **document roots**.
  * @requires ?rids: string[] -> the document root ids
  */
 router.get('/documents', allDocuments);
+/**
+ * a post endpoint to prevent issues with long query strings when requesting
+ * many document roots for a user
+ * @adminOnly --> handle in controller
+ * Returns all documents which are linked to the **document roots**.
+ */
+router.post('/documents/multiple', multipleDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
 router.put('/documents/:id/linkTo/:parentId', linkDocument);

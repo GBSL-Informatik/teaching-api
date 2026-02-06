@@ -266,7 +266,10 @@ function Document(db: PrismaClient['document']) {
             return model;
         },
 
-        async allOfDocumentRoots(actor: User, documentRootIds: string[]): Promise<DbDocument[]> {
+        async allOfDocumentRoots(
+            actor: User | { role: Role | string; id: string },
+            documentRootIds: string[]
+        ): Promise<DbDocument[]> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }

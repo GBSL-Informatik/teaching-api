@@ -23,7 +23,7 @@ const authConfig: Config = {
         userFind: { path: '/users/:id', access: [{ methods: ['GET', 'PUT'], minRole: Role.STUDENT }] },
         usersDocumentRoots: {
             path: '/users/:id/documentRoots',
-            access: [{ methods: ['GET'], minRole: Role.STUDENT }]
+            access: [{ methods: ['GET', 'POST'], minRole: Role.STUDENT }]
         },
         studentGroups: {
             path: '/studentGroups',
@@ -39,6 +39,10 @@ const authConfig: Config = {
         documents: {
             path: '/documents',
             access: [{ methods: ['GET', 'PUT', 'POST', 'DELETE'], minRole: Role.STUDENT }]
+        },
+        documentsMultiple: {
+            path: '/documents/multiple',
+            access: [{ methods: ['POST'], minRole: Role.TEACHER }]
         },
         documentRoots: {
             path: '/documentRoots',
