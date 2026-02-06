@@ -34,8 +34,10 @@ import {
     update as updateDocumentRoot,
     permissions as allPermissions,
     findManyFor as findManyDocumentRootsFor,
+    findMultipleFor as findMultipleDocumentRootsFor,
     allDocuments,
-    destroy as deleteDocumentRoot
+    destroy as deleteDocumentRoot,
+    multipleDocuments
 } from '../controllers/documentRoots.js';
 import {
     allowedActions,
@@ -65,6 +67,11 @@ router.put('/users/:id', updateUser);
  * @requires ?ids: string[]
  */
 router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
+/**
+ * a post endpoint to prevent issues with long query strings when requesting
+ * many document roots for a user
+ */
+router.post('/users/:id/documentRoots', findMultipleDocumentRootsFor);
 
 router.get('/studentGroups', allStudentGroups);
 router.post('/studentGroups', createStudentGroup);
@@ -93,10 +100,6 @@ router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
 router.delete('/documentRoots/:id', deleteDocumentRoot);
 router.get('/documentRoots/:id/permissions', allPermissions);
-/**
- * TODO: Reactivate once the controller's permissions are updated.
- * router.get('/documents', allDocuments);
- */
 router.post('/documents', createDocument);
 
 /**
@@ -105,6 +108,11 @@ router.post('/documents', createDocument);
  * @requires ?rids: string[] -> the document root ids
  */
 router.get('/documents', allDocuments);
+/**
+ * a post endpoint to prevent issues with long query strings when requesting
+ * many document roots for a user
+ */
+router.post('/documents/multiple', multipleDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
 router.put('/documents/:id/linkTo/:parentId', linkDocument);
