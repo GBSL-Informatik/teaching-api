@@ -62,6 +62,8 @@ router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
 /**
+ * TODO: remove once [post] /users/:id/documentRoots is established and clients are updated
+ *
  * @optional ?ignoreMissingRoots: boolean
  * @optional ?type: string -> filter included documents by provided type
  * @requires ?ids: string[]
@@ -103,6 +105,8 @@ router.get('/documentRoots/:id/permissions', allPermissions);
 router.post('/documents', createDocument);
 
 /**
+ * TODO: remove once /documents/multiple is established and clients are updated
+ *
  * @adminOnly --> handle in controller
  * Returns all documents which are linked to the **document roots**.
  * @requires ?rids: string[] -> the document root ids
@@ -111,6 +115,8 @@ router.get('/documents', allDocuments);
 /**
  * a post endpoint to prevent issues with long query strings when requesting
  * many document roots for a user
+ * @adminOnly --> handle in controller
+ * Returns all documents which are linked to the **document roots**.
  */
 router.post('/documents/multiple', multipleDocuments);
 router.get('/documents/:id', findDocument);
