@@ -119,13 +119,11 @@ function Document(db: PrismaClient['document']) {
                 /**
                  * TODO: Should we allow creating children on documents where actor only has RO access?
                  */
-                if (
-                    !(
-                        parent.document.authorId === actor.id ||
-                        elevatedAccess ||
-                        RWAccess.has(parent.highestPermission)
-                    )
-                ) {
+                if (!(
+                    parent.document.authorId === actor.id ||
+                    elevatedAccess ||
+                    RWAccess.has(parent.highestPermission)
+                )) {
                     throw new HTTP403Error('Insufficient access permission');
                 }
             }
