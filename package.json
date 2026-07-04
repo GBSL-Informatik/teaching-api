@@ -7,7 +7,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register --exec tsx ./src/server.ts",
+    "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register --exec \"tsx --env-file=.env\" ./src/server.ts",
     "build": "yarn run prisma generate && tsc --build ./tsconfig.build.json",
     "start": "cross-env NODE_ENV=production node --import ./dist/src/instrumentation.js ./dist/src/server.js",
     "lint": "eslint . --ignore-pattern node_modules --fix",
@@ -61,11 +61,11 @@
     "prisma-docs-generator": "^0.8.0",
     "prisma-erd-generator": "^2.4.2",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.2"
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3"
   },
   "engines": {
-    "node": "24.12.x || 24.13.x || 24.14.x"
+    "node": "24.12.x || 24.13.x || 24.14.x || 24.18.x"
   },
   "optionalDependencies": {
     "puppeteer": "^24.34.0"

@@ -6,7 +6,7 @@ import { HTTP403Error } from '../utils/errors/Errors.js';
 import prisma from '../prisma.js';
 import { auth } from '../auth.js';
 import { fromNodeHeaders } from 'better-auth/node';
-import User, { hasElevatedAccess } from '../models/User.js';
+import User, { hasElevatedAccess, Role } from '../models/User.js';
 
 export const createAllowedAction: RequestHandler<any, any, Prisma.AllowedActionCreateInput> = async (
     req,
@@ -129,4 +129,60 @@ export const revokeUserPassword: RequestHandler<{ id: string }> = async (req, re
         ];
     }
     res.status(204).send();
+};
+
+export const exportData: RequestHandler<
+    any,
+    any,
+    { userIds: string; ignoredDocumentTypes?: string[] }
+> = async (req, res, next) => {
+    if (!hasElevatedAccess(req.user?.role)) {
+        throw new HTTP403Error('cannot export data');
+    }
+    const { userIds, ignoredDocumentTypes } = req.body;
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        throw new HTTP403Error('no user ids provided');
+    }
+    const excludedTypes = Array.isArray(ignoredDocumentTypes) ? ignoredDocumentTypes : [];
+    const requestedUsers = await prisma.user
+        .findMany({
+            where: { id: { in: userIds } }
+        })
+        .then((users) =>
+            users.map((u) => ({
+                id: u.id,
+                name: u.name,
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+                createdAt: u.createdAt,
+                updatedAt: u.updatedAt
+            }))
+        );
+    const allowedUserIds = new Set(requestedUsers.map((u) => u.id));
+    if (req.user.role === Role.TEACHER) {
+        // ensure the teacher owns a student group that the requested users are part of
+        const teacherGroups = await prisma.studentGroup.findMany({
+            where: { users: { some: { userId: req.user.id, isAdmin: true } } },
+            include: { users: true }
+        });
+        allowedUserIds.clear();
+        teacherGroups.flatMap((g) => g.users.map((u) => u.userId)).forEach((id) => allowedUserIds.add(id));
+    }
+    const promise = userIds
+        .filter((id) => allowedUserIds.has(id))
+        .map((id) => {
+            return prisma.document
+                .findMany({
+                    where: { authorId: id, type: { notIn: excludedTypes } }
+                })
+                .then((docs) => {
+                    return {
+                        user: requestedUsers.find((u) => u.id === id),
+                        documents: docs
+                    };
+                });
+        });
+    const results = await Promise.all(promise);
+    res.status(200).send(results);
 };

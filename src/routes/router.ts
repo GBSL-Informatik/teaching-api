@@ -43,6 +43,7 @@ import {
     allowedActions,
     createAllowedAction,
     destroyAllowedAction,
+    exportData,
     linkUserPassword,
     revokeUserPassword
 } from '../controllers/admins.js';
@@ -129,6 +130,7 @@ router.post('/admin/allowedActions', createAllowedAction);
 router.delete('/admin/allowedActions/:id', destroyAllowedAction);
 router.post('/admin/users/:id/linkUserPassword', linkUserPassword);
 router.post('/admin/users/:id/revokeUserPassword', revokeUserPassword);
+router.post('/admin/export', exportData);
 
 router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);
