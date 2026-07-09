@@ -13,6 +13,7 @@
     "lint": "eslint . --ignore-pattern node_modules --fix",
     "format": "prettier --write ./**/*.{ts,json}",
     "format:check": "prettier --check ./**/*.{ts,json}",
+    "typecheck": "tsc",
     "db:migrate": "yarn prisma migrate deploy",
     "db:migrate:dev": "yarn prisma migrate dev",
     "db:migrate-view": "tsx -r dotenv/config ./prisma/view-migrations/create-view-migration.ts",
