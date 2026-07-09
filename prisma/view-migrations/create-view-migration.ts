@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as yaml from 'js-yaml';
+import { load as yamlLoad } from 'js-yaml';
 import { default as parseArgs } from 'minimist';
 import { exit } from 'process';
 import { fileURLToPath } from 'url';
@@ -14,7 +14,7 @@ interface Config {
     name: string;
     depends_on: string[];
 }
-const config = yaml.load(fs.readFileSync(path.resolve(currentDir, CONFIG_FILENAME), 'utf8')) as Config[];
+const config = yamlLoad(fs.readFileSync(path.resolve(currentDir, CONFIG_FILENAME), 'utf8')) as Config[];
 const HELP_TEXT = `
 yarn run db:migrate-view [view-name [view-name ...]]
 
