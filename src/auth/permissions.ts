@@ -1,6 +1,6 @@
 import { adminAc, defaultAc } from 'better-auth/plugins/admin/access';
 
-const revokedTeacherPermissions: (typeof adminAc.statements)['user'] = [
+const revokedTeacherPermissions: (typeof adminAc.statements)['user'][number][] = [
     'ban',
     'delete',
     'set-role',

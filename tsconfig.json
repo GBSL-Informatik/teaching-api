@@ -5,8 +5,6 @@
     "moduleResolution": "nodenext",
     // "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "outDir": "dist",
     "sourceMap": true,
     "strict": true,

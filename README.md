@@ -322,6 +322,17 @@ yarn run prisma migrate dev
 # when ai-pr was once merged/deployed to the db, run `delete from _prisma_migrations where migration_name ilike '%_ai_%';`
 ```
 
+### Troubleshooting
+
+#### Dokku `Unknown buildpack version` 
+
+```bash
+docker pull gliderlabs/herokuish:latest
+# when this does not help, try additionally:
+dokku buildpacks:set-property <APP> stack gliderlabs/herokuish:latest
+dokku repo:purge-cache <APP>
+```
+
 ## Speed Improvements
 If the API and the Database are running on the same server, you can improve the speed by disabling the tcp connection for the database. This can be done by setting the `DATABASE_URL` to `postgresql://teaching_website:teaching_website@localhost/teaching_website?sslmode=disable`.
 
