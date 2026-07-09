@@ -22,11 +22,11 @@
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist && sentry-cli sourcemaps upload --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist"
   },
   "dependencies": {
-    "@better-auth/sso": "1.4.9",
+    "@better-auth/sso": "^1.6.23",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sentry/node": "^10.64.0",
-    "better-auth": "1.4.9",
+    "better-auth": "^1.6.23",
     "cors": "^2.8.6",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
