@@ -31,9 +31,11 @@
 				"esbenp.prettier-vscode",
 				"ms-ossdata.vscode-pgsql",
 				"GitHub.copilot",
-				"GitHub.vscode-pull-request-github"
+				"GitHub.vscode-pull-request-github",
+				"Gruntfuggly.todo-tree"
 			],
 			"settings": {
+				"todo-tree.ripgrep.ripgrep": "/usr/bin/rg",
 				"pgsql.serverGroups": [
 					{
 						"name": "Servers",
