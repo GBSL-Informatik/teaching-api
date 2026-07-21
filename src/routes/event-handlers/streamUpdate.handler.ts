@@ -1,4 +1,10 @@
-import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from '../socketEventTypes.js';
+import {
+    ChangedDocument,
+    ClientToServerEvents,
+    IoClientEvent,
+    IoEvent,
+    ServerToClientEvents
+} from '../socketEventTypes.js';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 
 const onStreamUpdate: (
@@ -8,11 +14,16 @@ const onStreamUpdate: (
     if (roomId !== payload.roomId) {
         return;
     }
-    socket.to(payload.roomId).emit(IoEvent.CHANGED_DOCUMENT, {
+    const pkg: ChangedDocument = {
         data: payload.data,
         id: payload.id,
         updatedAt: payload.updatedAt
-    });
+    };
+    if (payload.meta) {
+        pkg.meta = payload.meta;
+    }
+
+    socket.to(payload.roomId).emit(IoEvent.CHANGED_DOCUMENT, pkg);
 };
 
 export default onStreamUpdate;

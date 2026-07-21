@@ -47,13 +47,14 @@ export interface ChangedRecord<T extends RecordType> {
     record: TypeRecordMap[T];
 }
 
-export interface ChangedDocument {
+export interface ChangedDocument<T = any> {
     id: string;
     data: Prisma.JsonValue;
     updatedAt: Date;
+    meta?: T;
 }
 
-export interface StreamedDynamicDocument extends ChangedDocument {
+export interface StreamedDynamicDocument<T = any> extends ChangedDocument<T> {
     roomId: string;
 }
 

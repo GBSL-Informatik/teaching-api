@@ -6,7 +6,7 @@ import { hasElevatedAccess, Role } from './User.js';
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['description', 'name'],
-    ['parentId']
+    ['parentId', 'canStreamUpdates']
 );
 
 export type ApiStudentGroup = DbStudentGroup & { userIds: string[]; adminIds: string[] };

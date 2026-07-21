@@ -4,12 +4,10 @@
         "target": "esnext",
         "module": "nodenext",
         "outDir": "../../dist/view-migrations",
-        "rootDir": "./",
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "baseUrl": "../../",
-        "paths": {
-            "*": ["node_modules/*"]
-        }
+        "types": [
+            "node"
+        ],
     }
 }
