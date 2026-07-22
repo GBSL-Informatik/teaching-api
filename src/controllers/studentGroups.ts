@@ -2,6 +2,7 @@ import { StudentGroup as DbStudentGroup } from '../../prisma/generated/client.js
 import { RequestHandler } from 'express';
 import StudentGroup from '../models/StudentGroup.js';
 import { IoEvent, RecordType } from '../routes/socketEventTypes.js';
+import { JsonObject } from '@prisma/client/runtime/client';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     const group = await StudentGroup.findModel((req as any).user!, req.params.id);
@@ -14,11 +15,11 @@ export const create: RequestHandler<any, any, DbStudentGroup> = async (req, res,
     res.status(200).json(model);
 };
 
-export const update: RequestHandler<{ id: string }, any, { data: DbStudentGroup }> = async (
-    req,
-    res,
-    next
-) => {
+export const update: RequestHandler<
+    { id: string },
+    any,
+    { data: Partial<Omit<DbStudentGroup, 'presentedDocument'> & { presentedDocument: JsonObject }> }
+> = async (req, res, next) => {
     const model = await StudentGroup.updateModel((req as any).user!, req.params.id, req.body.data);
     if (!model) {
         return res.status(404).json({ message: 'Student group not found' });
