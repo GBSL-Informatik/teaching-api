@@ -15,16 +15,21 @@ export type ApiStudentGroup = DbStudentGroup & { userIds: string[]; adminIds: st
 
 export const StreamableGroupUserCacheStore = new Map<string, Set<string>>();
 
+const setStreamableGroupUsers = (group: ApiStudentGroup) => {
+    if (!group.canPresent) {
+        StreamableGroupUserCacheStore.delete(group.id);
+        return;
+    }
+    StreamableGroupUserCacheStore.set(group.id, new Set(group.userIds.concat(group.adminIds)));
+};
+
 export const initializeStreamableGroupUserCache = async () => {
     const all = await prisma.studentGroup.findMany({
         include: { users: true }
     });
-    const groupUsers = all
-        .map((group) => asApiRecord(group)!)
-        .map((g) => [g.id, [...g.userIds, ...g.adminIds]]) as [string, string[]][];
     StreamableGroupUserCacheStore.clear();
-    for (const [groupId, userIds] of groupUsers) {
-        StreamableGroupUserCacheStore.set(groupId, new Set(userIds));
+    for (const group of all.map((record) => asApiRecord(record)!)) {
+        setStreamableGroupUsers(group);
     }
     Logger.info(
         `☄️  Initialized StreamableGroupUserCacheStore with ${StreamableGroupUserCacheStore.size} groups`
@@ -114,14 +119,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
             const resultApi = asApiRecord(result);
             if (resultApi.canPresent !== record.canPresent) {
-                if (record.canPresent) {
-                    StreamableGroupUserCacheStore.set(
-                        id,
-                        new Set(resultApi.userIds.concat(resultApi.adminIds))
-                    );
-                } else {
-                    StreamableGroupUserCacheStore.delete(id);
-                }
+                setStreamableGroupUsers(resultApi);
             }
             return resultApi;
         },
@@ -242,8 +240,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 },
                 include: { users: { select: { userId: true, isAdmin: true } } }
             });
-            StreamableGroupUserCacheStore.set(model.id, new Set([actor.id]));
-            return asApiRecord(model)!;
+            const result = asApiRecord(model)!;
+            setStreamableGroupUsers(result);
+            return result;
         },
 
         async deleteModel(actor: User, id: string): Promise<DbStudentGroup> {

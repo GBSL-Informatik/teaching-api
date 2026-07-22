@@ -9,17 +9,24 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3002;
 
-const server = http.createServer(app);
-initializeSocketIo(server);
+const start = async () => {
+    const server = http.createServer(app);
+    initializeSocketIo(server);
 
-configure(app);
-initializeStreamableGroupUserCache();
+    configure(app);
+    await initializeStreamableGroupUserCache();
 
-if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
-    Sentry.setupExpressErrorHandler(app);
-}
+    if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
+        Sentry.setupExpressErrorHandler(app);
+    }
 
-server.listen(PORT || 3002, () => {
-    Logger.info(`application is running at: http://localhost:${PORT}`);
-    Logger.info('Press Ctrl+C to quit.');
+    server.listen(PORT || 3002, () => {
+        Logger.info(`application is running at: http://localhost:${PORT}`);
+        Logger.info('Press Ctrl+C to quit.');
+    });
+};
+
+start().catch((error) => {
+    Logger.error('Failed to initialize server', error);
+    process.exit(1);
 });
