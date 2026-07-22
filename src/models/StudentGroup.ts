@@ -23,7 +23,12 @@ const setStreamableGroupUsers = (group: ApiStudentGroup) => {
     StreamableGroupUserCacheStore.set(group.id, new Set(group.userIds.concat(group.adminIds)));
 };
 
-export const initializeStreamableGroupUserCache = async () => {
+let lastCacheRecreation: number | null = null;
+const MS_IN_45_MINUTES = 1000 * 60 * 45;
+export const recreateStreamableGroupUserCache = async () => {
+    if (lastCacheRecreation && Date.now() - lastCacheRecreation < MS_IN_45_MINUTES) {
+        return;
+    }
     const all = await prisma.studentGroup.findMany({
         include: { users: true }
     });
@@ -34,6 +39,7 @@ export const initializeStreamableGroupUserCache = async () => {
     Logger.info(
         `☄️  Initialized StreamableGroupUserCacheStore with ${StreamableGroupUserCacheStore.size} groups`
     );
+    lastCacheRecreation = Date.now();
 };
 
 function asApiRecord(
