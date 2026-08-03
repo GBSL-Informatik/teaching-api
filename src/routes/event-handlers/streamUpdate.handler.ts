@@ -19,13 +19,13 @@ const onStreamUpdate: (
     const pkg: ChangedDocument = {
         data: payload.data,
         id: payload.id,
-        updatedAt: payload.updatedAt
+        updatedAt: new Date()
     };
     if (payload.meta) {
         pkg.meta = payload.meta;
     }
 
-    socket.to(payload.roomId).emit(IoEvent.CHANGED_DOCUMENT, pkg);
+    socket.to(payload.roomId).except(socket.id).emit(IoEvent.CHANGED_DOCUMENT, pkg);
 };
 
 export const onStreamDynamicRoomUpdate: (
@@ -38,13 +38,13 @@ export const onStreamDynamicRoomUpdate: (
     const pkg: ChangedDocument = {
         data: payload.data,
         id: payload.id,
-        updatedAt: payload.updatedAt
+        updatedAt: new Date()
     };
     if (payload.meta) {
         pkg.meta = payload.meta;
     }
 
-    socket.to(payload.roomId).emit(IoEvent.CHANGED_DOCUMENT, pkg);
+    socket.to(payload.roomId).except(socket.id).emit(IoEvent.CHANGED_DOCUMENT, pkg);
 };
 
 export default onStreamUpdate;
