@@ -19,7 +19,7 @@ const onStreamUpdate: (
     const pkg: ChangedDocument = {
         data: payload.data,
         id: payload.id,
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString() as unknown as Date
     };
     if (payload.meta) {
         pkg.meta = payload.meta;
@@ -38,7 +38,7 @@ export const onStreamDynamicRoomUpdate: (
     const pkg: ChangedDocument = {
         data: payload.data,
         id: payload.id,
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString() as unknown as Date
     };
     if (payload.meta) {
         pkg.meta = payload.meta;
