@@ -3,8 +3,8 @@ import { ApiDocument } from '../models/Document.js';
 import { ApiUserPermission } from '../models/RootUserPermission.js';
 import { ApiGroupPermission } from '../models/RootGroupPermission.js';
 import { ApiDocumentRootWithoutDocuments } from '../models/DocumentRoot.js';
-import { ApiStudentGroup } from '../models/StudentGroup.js';
 import { ApiUser } from '../models/User.js';
+import { ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',

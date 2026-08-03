@@ -4,7 +4,7 @@ import http from 'http';
 import * as Sentry from '@sentry/node';
 import Logger from './utils/logger.js';
 import dotenv from 'dotenv';
-import { recreateStreamableGroupUserCache } from './models/StudentGroup.js';
+import { StreamableGroupUserCacheStore } from './models/StudentGroup.js';
 dotenv.config();
 
 const PORT = process.env.PORT || 3002;
@@ -14,7 +14,7 @@ const start = async () => {
     initializeSocketIo(server);
 
     configure(app);
-    await recreateStreamableGroupUserCache();
+    await StreamableGroupUserCacheStore.recreate();
 
     if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
         Sentry.setupExpressErrorHandler(app);

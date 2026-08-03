@@ -4,65 +4,15 @@ import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 import { createDataExtractor } from '../helpers/dataExtractor.js';
 import { hasElevatedAccess, Role } from './User.js';
 import { JsonObject } from '@prisma/client/runtime/client';
-import Logger from '../utils/logger.js';
+import asApiRecord, { type ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
+import StudentGroupCache from '../utils/StudentGroup.cache.js';
+
+export const StreamableGroupUserCacheStore = new StudentGroupCache();
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['description', 'name'],
     ['parentId', 'canPresent', 'presentedDocument']
 );
-
-export type ApiStudentGroup = DbStudentGroup & { userIds: string[]; adminIds: string[] };
-
-export const StreamableGroupUserCacheStore = new Map<string, Set<string>>();
-
-const setStreamableGroupUsers = (group: ApiStudentGroup) => {
-    if (!group.canPresent) {
-        StreamableGroupUserCacheStore.delete(group.id);
-        return;
-    }
-    StreamableGroupUserCacheStore.set(group.id, new Set(group.userIds.concat(group.adminIds)));
-};
-
-let lastCacheRecreation: number | null = null;
-const MS_IN_45_MINUTES = 1000 * 60 * 45;
-export const recreateStreamableGroupUserCache = async () => {
-    if (lastCacheRecreation && Date.now() - lastCacheRecreation < MS_IN_45_MINUTES) {
-        return;
-    }
-    const all = await prisma.studentGroup.findMany({
-        include: { users: true }
-    });
-    StreamableGroupUserCacheStore.clear();
-    for (const group of all.map((record) => asApiRecord(record)!)) {
-        setStreamableGroupUsers(group);
-    }
-    Logger.info(
-        `☄️  Initialized StreamableGroupUserCacheStore with ${StreamableGroupUserCacheStore.size} groups`
-    );
-    lastCacheRecreation = Date.now();
-};
-
-function asApiRecord(
-    record: DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }
-): ApiStudentGroup;
-function asApiRecord(record: null): null;
-function asApiRecord(
-    record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
-): ApiStudentGroup | null;
-function asApiRecord(
-    record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
-): ApiStudentGroup | null {
-    if (!record) {
-        return null;
-    }
-    const group = {
-        ...record,
-        userIds: record.users.map((user) => user.userId),
-        adminIds: record.users.filter((u) => u.isAdmin).map((u) => u.userId)
-    };
-    delete (group as any).users;
-    return group;
-}
 
 /**
  * returns true if the user can administer the group.
@@ -118,6 +68,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     throw new HTTP403Error('Not authorized to create subgroup in this group');
                 }
             }
+            if (sanitized.canPresent === false) {
+                sanitized.presentedDocument = null as unknown as Prisma.NullableJsonNullValueInput;
+            }
             const result = await db.update({
                 where: { id: id },
                 data: sanitized,
@@ -125,7 +78,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             });
             const resultApi = asApiRecord(result);
             if (resultApi.canPresent !== record.canPresent) {
-                setStreamableGroupUsers(resultApi);
+                StreamableGroupUserCacheStore.setStreamableGroupUsers(resultApi);
             }
             return resultApi;
         },
@@ -247,7 +200,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 include: { users: { select: { userId: true, isAdmin: true } } }
             });
             const result = asApiRecord(model)!;
-            setStreamableGroupUsers(result);
+            StreamableGroupUserCacheStore.setStreamableGroupUsers(result);
             return result;
         },
 
