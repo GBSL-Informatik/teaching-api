@@ -10,6 +10,7 @@ import onAction from './event-handlers/action.handler.js';
 import onJoinRoom from './event-handlers/joinRoom.handler.js';
 import onLeaveRoom from './event-handlers/leaveRoom.handler.js';
 import { auth } from '../auth.js';
+import onStreamUpdate from './event-handlers/streamUpdate.handler.js';
 
 export enum IoRoom {
     ADMIN = 'admin',
@@ -44,6 +45,7 @@ const EventRouter = (io: Server<ClientToServerEvents, ServerToClientEvents>) => 
         socket.join(IoRoom.ALL);
         socket.on(IoClientEvent.JOIN_ROOM, onJoinRoom(user, socket));
         socket.on(IoClientEvent.LEAVE_ROOM, onLeaveRoom(user, socket));
+        socket.on(IoClientEvent.STREAM_UPDATE, onStreamUpdate(user, socket));
         const groups = await StudentGroup.all(user);
         const groupIds = groups.map((group) => group.id);
         if (groupIds.length > 0) {

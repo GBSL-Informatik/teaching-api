@@ -3,10 +3,11 @@ import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../so
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import prisma from '../../prisma.js';
 import StudentGroup from '../../models/StudentGroup.js';
-import onStreamUpdate from './streamUpdate.handler.js';
+import onStreamUpdate, { onStreamDynamicRoomUpdate } from './streamUpdate.handler.js';
 import DocumentRoot from '../../models/DocumentRoot.js';
 import { highestAccess, RWAccess } from '../../helpers/accessPolicy.js';
 import { Role } from '../../models/User.js';
+import Logger from '../../utils/logger.js';
 type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, any>;
 
 const isDocumentRoot = (roomId: string) => {
@@ -37,16 +38,16 @@ const findStudentGroup = (userId: string, roomId: string) => {
 const joinRoom = (socket: SocketType, roomId: string, joinStreamGroup: boolean) => {
     socket.join(roomId);
     if (joinStreamGroup) {
-        socket.on(IoClientEvent.STREAM_UPDATE, onStreamUpdate(roomId, socket));
+        socket.on(IoClientEvent.STREAM_UPDATE, onStreamDynamicRoomUpdate(roomId, socket));
     }
 };
 
 const onJoinRoom: (user: User, socket: SocketType) => ClientToServerEvents[IoClientEvent.JOIN_ROOM] =
     (user, socket) => (roomId: string, callback: (joined: boolean) => void) => {
         if (user.role === Role.ADMIN) {
-            return isDocumentRoot(roomId)
-                .then((docRoot) => {
-                    joinRoom(socket, roomId, !!docRoot);
+            return Promise.all([isDocumentRoot(roomId), StudentGroup.findModel(user, roomId)])
+                .then(([docRoot, group]) => {
+                    joinRoom(socket, roomId, !!docRoot || !!(group && group.canPresent));
                     callback(true);
                 })
                 .catch(() => {
@@ -55,7 +56,7 @@ const onJoinRoom: (user: User, socket: SocketType) => ClientToServerEvents[IoCli
         }
         StudentGroup.findModel(user, roomId).then((group) => {
             if (group) {
-                socket.join(roomId);
+                joinRoom(socket, roomId, group.canPresent);
                 callback(true);
             } else {
                 if (user.role === Role.TEACHER) {

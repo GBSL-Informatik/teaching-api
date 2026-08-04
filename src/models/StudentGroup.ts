@@ -3,35 +3,16 @@ import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 import { createDataExtractor } from '../helpers/dataExtractor.js';
 import { hasElevatedAccess, Role } from './User.js';
+import { JsonObject } from '@prisma/client/runtime/client';
+import asApiRecord, { type ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
+import StudentGroupCache from '../utils/StudentGroup.cache.js';
+
+export const StreamableGroupUserCacheStore = new StudentGroupCache();
 
 const getData = createDataExtractor<Prisma.StudentGroupUncheckedUpdateInput>(
     ['description', 'name'],
-    ['parentId']
+    ['parentId', 'canPresent', 'presentedDocument']
 );
-
-export type ApiStudentGroup = DbStudentGroup & { userIds: string[]; adminIds: string[] };
-
-function asApiRecord(
-    record: DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }
-): ApiStudentGroup;
-function asApiRecord(record: null): null;
-function asApiRecord(
-    record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
-): ApiStudentGroup | null;
-function asApiRecord(
-    record: (DbStudentGroup & { users: { userId: string; isAdmin: boolean }[] }) | null
-): ApiStudentGroup | null {
-    if (!record) {
-        return null;
-    }
-    const group = {
-        ...record,
-        userIds: record.users.map((user) => user.userId),
-        adminIds: record.users.filter((u) => u.isAdmin).map((u) => u.userId)
-    };
-    delete (group as any).users;
-    return group;
-}
 
 /**
  * returns true if the user can administer the group.
@@ -65,13 +46,18 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             return asApiRecord(model);
         },
 
-        async updateModel(actor: User, id: string, data: Partial<DbStudentGroup>): Promise<ApiStudentGroup> {
+        async updateModel(
+            actor: User,
+            id: string,
+            data: Partial<Omit<DbStudentGroup, 'presentedDocument'> & { presentedDocument: JsonObject }>
+        ): Promise<ApiStudentGroup> {
             const record = await this.findModel(actor, id);
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
             /** remove fields not updatable*/
             const sanitized = getData(data, false, hasElevatedAccess(actor.role));
+
             const parentId =
                 typeof sanitized.parentId === 'string' ? sanitized.parentId : sanitized.parentId?.set;
             if (parentId && actor.role !== Role.ADMIN) {
@@ -82,12 +68,19 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                     throw new HTTP403Error('Not authorized to create subgroup in this group');
                 }
             }
+            if (sanitized.canPresent === false) {
+                sanitized.presentedDocument = null as unknown as Prisma.NullableJsonNullValueInput;
+            }
             const result = await db.update({
                 where: { id: id },
                 data: sanitized,
                 include: { users: { select: { userId: true, isAdmin: true } } }
             });
-            return asApiRecord(result);
+            const resultApi = asApiRecord(result);
+            if (resultApi.canPresent !== record.canPresent) {
+                StreamableGroupUserCacheStore.setStreamableGroupUsers(resultApi);
+            }
+            return resultApi;
         },
 
         async setAdminRole(
@@ -143,6 +136,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 },
                 include: { users: { select: { userId: true, isAdmin: true } } }
             });
+            StreamableGroupUserCacheStore.get(id)?.add(userId);
             return asApiRecord(result)!;
         },
 
@@ -160,6 +154,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 data: { users: { delete: { id: { userId: userId, studentGroupId: record.id } } } },
                 include: { users: { select: { userId: true, isAdmin: true } } }
             });
+            StreamableGroupUserCacheStore.get(id)?.delete(userId);
             return asApiRecord(result)!;
         },
 
@@ -204,7 +199,9 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
                 },
                 include: { users: { select: { userId: true, isAdmin: true } } }
             });
-            return asApiRecord(model)!;
+            const result = asApiRecord(model)!;
+            StreamableGroupUserCacheStore.setStreamableGroupUsers(result);
+            return result;
         },
 
         async deleteModel(actor: User, id: string): Promise<DbStudentGroup> {
@@ -212,6 +209,7 @@ function StudentGroup(db: PrismaClient['studentGroup']) {
             if (!hasAdminAccess(actor, record)) {
                 throw new HTTP403Error('Not authorized');
             }
+            StreamableGroupUserCacheStore.delete(id);
             return db.delete({ where: { id: id } });
         }
     });

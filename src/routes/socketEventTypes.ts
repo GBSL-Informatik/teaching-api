@@ -3,8 +3,8 @@ import { ApiDocument } from '../models/Document.js';
 import { ApiUserPermission } from '../models/RootUserPermission.js';
 import { ApiGroupPermission } from '../models/RootGroupPermission.js';
 import { ApiDocumentRootWithoutDocuments } from '../models/DocumentRoot.js';
-import { ApiStudentGroup } from '../models/StudentGroup.js';
 import { ApiUser } from '../models/User.js';
+import { ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',
@@ -47,13 +47,14 @@ export interface ChangedRecord<T extends RecordType> {
     record: TypeRecordMap[T];
 }
 
-export interface ChangedDocument {
+export interface ChangedDocument<T = any> {
     id: string;
     data: Prisma.JsonValue;
     updatedAt: Date;
+    meta?: T;
 }
 
-export interface StreamedDynamicDocument extends ChangedDocument {
+export interface StreamedDynamicDocument<T = any> extends Omit<ChangedDocument<T>, 'updatedAt'> {
     roomId: string;
 }
 
