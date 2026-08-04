@@ -28,6 +28,7 @@ const onStreamUpdate: (
     socket.to(payload.roomId).except(socket.id).emit(IoEvent.CHANGED_DOCUMENT, pkg);
 };
 
+// is only for dynamic rooms (e.g. text message room) where no shared student group is available.
 export const onStreamDynamicRoomUpdate: (
     roomId: string,
     socket: Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, any>
