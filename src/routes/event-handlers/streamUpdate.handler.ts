@@ -8,6 +8,7 @@ import {
 import { User } from '../../../prisma/generated/client.js';
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import { StreamableGroupUserCacheStore } from '../../models/StudentGroup.js';
+import Logger from '../../utils/logger.js';
 
 const onStreamUpdate: (
     user: User,
@@ -24,6 +25,10 @@ const onStreamUpdate: (
     if (payload.meta) {
         pkg.meta = payload.meta;
     }
+
+    Logger.debug(
+        `[${pkg.updatedAt}] ${user.name} (${user.id}) @ room ${payload.roomId} -> ${JSON.stringify(pkg)}`
+    );
 
     socket.to(payload.roomId).except(socket.id).emit(IoEvent.CHANGED_DOCUMENT, pkg);
 };
@@ -44,6 +49,7 @@ export const onStreamDynamicRoomUpdate: (
     if (payload.meta) {
         pkg.meta = payload.meta;
     }
+    Logger.debug(`[${pkg.updatedAt}] dynamic ${pkg.id} @ room ${roomId} -> ${JSON.stringify(pkg.data)}`);
 
     socket.to(payload.roomId).except(socket.id).emit(IoEvent.CHANGED_DOCUMENT, pkg);
 };
