@@ -3,11 +3,10 @@ import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../so
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import prisma from '../../prisma.js';
 import StudentGroup from '../../models/StudentGroup.js';
-import onStreamUpdate, { onStreamDynamicRoomUpdate } from './streamUpdate.handler.js';
+import { onStreamDynamicRoomUpdate } from './streamUpdate.handler.js';
 import DocumentRoot from '../../models/DocumentRoot.js';
 import { highestAccess, RWAccess } from '../../helpers/accessPolicy.js';
 import { Role } from '../../models/User.js';
-import Logger from '../../utils/logger.js';
 type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, any>;
 
 const isDocumentRoot = (roomId: string) => {
