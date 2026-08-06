@@ -47,7 +47,6 @@ A user can have one of the following roles:
   - Can CRUD user- and group-permissions for managed users and administrated groups.
 - `STUDENT`: The user has limited access to the system and can only manage their own resources.
 
-
 \* Documents can be updated always only by the user who created them. Except the document has excplicite shared permissions with other users/groups.
 
 ## Code Formatting
