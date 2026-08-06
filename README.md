@@ -96,8 +96,6 @@ These variables are stored in a `.env` file in the root directory. Make sure to 
 cp .example.env .env
 ```
 
-## Dev Services
-
 ## Database
 
 ### Database Views
