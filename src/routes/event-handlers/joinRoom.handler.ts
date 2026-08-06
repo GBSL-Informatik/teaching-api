@@ -15,13 +15,13 @@ const isDocumentRoot = (roomId: string) => {
 };
 
 const findDocumentRoot = (user: User, roomId: string) => {
-    return DocumentRoot.getPermissions(user, roomId).then((res) => {
-        if (!res) {
+    return DocumentRoot.getPermissions(user, [roomId]).then((res) => {
+        if (!res || res.length !== 1) {
             return false;
         } else {
             const access = new Set([
-                ...res.groupPermissions.map((p) => p.access),
-                ...res.userPermissions.map((p) => p.access)
+                ...res[0].groupPermissions.map((p) => p.access),
+                ...res[0].userPermissions.map((p) => p.access)
             ]);
             const current = highestAccess(access);
             return RWAccess.has(current);
