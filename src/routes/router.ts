@@ -33,6 +33,7 @@ import {
     findMany as findManyDocumentRoots,
     update as updateDocumentRoot,
     permissions as allPermissions,
+    singlePermissions as allPermissionsFor,
     findManyFor as findManyDocumentRootsFor,
     findMultipleFor as findMultipleDocumentRootsFor,
     allDocuments,
@@ -99,12 +100,15 @@ router.delete('/permissions/group/:id', deleteStudentGroupPermission);
 
 router.get('/documentRoots', findManyDocumentRoots);
 router.get('/documentRoots/:id', findDocumentRoot);
+// TODO: remove this endpoint once the permissions [POST]/documentRoots/permissions endpoint is established and clients are updated
+router.get('/documentRoots/:id/permissions', allPermissionsFor);
+// order matters here! /documentRoots/:id would match /documentRoots/:id/permissions if it was placed before
+router.post('/documentRoots/permissions', allPermissions);
 router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
 router.delete('/documentRoots/:id', deleteDocumentRoot);
-router.get('/documentRoots/:id/permissions', allPermissions);
-router.post('/documents', createDocument);
 
+router.post('/documents', createDocument);
 /**
  * TODO: remove once /documents/multiple is established and clients are updated
  *

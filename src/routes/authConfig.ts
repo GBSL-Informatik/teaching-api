@@ -51,6 +51,11 @@ const authConfig: Config = {
                 { methods: ['PUT', 'DELETE'], minRole: Role.TEACHER }
             ]
         },
+        documentRootMultiPermissions: {
+            path: '/documentRoots/permissions',
+            access: [{ methods: ['POST'], minRole: Role.TEACHER }]
+        },
+        // TODO: remove this endpoint once the permissions [POST]/documentRoots/permissions endpoint is established and clients are updated
         documentRootPermissions: {
             path: '/documentRoots/:id/permissions',
             access: [{ methods: ['GET'], minRole: Role.TEACHER }]

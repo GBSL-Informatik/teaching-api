@@ -6,6 +6,7 @@ import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors.js';
 import Document from '../models/Document.js';
 import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy.js';
 import { hasElevatedAccess } from '../models/User.js';
+import { Access } from '../../prisma/generated/enums.js';
 
 export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     const document = await DocumentRoot.findModel((req as any).user!, req.params.id);
@@ -151,9 +152,26 @@ export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (
     res.status(204).send();
 };
 
-export const permissions: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const permissions = await DocumentRoot.getPermissions((req as any).user!, req.params.id);
+export const permissions: RequestHandler<any, any, { documentRootIds: string[] }> = async (
+    req,
+    res,
+    next
+) => {
+    const permissions = await DocumentRoot.getPermissions((req as any).user!, req.body.documentRootIds);
     res.json(permissions);
+};
+// TODO: remove this endpoint once the permissions [POST]/documentRoots/permissions endpoint is established and clients are updated
+export const singlePermissions: RequestHandler<{ id: string }> = async (req, res, next) => {
+    const permissions = await DocumentRoot.getPermissions((req as any).user!, [req.params.id]);
+    res.json(
+        permissions[0] ?? {
+            id: req.params.id,
+            access: Access.None_DocumentRoot,
+            sharedAccess: Access.None_DocumentRoot,
+            userPermissions: [],
+            groupPermissions: []
+        }
+    );
 };
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {

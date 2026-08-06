@@ -23,6 +23,8 @@ export type ApiDocumentRoot = DbDocumentRoot & {
 
 type Permissions = {
     id: string;
+    access: Access;
+    sharedAccess: Access;
     userPermissions: ApiUserPermission[];
     groupPermissions: ApiGroupPermission[];
 };
@@ -50,11 +52,13 @@ export interface UpdateConfig {
     sharedAccess?: Access;
 }
 
-const prepareGroupPermission = (permission: RootGroupPermission): ApiGroupPermission => {
+const prepareGroupPermission = (
+    permission: Omit<RootGroupPermission, 'documentRootId'>
+): ApiGroupPermission => {
     return { id: permission.id, access: permission.access, groupId: permission.studentGroupId };
 };
 
-const prepareUserPermission = (permission: RootUserPermission): ApiUserPermission => {
+const prepareUserPermission = (permission: Omit<RootUserPermission, 'documentRootId'>): ApiUserPermission => {
     return { id: permission.id, access: permission.access, userId: permission.userId };
 };
 
@@ -207,30 +211,34 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 groupPermissions: model.rootGroupPermissions.map((p) => prepareGroupPermission(p))
             };
         },
-        async getPermissions(actor: User, id: string): Promise<Permissions> {
+        async getPermissions(actor: User, ids: string[]): Promise<Permissions[]> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
-            const userPermissions = await prisma.rootUserPermission.findMany({
-                where:
-                    actor.role === Role.ADMIN
-                        ? { documentRootId: id }
-                        : { documentRootId: id, user: whereStudentGroupAccess(actor.id, true) }
+            const permissions = await db.findMany({
+                where: { id: { in: ids } },
+                include: {
+                    rootUserPermissions: {
+                        select: { id: true, access: true, userId: true },
+                        where:
+                            actor.role === Role.ADMIN ? {} : { user: whereStudentGroupAccess(actor.id, true) }
+                    },
+                    rootGroupPermissions: {
+                        select: { id: true, access: true, studentGroupId: true },
+                        where:
+                            actor.role === Role.ADMIN
+                                ? {}
+                                : { studentGroup: { users: { some: { userId: actor.id, isAdmin: true } } } }
+                    }
+                }
             });
-            const groupPermissions = await prisma.rootGroupPermission.findMany({
-                where:
-                    actor.role === Role.ADMIN
-                        ? { documentRootId: id }
-                        : {
-                              documentRootId: id,
-                              studentGroup: { users: { some: { userId: actor.id, isAdmin: true } } }
-                          }
-            });
-            return {
-                id: id,
-                userPermissions: userPermissions.map(prepareUserPermission),
-                groupPermissions: groupPermissions.map(prepareGroupPermission)
-            };
+            return permissions.map((p) => ({
+                id: p.id,
+                access: p.access,
+                sharedAccess: p.sharedAccess,
+                userPermissions: p.rootUserPermissions.map(prepareUserPermission),
+                groupPermissions: p.rootGroupPermissions.map(prepareGroupPermission)
+            }));
         },
         async deleteModel(actor: User, id: string) {
             const record = await this.findModel(actor, id);
