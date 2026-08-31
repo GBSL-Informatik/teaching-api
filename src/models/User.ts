@@ -3,6 +3,7 @@ import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 import { createDataExtractor } from '../helpers/dataExtractor.js';
 import _ from 'es-toolkit/compat';
+import { Session } from 'better-auth';
 const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName']);
 
 export enum Role {
@@ -33,10 +34,15 @@ export const whereStudentGroupAccess = (userId: string, isAdmin?: boolean) => ({
     }
 });
 
-export type ApiUser = DbUser & { authProviders?: string[] };
+export type ApiUser = DbUser & { authProviders?: string[]; sessions: Omit<Session, 'token' | 'userId'>[] };
 
-export const prepareUser = (
-    user: (DbUser & { accounts: { providerId: string }[] }) | null | undefined,
+const prepareSession = (session: Session): Omit<Session, 'token' | 'userId'> => {
+    const { token, userId, ...rest } = session;
+    return rest;
+};
+
+const prepareUser = (
+    user: (DbUser & { accounts: { providerId: string }[]; sessions: Session[] }) | null | undefined,
     includeAuthProvidersFor?: string
 ): ApiUser | null => {
     if (!user) {
@@ -45,12 +51,17 @@ export const prepareUser = (
     if (!includeAuthProvidersFor || user.id === includeAuthProvidersFor) {
         (user as unknown as ApiUser).authProviders = (user.accounts || []).map((a) => a.providerId);
     }
+    if (user.sessions && user.sessions.length > 0) {
+        (user as unknown as ApiUser).sessions = user.sessions.map(prepareSession);
+    } else {
+        (user as unknown as ApiUser).sessions = [];
+    }
     delete (user as any).accounts;
     return user;
 };
 
 const prepareUsers = (
-    users: (DbUser & { accounts: { providerId: string }[] })[] | null | undefined
+    users: (DbUser & { accounts: { providerId: string }[]; sessions: Session[] })[] | null | undefined
 ): ApiUser[] => {
     return users?.filter((u) => !!u).map((u) => prepareUser(u)!) || [];
 };
@@ -59,7 +70,13 @@ function User(db: PrismaClient['user']) {
     return Object.assign(db, {
         async findModel(id: string): Promise<ApiUser | null> {
             return db
-                .findUnique({ where: { id }, include: { accounts: { select: { providerId: true } } } })
+                .findUnique({
+                    where: { id },
+                    include: {
+                        accounts: { select: { providerId: true } },
+                        sessions: { take: 1, orderBy: { createdAt: 'desc' } }
+                    }
+                })
                 .then(prepareUser);
         },
 
@@ -81,7 +98,10 @@ function User(db: PrismaClient['user']) {
                 .update({
                     where: { id: id },
                     data: sanitized,
-                    include: { accounts: { select: { providerId: true } } }
+                    include: {
+                        accounts: { select: { providerId: true } },
+                        sessions: { take: 1, orderBy: { createdAt: 'desc' } }
+                    }
                 })
                 .then((u) => prepareUser(u)!);
         },
@@ -94,13 +114,19 @@ function User(db: PrismaClient['user']) {
                  */
                 return db
                     .findMany({
-                        include: { accounts: { select: { providerId: true } } }
+                        include: {
+                            accounts: { select: { providerId: true } },
+                            sessions: { take: 1, orderBy: { createdAt: 'desc' } }
+                        }
                     })
                     .then(prepareUsers);
             }
             const users = await db.findMany({
                 where: { OR: [{ id: actor.id }, whereStudentGroupAccess(actor.id)] },
-                include: { accounts: { select: { providerId: true } } },
+                include: {
+                    accounts: { select: { providerId: true } },
+                    sessions: { take: 1, orderBy: { createdAt: 'desc' } }
+                },
                 distinct: ['id']
             });
             return users.filter((u) => !!u).map((u) => prepareUser(u, actor.id)!);
@@ -133,7 +159,10 @@ function User(db: PrismaClient['user']) {
                 .update({
                     where: { id: userId },
                     data: { role: role },
-                    include: { accounts: { select: { providerId: true } } }
+                    include: {
+                        accounts: { select: { providerId: true } },
+                        sessions: { take: 1, orderBy: { createdAt: 'desc' } }
+                    }
                 })
                 .then((u) => prepareUser(u)!);
         }
