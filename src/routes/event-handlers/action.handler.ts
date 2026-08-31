@@ -15,6 +15,42 @@ const onAction: (
             .emit(IoEvent.ACTION, navRequest.action);
         return onDone(true);
     }
+    if (navRequest.roomIds.length === 0) {
+        // check that only administrated users receive the action
+        return prisma.user
+            .findMany({
+                where: {
+                    id: { in: navRequest.userIds },
+                    studentGroups: {
+                        some: {
+                            studentGroup: {
+                                users: {
+                                    some: {
+                                        userId: user.id,
+                                        isAdmin: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                distinct: ['id'],
+                select: { id: true }
+            })
+            .then((users) => {
+                if (users.length > 0) {
+                    socket
+                        .to(users.map((u) => u.id))
+                        .except(socket.id)
+                        .emit(IoEvent.ACTION, navRequest.action);
+                }
+                onDone(true);
+            })
+            .catch((err) => {
+                console.error('Error checking user access for action', err);
+                onDone(false);
+            });
+    }
     // check access first
     (navRequest.roomIds.length > 0
         ? prisma.studentGroup
