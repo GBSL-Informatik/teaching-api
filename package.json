@@ -20,6 +20,8 @@
     "db:seed": "yarn prisma db seed",
     "db:reset": "tsx prisma/reset.ts",
     "db:recreate": "yarn run db:reset && yarn run db:migrate && yarn run db:seed",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist && sentry-cli sourcemaps upload --org $SENTRY_ORG --project $SENTRY_PROJECT ./dist"
   },
   "dependencies": {
@@ -46,6 +48,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.0.3",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.1",
     "@typescript-eslint/eslint-plugin": "^8.63.0",
     "@typescript-eslint/parser": "^8.63.0",
     "dotenv-cli": "^11.0.0",
@@ -60,12 +63,15 @@
     "prisma-dbml-generator": "^0.12.0",
     "prisma-docs-generator": "^0.8.0",
     "prisma-erd-generator": "^2.4.3",
+    "supertest": "^7.2.2",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.23.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
   },
   "engines": {
-    "node": "24.16.x || 24.18.x"
+    "node": "24.16.x || 24.18.x || 24.21.x"
   },
   "optionalDependencies": {
     "puppeteer": "^24.34.0"
