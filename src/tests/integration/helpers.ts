@@ -34,16 +34,25 @@ export const createTestUser = async (role: Role = Role.STUDENT) => {
     });
 };
 
-export const deleteTestUsers = async (...ids: string[]) => {
-    if (ids.length === 0) {
-        return;
-    }
-    await prisma.user.deleteMany({ where: { id: { in: ids } } });
-};
+export const resetDatabase = async () => {
+    await prisma.$executeRawUnsafe(`
+        DO $reset$
+        DECLARE
+            tables text;
+        BEGIN
+            SELECT string_agg(
+                format('TRUNCATE TABLE %I.%I RESTART IDENTITY CASCADE', schemaname, tablename),
+                '; '
+            )
+            INTO tables
+            FROM pg_tables
+            WHERE schemaname = 'public'
+              AND tablename <> '_prisma_migrations';
 
-export const deleteTestDocumentRoots = async (...ids: string[]) => {
-    if (ids.length === 0) {
-        return;
-    }
-    await prisma.documentRoot.deleteMany({ where: { id: { in: ids } } });
+            IF tables IS NOT NULL THEN
+                EXECUTE tables;
+            END IF;
+        END
+        $reset$;
+    `);
 };

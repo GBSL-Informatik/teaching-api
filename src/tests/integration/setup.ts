@@ -1,5 +1,6 @@
-import { afterAll, vi } from 'vitest';
+import { afterAll, afterEach, vi } from 'vitest';
 import prisma from '../../prisma.js';
+import { resetDatabase } from './helpers.js';
 
 /**
  * The real auth flow relies on better-auth cookies/sessions. For integration tests we
@@ -31,6 +32,10 @@ vi.mock('../../socketIoServer.js', () => ({
     getIo: vi.fn(),
     notify: vi.fn()
 }));
+
+afterEach(async () => {
+    await resetDatabase();
+});
 
 afterAll(async () => {
     await prisma.$disconnect();

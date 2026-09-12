@@ -1,26 +1,15 @@
 import { randomUUID } from 'crypto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Access } from '../../../prisma/generated/enums.js';
 import { Role } from '../../models/User.js';
-import { API_URL, agentAs, createTestUser, deleteTestDocumentRoots, deleteTestUsers } from './helpers.js';
+import { API_URL, agentAs, createTestUser } from './helpers.js';
 
 describe('Documents (integration)', () => {
-    const userIds: string[] = [];
-    const documentRootIds: string[] = [];
-
-    afterEach(async () => {
-        // deleting the document root cascades and removes documents created on it
-        await deleteTestDocumentRoots(...documentRootIds.splice(0));
-        await deleteTestUsers(...userIds.splice(0));
-    });
-
     it('creates, reads, updates and deletes a document', async () => {
         const user = await createTestUser(Role.STUDENT);
-        userIds.push(user.id);
         const agent = agentAs(user.id);
 
         const documentRootId = randomUUID();
-        documentRootIds.push(documentRootId);
         await agent
             .post(`${API_URL}/documentRoots/${documentRootId}`)
             .send({ access: Access.RW_DocumentRoot });
@@ -60,10 +49,8 @@ describe('Documents (integration)', () => {
     it('does not allow a user without access to read another users document data', async () => {
         const owner = await createTestUser(Role.STUDENT);
         const stranger = await createTestUser(Role.STUDENT);
-        userIds.push(owner.id, stranger.id);
 
         const documentRootId = randomUUID();
-        documentRootIds.push(documentRootId);
         await agentAs(owner.id)
             .post(`${API_URL}/documentRoots/${documentRootId}`)
             .send({ access: Access.RW_DocumentRoot, sharedAccess: Access.None_DocumentRoot });

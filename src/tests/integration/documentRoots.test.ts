@@ -1,27 +1,17 @@
 import { randomUUID } from 'crypto';
 import request from 'supertest';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Access } from '../../../prisma/generated/enums.js';
 import app from '../../app.js';
 import { Role } from '../../models/User.js';
-import { API_URL, agentAs, createTestUser, deleteTestDocumentRoots, deleteTestUsers } from './helpers.js';
+import { API_URL, agentAs, createTestUser } from './helpers.js';
 
 describe('DocumentRoots (integration)', () => {
-    const userIds: string[] = [];
-    const documentRootIds: string[] = [];
-
-    afterEach(async () => {
-        await deleteTestDocumentRoots(...documentRootIds.splice(0));
-        await deleteTestUsers(...userIds.splice(0));
-    });
-
     it('lets a student create and fetch a document root', async () => {
         const user = await createTestUser(Role.STUDENT);
-        userIds.push(user.id);
         const agent = agentAs(user.id);
 
         const documentRootId = randomUUID();
-        documentRootIds.push(documentRootId);
 
         const createRes = await agent
             .post(`${API_URL}/documentRoots/${documentRootId}`)
@@ -46,10 +36,8 @@ describe('DocumentRoots (integration)', () => {
     it('only allows an admin to delete a document root', async () => {
         const student = await createTestUser(Role.STUDENT);
         const admin = await createTestUser(Role.ADMIN);
-        userIds.push(student.id, admin.id);
 
         const documentRootId = randomUUID();
-        documentRootIds.push(documentRootId);
         await agentAs(student.id)
             .post(`${API_URL}/documentRoots/${documentRootId}`)
             .send({ access: Access.RW_DocumentRoot });
@@ -59,6 +47,5 @@ describe('DocumentRoots (integration)', () => {
 
         const ok = await agentAs(admin.id).delete(`${API_URL}/documentRoots/${documentRootId}`);
         expect(ok.status).toBe(200);
-        documentRootIds.length = 0; // already deleted - prevent afterEach from trying to delete it again
     });
 });
