@@ -68,6 +68,47 @@ describe('Users (integration)', () => {
         expect(res.body[0].documents[0].data).toEqual({ owner: user.id });
     });
 
+    it('returns document roots for the requested user with explicite user permissions', async () => {
+        const user = await createTestUser(Role.STUDENT);
+        const otherUser = await createTestUser(Role.STUDENT);
+        const documentRootId = randomUUID();
+        const agent = agentAs(user.id);
+
+        const createRootRes = await agent.post(`${API_URL}/documentRoots/${documentRootId}`).send({
+            access: Access.None_DocumentRoot,
+            sharedAccess: Access.None_DocumentRoot,
+            userPermissions: [{ userId: user.id, access: Access.RW_User }]
+        });
+        expect(createRootRes.status).toBe(200);
+
+        const ownDocumentRes = await agent.post(`${API_URL}/documents`).send({
+            type: 'document',
+            documentRootId,
+            data: { owner: user.id }
+        });
+        expect(ownDocumentRes.status).toBe(200);
+
+        await prisma.document.create({
+            data: {
+                type: 'document',
+                documentRootId,
+                authorId: otherUser.id,
+                data: { owner: otherUser.id }
+            }
+        });
+
+        const res = await agent
+            .post(`${API_URL}/users/${user.id}/documentRoots`)
+            .send({ documentRootIds: [documentRootId] });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveLength(1);
+        expect(res.body[0].id).toBe(documentRootId);
+        expect(res.body[0].documents).toHaveLength(1);
+        expect(res.body[0].documents[0].authorId).toBe(user.id);
+        expect(res.body[0].documents[0].data).toEqual({ owner: user.id });
+    });
+
     it('does not allow a user to request another users document roots', async () => {
         const user = await createTestUser(Role.STUDENT);
         const otherUser = await createTestUser(Role.STUDENT);
