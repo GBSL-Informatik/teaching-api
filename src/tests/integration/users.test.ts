@@ -73,8 +73,8 @@ describe('Users (integration)', () => {
         const otherUser = await createTestUser(Role.STUDENT);
 
         const res = await agentAs(user.id)
-            .get(`${API_URL}/users/${otherUser.id}/documentRoots`)
-            .query({ ids: randomUUID() });
+            .post(`${API_URL}/users/${otherUser.id}/documentRoots`)
+            .send({ documentRootIds: [randomUUID()] });
 
         expect(res.status).toBe(403);
     });
