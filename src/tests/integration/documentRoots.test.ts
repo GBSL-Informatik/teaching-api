@@ -59,6 +59,6 @@ describe('DocumentRoots (integration)', () => {
 
         const ok = await agentAs(admin.id).delete(`${API_URL}/documentRoots/${documentRootId}`);
         expect(ok.status).toBe(200);
-        documentRootIds.length = 0; // already deleted
+        documentRootIds.length = 0; // already deleted - prevent afterEach from trying to delete it again
     });
 });
