@@ -22,30 +22,6 @@ export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async 
     res.json(documents);
 };
 
-export const findManyFor: RequestHandler<
-    { id: string /** userId */ },
-    any,
-    any,
-    { ignoreMissingRoots?: boolean; type?: string; ids: string[] }
-> = async (req, res, next) => {
-    if (!req.params.id) {
-        throw new HTTP400Error('Missing user id');
-    }
-    const canLoad = (req as any).user!.id === req.params.id || hasElevatedAccess((req as any).user?.role);
-    if (!canLoad) {
-        throw new HTTP403Error('Not Authorized');
-    }
-    const ids = Array.isArray(req.query.ids) ? req.query.ids : [req.query.ids];
-    if (ids.length === 0 || !req.query.ids) {
-        return res.json([]);
-    }
-    const documents = await DocumentRoot.findManyModels(req.params.id, ids, {
-        ignoreMissingRoots: !!req.query.ignoreMissingRoots,
-        documentType: req.query.type && (req.query.type as string | undefined)
-    });
-    res.json(documents);
-};
-
 export const findMultipleFor: RequestHandler<
     { id: string /** userId */ },
     any,
