@@ -13,7 +13,6 @@ interface Config {
 
 const authConfig: Config = {
     accessMatrix: {
-        checklogin: { path: '/checklogin', access: [{ methods: ['GET'], minRole: Role.STUDENT }] },
         user: { path: '/user', access: [{ methods: ['GET', 'POST'], minRole: Role.STUDENT }] },
         admin: {
             path: '/admin',
