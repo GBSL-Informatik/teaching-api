@@ -1,8 +1,8 @@
-import request from 'supertest';
 import { randomUUID } from 'crypto';
+import request from 'supertest';
 import app from '../../app.js';
-import prisma from '../../prisma.js';
 import { Role } from '../../models/User.js';
+import prisma from '../../prisma.js';
 
 export const API_URL = '/api/v1';
 

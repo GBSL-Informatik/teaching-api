@@ -1,8 +1,8 @@
-import { User } from '../../../prisma/generated/client.js';
-import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../socketEventTypes.js';
 import type { DefaultEventsMap, Socket } from 'socket.io';
-import prisma from '../../prisma.js';
+import { User } from '../../../prisma/generated/client.js';
 import { hasElevatedAccess } from '../../models/User.js';
+import prisma from '../../prisma.js';
+import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../socketEventTypes.js';
 
 const onLeaveRoom: (
     user: User,

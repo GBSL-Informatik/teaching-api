@@ -63,7 +63,10 @@
 						"copilotAccessMode": "ro",
 						"expiresOn": 0
 					}
-				]
+				],
+				"editor.codeActionsOnSave": {
+					"source.organizeImports": "explicit"
+				}
 			}
 		}
 	},

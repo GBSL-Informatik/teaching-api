@@ -1,4 +1,5 @@
-import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users.js';
+import prisma from '../src/prisma.js';
+import { documentRoots as seedDocumentRoots } from './seed-files/document-roots.js';
 import { documents as seedDocuments } from './seed-files/documents.js';
 import {
     ALL_USERS_GROUP_ID,
@@ -6,8 +7,7 @@ import {
     PROJECT_GROUP_ID,
     studentGroups as seedStudentGroups
 } from './seed-files/student-groups.js';
-import { documentRoots as seedDocumentRoots } from './seed-files/document-roots.js';
-import prisma from '../src/prisma.js';
+import { FOO_BAR_ID, TEST_USER_ID, users as seedUsers } from './seed-files/users.js';
 
 const { USER_ID, USER_EMAIL } = process.env;
 

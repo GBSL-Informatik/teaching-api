@@ -1,9 +1,8 @@
-import { Prisma, PrismaClient, User as DbUser } from '../../prisma/generated/client.js';
+import { Session } from 'better-auth';
+import { User as DbUser, Prisma, PrismaClient } from '../../prisma/generated/client.js';
+import { createDataExtractor } from '../helpers/dataExtractor.js';
 import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
-import { createDataExtractor } from '../helpers/dataExtractor.js';
-import _ from 'es-toolkit/compat';
-import { Session } from 'better-auth';
 const getData = createDataExtractor<Prisma.UserUncheckedUpdateInput>(['firstName', 'lastName']);
 
 export enum Role {

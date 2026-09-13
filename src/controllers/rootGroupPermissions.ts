@@ -1,8 +1,8 @@
-import { Access } from '../../prisma/generated/client.js';
 import { RequestHandler } from 'express';
+import { Access } from '../../prisma/generated/client.js';
 import RootGroupPermission from '../models/RootGroupPermission.js';
-import { HTTP400Error } from '../utils/errors/Errors.js';
 import { IoEvent, RecordType } from '../routes/socketEventTypes.js';
+import { HTTP400Error } from '../utils/errors/Errors.js';
 
 export const create: RequestHandler<
     any,

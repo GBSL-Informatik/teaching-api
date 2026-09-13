@@ -1,39 +1,4 @@
 import express from 'express';
-import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users.js';
-import {
-    all as allStudentGroups,
-    create as createStudentGroup,
-    destroy as deleteStudentGroup,
-    update as updateStudentGroup,
-    addUser as addStudentGroupUser,
-    removeUser as removeStudentGroupUser,
-    setAdminRole as setStudentGroupAdminRole
-} from '../controllers/studentGroups.js';
-import {
-    create as createUserPermission,
-    destroy as deleteUserPermission,
-    update as updateUserPermission
-} from '../controllers/rootUserPermissions.js';
-import {
-    create as createStudentGroupPermission,
-    destroy as deleteStudentGroupPermission,
-    update as updateStudentGroupPermission
-} from '../controllers/rootGroupPermissions.js';
-import {
-    create as createDocument,
-    destroy as deleteDocument,
-    update as updateDocument,
-    linkTo as linkDocument,
-    find as findDocument
-} from '../controllers/documents.js';
-import {
-    create as createDocumentRoot,
-    update as updateDocumentRoot,
-    permissions as allPermissions,
-    findMultipleFor as findMultipleDocumentRootsFor,
-    destroy as deleteDocumentRoot,
-    multipleDocuments
-} from '../controllers/documentRoots.js';
 import {
     allowedActions,
     createAllowedAction,
@@ -43,11 +8,46 @@ import {
     revokeUserPassword
 } from '../controllers/admins.js';
 import {
-    githubToken,
     find as findCmsSettings,
-    update as updateCmsSettings,
-    logout as githubLogout
+    logout as githubLogout,
+    githubToken,
+    update as updateCmsSettings
 } from '../controllers/cmsSettings.js';
+import {
+    permissions as allPermissions,
+    create as createDocumentRoot,
+    destroy as deleteDocumentRoot,
+    findMultipleFor as findMultipleDocumentRootsFor,
+    multipleDocuments,
+    update as updateDocumentRoot
+} from '../controllers/documentRoots.js';
+import {
+    create as createDocument,
+    destroy as deleteDocument,
+    find as findDocument,
+    linkTo as linkDocument,
+    update as updateDocument
+} from '../controllers/documents.js';
+import {
+    create as createStudentGroupPermission,
+    destroy as deleteStudentGroupPermission,
+    update as updateStudentGroupPermission
+} from '../controllers/rootGroupPermissions.js';
+import {
+    create as createUserPermission,
+    destroy as deleteUserPermission,
+    update as updateUserPermission
+} from '../controllers/rootUserPermissions.js';
+import {
+    addUser as addStudentGroupUser,
+    all as allStudentGroups,
+    create as createStudentGroup,
+    destroy as deleteStudentGroup,
+    removeUser as removeStudentGroupUser,
+    setAdminRole as setStudentGroupAdminRole,
+    update as updateStudentGroup
+} from '../controllers/studentGroups.js';
+import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users.js';
 
 // initialize router
 const router = express.Router();

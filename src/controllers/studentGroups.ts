@@ -1,8 +1,8 @@
-import { StudentGroup as DbStudentGroup } from '../../prisma/generated/client.js';
+import { JsonObject } from '@prisma/client/runtime/client';
 import { RequestHandler } from 'express';
+import { StudentGroup as DbStudentGroup } from '../../prisma/generated/client.js';
 import StudentGroup from '../models/StudentGroup.js';
 import { IoEvent, RecordType } from '../routes/socketEventTypes.js';
-import { JsonObject } from '@prisma/client/runtime/client';
 
 export const create: RequestHandler<any, any, DbStudentGroup> = async (req, res, next) => {
     const { name, description, parentId } = req.body;

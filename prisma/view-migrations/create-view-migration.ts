@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { load as yamlLoad } from 'js-yaml';
 import { default as parseArgs } from 'minimist';
+import * as path from 'path';
 import { exit } from 'process';
 import { fileURLToPath } from 'url';
 
