@@ -265,20 +265,32 @@ function Document(db: PrismaClient['document']) {
         },
 
         async allOfDocumentRoots(
-            actor: User | { role: Role | string; id: string },
-            documentRootIds: string[]
+            actor: User,
+            documentRootIds: string[],
+            authorId?: string
         ): Promise<DbDocument[]> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
             if (actor.role === Role.ADMIN) {
-                return db.findMany({ where: { documentRootId: { in: documentRootIds } } });
+                return db.findMany({
+                    where: { documentRootId: { in: documentRootIds }, authorId: authorId }
+                });
             }
             // only include documents where the author is in the same group as the actor.
             const documents = await db.findMany({
                 where: {
                     documentRootId: { in: documentRootIds },
-                    author: whereStudentGroupAccess(actor.id, true)
+                    author: {
+                        id: authorId,
+                        studentGroups: {
+                            some: {
+                                studentGroup: {
+                                    users: { some: { userId: actor.id, isAdmin: true } }
+                                }
+                            }
+                        }
+                    }
                 }
             });
             return documents;

@@ -21,16 +21,38 @@ describe('DocumentRoots (integration)', () => {
         expect(createRes.body.id).toBe(documentRootId);
         expect(createRes.body.access).toBe(Access.RW_DocumentRoot);
 
-        const getRes = await agent.get(`${API_URL}/documentRoots/${documentRootId}`);
+        const getRes = await agent.post(`${API_URL}/users/${user.id}/documentRoots`).send({
+            documentRootIds: [documentRootId]
+        });
         expect(getRes.status).toBe(200);
-        expect(getRes.body.id).toBe(documentRootId);
-        expect(getRes.body.documents).toEqual([]);
+        expect(getRes.body.length).toBe(1);
+        expect(getRes.body[0].id).toBe(documentRootId);
+        expect(getRes.body[0].documents).toEqual([]);
     });
 
     it('rejects unauthenticated requests', async () => {
+        const user = await createTestUser(Role.STUDENT);
         const documentRootId = randomUUID();
-        const res = await request(app).get(`${API_URL}/documentRoots/${documentRootId}`);
+
+        const res = await request(app)
+            .post(`${API_URL}/users/${user.id}/documentRoots`)
+            .send({
+                documentRootIds: [documentRootId]
+            });
         expect(res.status).toBe(401);
+    });
+
+    it('rejects user to fetch others documents', async () => {
+        const user = await createTestUser(Role.STUDENT);
+        const otherUser = await createTestUser(Role.STUDENT);
+        const documentRootId = randomUUID();
+
+        const agent = agentAs(user.id);
+
+        const res = await agent.post(`${API_URL}/users/${otherUser.id}/documentRoots`).send({
+            documentRootIds: [documentRootId]
+        });
+        expect(res.status).toBe(403);
     });
 
     it('only allows an admin to delete a document root', async () => {

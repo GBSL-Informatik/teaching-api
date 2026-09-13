@@ -4,11 +4,6 @@ import StudentGroup from '../models/StudentGroup.js';
 import { IoEvent, RecordType } from '../routes/socketEventTypes.js';
 import { JsonObject } from '@prisma/client/runtime/client';
 
-export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const group = await StudentGroup.findModel((req as any).user!, req.params.id);
-    res.json(group);
-};
-
 export const create: RequestHandler<any, any, DbStudentGroup> = async (req, res, next) => {
     const { name, description, parentId } = req.body;
     const model = await StudentGroup.createModel((req as any).user!, name, description, parentId);

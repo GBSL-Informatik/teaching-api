@@ -34,6 +34,24 @@ export const createTestUser = async (role: Role = Role.STUDENT) => {
     });
 };
 
+export const createTestStudentGroup = async (name: string, adminIds: string[], userIds: string[]) => {
+    const id = randomUUID();
+    return prisma.studentGroup.create({
+        data: {
+            id,
+            name,
+            users: {
+                createMany: {
+                    data: [
+                        ...adminIds.map((userId) => ({ userId, isAdmin: true })),
+                        ...userIds.map((userId) => ({ userId, isAdmin: false }))
+                    ]
+                }
+            }
+        }
+    });
+};
+
 export const resetDatabase = async () => {
     await prisma.$executeRawUnsafe(`
         DO $reset$
