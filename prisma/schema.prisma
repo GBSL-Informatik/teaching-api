@@ -11,7 +11,7 @@ generator docs {
 
 generator erd {
   provider = "prisma-erd-generator"
-  output   = "./erd.svg"
+  output   = "./erd.md"
   disabled = true
 }
 

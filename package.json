@@ -62,7 +62,7 @@
     "prisma": "^7.8.0",
     "prisma-dbml-generator": "^0.12.0",
     "prisma-docs-generator": "^0.8.0",
-    "prisma-erd-generator": "^2.4.3",
+    "prisma-erd-generator": "^3.2.1",
     "supertest": "^7.2.2",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.23.0",
