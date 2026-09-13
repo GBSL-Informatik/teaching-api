@@ -6,21 +6,6 @@ import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors.js';
 import Document from '../models/Document.js';
 import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy.js';
 import { hasElevatedAccess } from '../models/User.js';
-import { Access } from '../../prisma/generated/enums.js';
-
-export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const document = await DocumentRoot.findModel((req as any).user!, req.params.id);
-    res.json(document);
-};
-
-export const findMany: RequestHandler<any, any, any, { ids: string[] }> = async (req, res, next) => {
-    const ids = Array.isArray(req.query.ids) ? req.query.ids : [req.query.ids];
-    if (ids.length === 0 || !req.query.ids) {
-        return res.json([]);
-    }
-    const documents = await DocumentRoot.findManyModels((req as any).user!.id, ids);
-    res.json(documents);
-};
 
 export const findMultipleFor: RequestHandler<
     { id: string /** userId */ },
@@ -45,30 +30,24 @@ export const findMultipleFor: RequestHandler<
     res.json(documents);
 };
 
-export const allDocuments: RequestHandler<any, any, any, { rids: string[] }> = async (req, res, next) => {
-    if (!hasElevatedAccess((req as any).user!.role)) {
-        throw new HTTP403Error('Not Authorized');
-    }
-    const ids = Array.isArray(req.query.rids) ? req.query.rids : [req.query.rids];
-    if (ids.length === 0) {
-        return res.json([]);
-    }
-    const documents = await Document.allOfDocumentRoots((req as any).user!, ids);
-    res.json(documents);
-};
-
 export const multipleDocuments: RequestHandler<
     any,
     any,
     { documentRootIds: string[]; userId?: string }
 > = async (req, res, next) => {
     const user = req.user;
-    if (!hasElevatedAccess(user.role)) {
-        throw new HTTP403Error('Not Authorized');
-    }
     const ids = req.body.documentRootIds;
     if (ids.length === 0) {
         return res.json([]);
+    }
+    if (!hasElevatedAccess(user.role)) {
+        if (req.body.userId && req.body.userId !== user.id) {
+            throw new HTTP403Error('Not authorized');
+        }
+        const documents = await DocumentRoot.findManyModels(req.params.id, ids, {
+            ignoreMissingRoots: false
+        });
+        return res.json(documents?.flatMap((dr) => dr.documents ?? []) ?? []);
     }
     const documents = await Document.allOfDocumentRoots(
         { role: user.role, id: req.body.userId ?? user.id },
@@ -135,19 +114,6 @@ export const permissions: RequestHandler<any, any, { documentRootIds: string[] }
 ) => {
     const permissions = await DocumentRoot.getPermissions((req as any).user!, req.body.documentRootIds);
     res.json(permissions);
-};
-// TODO: remove this endpoint once the permissions [POST]/documentRoots/permissions endpoint is established and clients are updated
-export const singlePermissions: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const permissions = await DocumentRoot.getPermissions((req as any).user!, [req.params.id]);
-    res.json(
-        permissions[0] ?? {
-            id: req.params.id,
-            access: Access.None_DocumentRoot,
-            sharedAccess: Access.None_DocumentRoot,
-            userPermissions: [],
-            groupPermissions: []
-        }
-    );
 };
 
 export const destroy: RequestHandler<{ id: string }> = async (req, res, next) => {

@@ -8,11 +8,6 @@ import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 import type { JsonObject } from '@prisma/client/runtime/client';
 
-export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
-    const document = await Document.findModel((req as any).user!, req.params.id);
-    res.json(document);
-};
-
 export const create: RequestHandler<
     any,
     any,
