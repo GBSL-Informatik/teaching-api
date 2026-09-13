@@ -28,7 +28,7 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sentry/node": "^10.64.0",
-    "better-auth": "^1.6.23",
+    "better-auth": "^1.7.4",
     "cors": "^2.8.6",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
