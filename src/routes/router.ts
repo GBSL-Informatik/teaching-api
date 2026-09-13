@@ -23,7 +23,8 @@ import {
     create as createDocument,
     destroy as deleteDocument,
     update as updateDocument,
-    linkTo as linkDocument
+    linkTo as linkDocument,
+    find as findDocument
 } from '../controllers/documents.js';
 import {
     create as createDocumentRoot,
@@ -93,6 +94,7 @@ router.post('/documents', createDocument);
  * Returns all documents which are linked to the **document roots**.
  */
 router.post('/documents/multiple', multipleDocuments);
+router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
 router.put('/documents/:id/linkTo/:parentId', linkDocument);
 router.delete('/documents/:id', deleteDocument);
