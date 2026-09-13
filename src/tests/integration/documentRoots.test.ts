@@ -31,9 +31,28 @@ describe('DocumentRoots (integration)', () => {
     });
 
     it('rejects unauthenticated requests', async () => {
+        const user = await createTestUser(Role.STUDENT);
         const documentRootId = randomUUID();
-        const res = await request(app).get(`${API_URL}/documentRoots/${documentRootId}`);
+
+        const res = await request(app)
+            .post(`${API_URL}/users/${user.id}/documentRoots`)
+            .send({
+                documentRootIds: [documentRootId]
+            });
         expect(res.status).toBe(401);
+    });
+
+    it('rejects user to fetch others documents', async () => {
+        const user = await createTestUser(Role.STUDENT);
+        const otherUser = await createTestUser(Role.STUDENT);
+        const documentRootId = randomUUID();
+
+        const agent = agentAs(user.id);
+
+        const res = await agent.post(`${API_URL}/users/${otherUser.id}/documentRoots`).send({
+            documentRootIds: [documentRootId]
+        });
+        expect(res.status).toBe(403);
     });
 
     it('only allows an admin to delete a document root', async () => {

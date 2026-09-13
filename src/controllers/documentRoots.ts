@@ -44,15 +44,12 @@ export const multipleDocuments: RequestHandler<
         if (req.body.userId && req.body.userId !== user.id) {
             throw new HTTP403Error('Not authorized');
         }
-        const documents = await DocumentRoot.findManyModels(req.params.id, ids, {
+        const documents = await DocumentRoot.findManyModels(user.id, ids, {
             ignoreMissingRoots: false
         });
         return res.json(documents?.flatMap((dr) => dr.documents ?? []) ?? []);
     }
-    const documents = await Document.allOfDocumentRoots(
-        { role: user.role, id: req.body.userId ?? user.id },
-        ids
-    );
+    const documents = await Document.allOfDocumentRoots(user, ids, req.body.userId);
     res.json(documents);
 };
 

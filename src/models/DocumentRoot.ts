@@ -105,6 +105,9 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 documentType?: string;
             } = {}
         ): Promise<ApiDocumentRoot[] | null> {
+            if (!actorId) {
+                throw new HTTP403Error('Not authorized');
+            }
             const documentRoots = (await prisma.view_UsersDocuments.findMany({
                 where: { id: { in: ids }, userId: actorId },
                 relationLoadStrategy: 'query'
