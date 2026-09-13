@@ -32,7 +32,8 @@
 				"ms-ossdata.vscode-pgsql",
 				"GitHub.copilot",
 				"GitHub.vscode-pull-request-github",
-				"Gruntfuggly.todo-tree"
+				"Gruntfuggly.todo-tree",
+				"vitest.explorer"
 			],
 			"settings": {
 				"todo-tree.ripgrep.ripgrep": "/usr/bin/rg",
@@ -67,7 +68,8 @@
 		}
 	},
 	"remoteEnv": {
-		"DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api?schema=public"
+		"DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api?schema=public",
+		"TEST_DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api_test?schema=public"
 	}
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"

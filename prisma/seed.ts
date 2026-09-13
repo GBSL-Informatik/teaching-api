@@ -17,7 +17,12 @@ async function main() {
     }
 
     const users = await prisma.user.createMany({
-        data: seedUsers.map((user) => ({ ...user, email: user.email.toLowerCase() }))
+        data: seedUsers.map((user) => ({
+            ...user,
+            email: user.email.toLowerCase(),
+            name: `${user.firstName} ${user.lastName}`,
+            emailVerified: true
+        }))
     });
     console.log('Created users:\n' + seedUsers.map((u) => `- ${u.email}`).join('\n'));
 

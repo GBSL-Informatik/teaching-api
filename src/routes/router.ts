@@ -34,7 +34,6 @@ import {
     update as updateDocumentRoot,
     permissions as allPermissions,
     singlePermissions as allPermissionsFor,
-    findManyFor as findManyDocumentRootsFor,
     findMultipleFor as findMultipleDocumentRootsFor,
     allDocuments,
     destroy as deleteDocumentRoot,
@@ -63,14 +62,7 @@ router.get('/user', user);
 router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
-/**
- * TODO: remove once [post] /users/:id/documentRoots is established and clients are updated
- *
- * @optional ?ignoreMissingRoots: boolean
- * @optional ?type: string -> filter included documents by provided type
- * @requires ?ids: string[]
- */
-router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
+
 /**
  * a post endpoint to prevent issues with long query strings when requesting
  * many document roots for a user
