@@ -1,18 +1,18 @@
-import prisma from '../prisma.js';
 import {
     Access,
-    Document,
     DocumentRoot as DbDocumentRoot,
+    Document,
     PrismaClient,
     RootGroupPermission,
     RootUserPermission,
     User
 } from '../../prisma/generated/client.js';
-import { ApiDocument } from './Document.js';
-import { ApiUserPermission } from './RootUserPermission.js';
-import { ApiGroupPermission } from './RootGroupPermission.js';
-import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 import { asDocumentRootAccess, asGroupAccess, asUserAccess } from '../helpers/accessPolicy.js';
+import prisma from '../prisma.js';
+import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
+import { ApiDocument } from './Document.js';
+import { ApiGroupPermission } from './RootGroupPermission.js';
+import { ApiUserPermission } from './RootUserPermission.js';
 import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User.js';
 
 export type ApiDocumentRoot = DbDocumentRoot & {

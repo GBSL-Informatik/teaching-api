@@ -1,3 +1,7 @@
+import type { DefaultEventsMap, Socket } from 'socket.io';
+import { User } from '../../../prisma/generated/client.js';
+import { StreamableGroupUserCacheStore } from '../../models/StudentGroup.js';
+import Logger from '../../utils/logger.js';
 import {
     ChangedDocument,
     ClientToServerEvents,
@@ -5,10 +9,6 @@ import {
     IoEvent,
     ServerToClientEvents
 } from '../socketEventTypes.js';
-import { User } from '../../../prisma/generated/client.js';
-import type { DefaultEventsMap, Socket } from 'socket.io';
-import { StreamableGroupUserCacheStore } from '../../models/StudentGroup.js';
-import Logger from '../../utils/logger.js';
 
 const onStreamUpdate: (
     user: User,

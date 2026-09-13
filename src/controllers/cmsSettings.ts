@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
+import { CmsSettings as DbCmsSettings } from '../../prisma/generated/client.js';
 import CmsSettings from '../models/CmsSetting.js';
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes.js';
-import { CmsSettings as DbCmsSettings } from '../../prisma/generated/client.js';
 
 export const find: RequestHandler = async (req, res, next) => {
     const settings = await CmsSettings.findModel((req as any).user!);

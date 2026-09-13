@@ -1,11 +1,11 @@
-import { Prisma, PrismaClient, StudentGroup as DbStudentGroup, User } from '../../prisma/generated/client.js';
+import { JsonObject } from '@prisma/client/runtime/client';
+import { StudentGroup as DbStudentGroup, Prisma, PrismaClient, User } from '../../prisma/generated/client.js';
+import { createDataExtractor } from '../helpers/dataExtractor.js';
+import asApiRecord, { type ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
 import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
-import { createDataExtractor } from '../helpers/dataExtractor.js';
-import { hasElevatedAccess, Role } from './User.js';
-import { JsonObject } from '@prisma/client/runtime/client';
-import asApiRecord, { type ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
 import StudentGroupCache from '../utils/StudentGroup.cache.js';
+import { hasElevatedAccess, Role } from './User.js';
 
 export const StreamableGroupUserCacheStore = new StudentGroupCache();
 

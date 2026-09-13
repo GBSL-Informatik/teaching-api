@@ -1,12 +1,12 @@
-import { User } from '../../../prisma/generated/client.js';
-import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../socketEventTypes.js';
 import type { DefaultEventsMap, Socket } from 'socket.io';
-import prisma from '../../prisma.js';
-import StudentGroup from '../../models/StudentGroup.js';
-import { onStreamDynamicRoomUpdate } from './streamUpdate.handler.js';
-import DocumentRoot from '../../models/DocumentRoot.js';
+import { User } from '../../../prisma/generated/client.js';
 import { highestAccess, RWAccess } from '../../helpers/accessPolicy.js';
+import DocumentRoot from '../../models/DocumentRoot.js';
+import StudentGroup from '../../models/StudentGroup.js';
 import { Role } from '../../models/User.js';
+import prisma from '../../prisma.js';
+import { ClientToServerEvents, IoClientEvent, ServerToClientEvents } from '../socketEventTypes.js';
+import { onStreamDynamicRoomUpdate } from './streamUpdate.handler.js';
 type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, any>;
 
 const isDocumentRoot = (roomId: string) => {

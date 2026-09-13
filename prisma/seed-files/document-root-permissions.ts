@@ -4,4 +4,4 @@ const rootUserPermissions: Prisma.RootUserPermissionCreateManyInput[] = [];
 
 const rootGroupPermissions: Prisma.RootGroupPermissionCreateManyInput[] = [];
 
-export { rootUserPermissions, rootGroupPermissions };
+export { rootGroupPermissions, rootUserPermissions };

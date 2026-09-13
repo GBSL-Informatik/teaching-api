@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient, CmsSettings as DbCmsSettings, User } from '../../prisma/generated/client.js';
-import prisma from '../prisma.js';
+import { CmsSettings as DbCmsSettings, Prisma, PrismaClient, User } from '../../prisma/generated/client.js';
 import { createDataExtractor } from '../helpers/dataExtractor.js';
+import prisma from '../prisma.js';
 import Logger from '../utils/logger.js';
 const getData = createDataExtractor<Prisma.CmsSettingsUncheckedUpdateInput>(['activeBranch', 'activePath']);
 

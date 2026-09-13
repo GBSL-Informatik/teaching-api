@@ -1,11 +1,11 @@
 import { RequestHandler } from 'express';
+import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy.js';
+import Document from '../models/Document.js';
 import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/DocumentRoot.js';
+import { hasElevatedAccess } from '../models/User.js';
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes.js';
 import { IoRoom } from '../routes/socketEvents.js';
 import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors.js';
-import Document from '../models/Document.js';
-import { NoneAccess, RO_RW_DocumentRootAccess } from '../helpers/accessPolicy.js';
-import { hasElevatedAccess } from '../models/User.js';
 
 export const findMultipleFor: RequestHandler<
     { id: string /** userId */ },

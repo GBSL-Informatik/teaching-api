@@ -1,12 +1,12 @@
+import { fromNodeHeaders } from 'better-auth/node';
 import { RequestHandler } from 'express';
+import { Prisma } from '../../prisma/generated/client.js';
+import { auth } from '../auth.js';
+import User, { hasElevatedAccess, Role } from '../models/User.js';
+import prisma from '../prisma.js';
 import { IoEvent, RecordType } from '../routes/socketEventTypes.js';
 import { IoRoom } from '../routes/socketEvents.js';
-import { Prisma } from '../../prisma/generated/client.js';
 import { HTTP403Error } from '../utils/errors/Errors.js';
-import prisma from '../prisma.js';
-import { auth } from '../auth.js';
-import { fromNodeHeaders } from 'better-auth/node';
-import User, { hasElevatedAccess, Role } from '../models/User.js';
 
 export const createAllowedAction: RequestHandler<any, any, Prisma.AllowedActionCreateInput> = async (
     req,
