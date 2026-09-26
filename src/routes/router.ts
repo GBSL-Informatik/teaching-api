@@ -1,45 +1,4 @@
 import express from 'express';
-import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users.js';
-import {
-    all as allStudentGroups,
-    create as createStudentGroup,
-    destroy as deleteStudentGroup,
-    find as findStudentGroup,
-    update as updateStudentGroup,
-    addUser as addStudentGroupUser,
-    removeUser as removeStudentGroupUser,
-    setAdminRole as setStudentGroupAdminRole
-} from '../controllers/studentGroups.js';
-import {
-    create as createUserPermission,
-    destroy as deleteUserPermission,
-    update as updateUserPermission
-} from '../controllers/rootUserPermissions.js';
-import {
-    create as createStudentGroupPermission,
-    destroy as deleteStudentGroupPermission,
-    update as updateStudentGroupPermission
-} from '../controllers/rootGroupPermissions.js';
-import {
-    create as createDocument,
-    destroy as deleteDocument,
-    find as findDocument,
-    update as updateDocument,
-    linkTo as linkDocument
-} from '../controllers/documents.js';
-import {
-    create as createDocumentRoot,
-    find as findDocumentRoot,
-    findMany as findManyDocumentRoots,
-    update as updateDocumentRoot,
-    permissions as allPermissions,
-    singlePermissions as allPermissionsFor,
-    findManyFor as findManyDocumentRootsFor,
-    findMultipleFor as findMultipleDocumentRootsFor,
-    allDocuments,
-    destroy as deleteDocumentRoot,
-    multipleDocuments
-} from '../controllers/documentRoots.js';
 import {
     allowedActions,
     createAllowedAction,
@@ -49,11 +8,46 @@ import {
     revokeUserPassword
 } from '../controllers/admins.js';
 import {
-    githubToken,
     find as findCmsSettings,
-    update as updateCmsSettings,
-    logout as githubLogout
+    logout as githubLogout,
+    githubToken,
+    update as updateCmsSettings
 } from '../controllers/cmsSettings.js';
+import {
+    permissions as allPermissions,
+    create as createDocumentRoot,
+    destroy as deleteDocumentRoot,
+    findMultipleFor as findMultipleDocumentRootsFor,
+    multipleDocuments,
+    update as updateDocumentRoot
+} from '../controllers/documentRoots.js';
+import {
+    create as createDocument,
+    destroy as deleteDocument,
+    find as findDocument,
+    linkTo as linkDocument,
+    update as updateDocument
+} from '../controllers/documents.js';
+import {
+    create as createStudentGroupPermission,
+    destroy as deleteStudentGroupPermission,
+    update as updateStudentGroupPermission
+} from '../controllers/rootGroupPermissions.js';
+import {
+    create as createUserPermission,
+    destroy as deleteUserPermission,
+    update as updateUserPermission
+} from '../controllers/rootUserPermissions.js';
+import {
+    addUser as addStudentGroupUser,
+    all as allStudentGroups,
+    create as createStudentGroup,
+    destroy as deleteStudentGroup,
+    removeUser as removeStudentGroupUser,
+    setAdminRole as setStudentGroupAdminRole,
+    update as updateStudentGroup
+} from '../controllers/studentGroups.js';
+import { all as allUsers, find as findUser, update as updateUser, user } from '../controllers/users.js';
 
 // initialize router
 const router = express.Router();
@@ -63,14 +57,7 @@ router.get('/user', user);
 router.get('/users', allUsers);
 router.get('/users/:id', findUser);
 router.put('/users/:id', updateUser);
-/**
- * TODO: remove once [post] /users/:id/documentRoots is established and clients are updated
- *
- * @optional ?ignoreMissingRoots: boolean
- * @optional ?type: string -> filter included documents by provided type
- * @requires ?ids: string[]
- */
-router.get('/users/:id/documentRoots', findManyDocumentRootsFor);
+
 /**
  * a post endpoint to prevent issues with long query strings when requesting
  * many document roots for a user
@@ -79,10 +66,6 @@ router.post('/users/:id/documentRoots', findMultipleDocumentRootsFor);
 
 router.get('/studentGroups', allStudentGroups);
 router.post('/studentGroups', createStudentGroup);
-/**
- * TODO: do we need id-based access?
- */
-router.get('/studentGroups/:id', findStudentGroup);
 
 router.put('/studentGroups/:id', updateStudentGroup);
 router.delete('/studentGroups/:id', deleteStudentGroup);
@@ -98,29 +81,16 @@ router.post('/permissions/group', createStudentGroupPermission);
 router.put('/permissions/group/:id', updateStudentGroupPermission);
 router.delete('/permissions/group/:id', deleteStudentGroupPermission);
 
-router.get('/documentRoots', findManyDocumentRoots);
-router.get('/documentRoots/:id', findDocumentRoot);
-// TODO: remove this endpoint once the permissions [POST]/documentRoots/permissions endpoint is established and clients are updated
-router.get('/documentRoots/:id/permissions', allPermissionsFor);
-// order matters here! /documentRoots/:id would match /documentRoots/:id/permissions if it was placed before
 router.post('/documentRoots/permissions', allPermissions);
 router.post('/documentRoots/:id', createDocumentRoot);
 router.put('/documentRoots/:id', updateDocumentRoot);
 router.delete('/documentRoots/:id', deleteDocumentRoot);
 
 router.post('/documents', createDocument);
-/**
- * TODO: remove once /documents/multiple is established and clients are updated
- *
- * @adminOnly --> handle in controller
- * Returns all documents which are linked to the **document roots**.
- * @requires ?rids: string[] -> the document root ids
- */
-router.get('/documents', allDocuments);
+
 /**
  * a post endpoint to prevent issues with long query strings when requesting
- * many document roots for a user
- * @adminOnly --> handle in controller
+ * many document roots (for the current user, or when having elevated access, for any user)
  * Returns all documents which are linked to the **document roots**.
  */
 router.post('/documents/multiple', multipleDocuments);
@@ -140,4 +110,5 @@ router.get('/cms/settings', findCmsSettings);
 router.put('/cms/settings', updateCmsSettings);
 router.get('/cms/github-token', githubToken);
 router.post('/cms/logout', githubLogout);
+
 export default router;

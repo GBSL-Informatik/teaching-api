@@ -1,16 +1,16 @@
 /* istanbul ignore file */
 
-import { type User } from '../../prisma/generated/client.js';
 import { Server } from 'socket.io';
-import Logger from '../utils/logger.js';
-import { ClientToServerEvents, IoEvent, IoClientEvent, ServerToClientEvents } from './socketEventTypes.js';
+import { type User } from '../../prisma/generated/client.js';
+import { auth } from '../auth.js';
 import StudentGroup from '../models/StudentGroup.js';
 import { hasElevatedAccess, Role } from '../models/User.js';
+import Logger from '../utils/logger.js';
 import onAction from './event-handlers/action.handler.js';
 import onJoinRoom from './event-handlers/joinRoom.handler.js';
 import onLeaveRoom from './event-handlers/leaveRoom.handler.js';
-import { auth } from '../auth.js';
 import onStreamUpdate from './event-handlers/streamUpdate.handler.js';
+import { ClientToServerEvents, IoClientEvent, IoEvent, ServerToClientEvents } from './socketEventTypes.js';
 
 export enum IoRoom {
     ADMIN = 'admin',

@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import { AccessMatrix } from '../routes/authConfig.js';
-import Logger from '../utils/logger.js';
-import { HttpStatusCode } from '../utils/errors/BaseError.js';
 import { getAccessLevel, Role } from '../models/User.js';
+import { AccessMatrix } from '../routes/authConfig.js';
+import { HttpStatusCode } from '../utils/errors/BaseError.js';
+import Logger from '../utils/logger.js';
 
 interface AccessRegexRule {
     path: string;

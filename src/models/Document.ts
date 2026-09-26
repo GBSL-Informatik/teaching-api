@@ -1,12 +1,12 @@
-import { Access, Document as DbDocument, PrismaClient, User } from '../../prisma/generated/client.js';
 import type { JsonObject } from '@prisma/client/runtime/client';
+import { Access, Document as DbDocument, PrismaClient, User } from '../../prisma/generated/client.js';
+import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy.js';
 import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
+import Logger from '../utils/logger.js';
 import DocumentRoot, { AccessCheckableDocumentRoot } from './DocumentRoot.js';
-import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy.js';
 import { ApiGroupPermission } from './RootGroupPermission.js';
 import { ApiUserPermission } from './RootUserPermission.js';
-import Logger from '../utils/logger.js';
 import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User.js';
 
 type AccessCheckableDocument = DbDocument & { documentRoot: AccessCheckableDocumentRoot };
@@ -265,20 +265,32 @@ function Document(db: PrismaClient['document']) {
         },
 
         async allOfDocumentRoots(
-            actor: User | { role: Role | string; id: string },
-            documentRootIds: string[]
+            actor: User,
+            documentRootIds: string[],
+            authorId?: string
         ): Promise<DbDocument[]> {
             if (!hasElevatedAccess(actor.role)) {
                 throw new HTTP403Error('Not authorized');
             }
             if (actor.role === Role.ADMIN) {
-                return db.findMany({ where: { documentRootId: { in: documentRootIds } } });
+                return db.findMany({
+                    where: { documentRootId: { in: documentRootIds }, authorId: authorId }
+                });
             }
             // only include documents where the author is in the same group as the actor.
             const documents = await db.findMany({
                 where: {
                     documentRootId: { in: documentRootIds },
-                    author: whereStudentGroupAccess(actor.id, true)
+                    author: {
+                        id: authorId,
+                        studentGroups: {
+                            some: {
+                                studentGroup: {
+                                    users: { some: { userId: actor.id, isAdmin: true } }
+                                }
+                            }
+                        }
+                    }
                 }
             });
             return documents;

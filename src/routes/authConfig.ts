@@ -13,7 +13,6 @@ interface Config {
 
 const authConfig: Config = {
     accessMatrix: {
-        checklogin: { path: '/checklogin', access: [{ methods: ['GET'], minRole: Role.STUDENT }] },
         user: { path: '/user', access: [{ methods: ['GET', 'POST'], minRole: Role.STUDENT }] },
         admin: {
             path: '/admin',
@@ -42,7 +41,7 @@ const authConfig: Config = {
         },
         documentsMultiple: {
             path: '/documents/multiple',
-            access: [{ methods: ['POST'], minRole: Role.TEACHER }]
+            access: [{ methods: ['POST'], minRole: Role.STUDENT }]
         },
         documentRoots: {
             path: '/documentRoots',
@@ -54,11 +53,6 @@ const authConfig: Config = {
         documentRootMultiPermissions: {
             path: '/documentRoots/permissions',
             access: [{ methods: ['POST'], minRole: Role.TEACHER }]
-        },
-        // TODO: remove this endpoint once the permissions [POST]/documentRoots/permissions endpoint is established and clients are updated
-        documentRootPermissions: {
-            path: '/documentRoots/:id/permissions',
-            access: [{ methods: ['GET'], minRole: Role.TEACHER }]
         },
         githubToken: { path: '/cms', access: [{ methods: ['GET', 'PUT'], minRole: Role.STUDENT }] },
         githubLogout: { path: '/cms/logout', access: [{ methods: ['POST'], minRole: Role.STUDENT }] }

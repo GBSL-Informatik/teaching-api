@@ -14,5 +14,8 @@
     "editor.formatOnSave": true,
     "files.exclude": {
         "**/*:Zone.Identifier": true
+    },
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
     }
 }

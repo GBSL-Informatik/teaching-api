@@ -1,10 +1,10 @@
 import { AllowedAction, CmsSettings, Prisma } from '../../prisma/generated/client.js';
-import { ApiDocument } from '../models/Document.js';
-import { ApiUserPermission } from '../models/RootUserPermission.js';
-import { ApiGroupPermission } from '../models/RootGroupPermission.js';
-import { ApiDocumentRootWithoutDocuments } from '../models/DocumentRoot.js';
-import { ApiUser } from '../models/User.js';
 import { ApiStudentGroup } from '../helpers/StudentGroup.asApiRecord.js';
+import { ApiDocument } from '../models/Document.js';
+import { ApiDocumentRootWithoutDocuments } from '../models/DocumentRoot.js';
+import { ApiGroupPermission } from '../models/RootGroupPermission.js';
+import { ApiUserPermission } from '../models/RootUserPermission.js';
+import { ApiUser } from '../models/User.js';
 
 export enum IoEvent {
     NEW_RECORD = 'NEW_RECORD',

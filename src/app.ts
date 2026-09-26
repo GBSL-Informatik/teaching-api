@@ -1,18 +1,18 @@
+import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
+import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import path from 'path';
-import cors from 'cors';
-import morganMiddleware from './middleware/morgan.middleware.js';
-import router from './routes/router.js';
-import routeGuard, { createAccessRules } from './auth/guard.js';
-import authConfig from './routes/authConfig.js';
 import { type User } from '../prisma/generated/client.js';
-import BaseError from './utils/errors/BaseError.js';
-import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
 import { auth } from './auth.js';
+import routeGuard, { createAccessRules } from './auth/guard.js';
+import morganMiddleware from './middleware/morgan.middleware.js';
+import authConfig from './routes/authConfig.js';
+import router from './routes/router.js';
+import BaseError from './utils/errors/BaseError.js';
 
+import { notify } from './socketIoServer.js';
 import Logger from './utils/logger.js';
 import { CORS_ORIGIN } from './utils/originConfig.js';
-import { notify } from './socketIoServer.js';
 
 const AccessRules = createAccessRules(authConfig.accessMatrix);
 

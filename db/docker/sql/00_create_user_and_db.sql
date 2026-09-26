@@ -1,2 +1,0 @@
-CREATE USER teaching_api WITH PASSWORD 'zW4SMEXLHpXXxxk';
-ALTER ROLE teaching_api CREATEDB;

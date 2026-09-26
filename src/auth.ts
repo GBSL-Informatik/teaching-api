@@ -1,18 +1,19 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import prisma from './prisma.js';
 import { createAuthMiddleware } from 'better-auth/api';
-import { admin, oneTimeToken } from 'better-auth/plugins';
-import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig.js';
-import { getNameFromEmail } from './helpers/email.js';
+import { admin } from 'better-auth/plugins/admin';
+import { adminAc, userAc } from 'better-auth/plugins/admin/access';
+import { oneTimeToken } from 'better-auth/plugins/one-time-token';
 import type { GithubProfile, MicrosoftEntraIDProfile } from 'better-auth/social-providers';
-import Logger from './utils/logger.js';
-import { getIo, notify } from './socketIoServer.js';
+import { teacher } from './auth/permissions.js';
+import { getNameFromEmail } from './helpers/email.js';
 import User from './models/User.js';
+import prisma from './prisma.js';
 import { IoRoom } from './routes/socketEvents.js';
 import { IoEvent, RecordType } from './routes/socketEventTypes.js';
-import { adminAc, userAc } from 'better-auth/plugins/admin/access';
-import { teacher } from './auth/permissions.js';
+import { getIo, notify } from './socketIoServer.js';
+import Logger from './utils/logger.js';
+import { CORS_ORIGIN_STRINGIFIED } from './utils/originConfig.js';
 
 // If your Prisma file is located elsewhere, you can change the path
 
@@ -83,7 +84,7 @@ export const auth = betterAuth({
                       mapProfileToUser: (profile) => {
                           const name = getNameFromGithubProfile(profile);
                           return {
-                              ...profile,
+                              email: profile.email,
                               firstName: name.firstName || '',
                               lastName: name.lastName || ''
                           };
@@ -104,7 +105,6 @@ export const auth = betterAuth({
                           const email = (profile.email || profile.preferred_username)?.toLowerCase();
                           const name = getNameFromMsftProfile(profile);
                           return {
-                              id: profile.oid,
                               email: email,
                               firstName: name.firstName || '',
                               lastName: name.lastName || ''

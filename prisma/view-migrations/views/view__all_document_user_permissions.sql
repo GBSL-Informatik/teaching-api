@@ -65,8 +65,10 @@ FROM (
                     document_roots.id = rup.document_root_id 
                     AND (
                         documents.author_id = rup.user_id
-                        OR
-                        rup.access >= document_roots.shared_access
+                        OR (
+                            rup.access >= document_roots.shared_access
+                            AND document_roots.shared_access != 'None_DocumentRoot'
+                        )
                     )
                 )
         WHERE rup.user_id IS NOT NULL
@@ -110,6 +112,7 @@ FROM (
                 ON (
                     document_roots.id=rgp.document_root_id 
                     AND rgp.access >= document_roots.shared_access
+                    AND document_roots.shared_access != 'None_DocumentRoot'
                 )
             INNER JOIN student_groups sg ON rgp.student_group_id=sg.id
             LEFT JOIN documents ON document_roots.id=documents.document_root_id
