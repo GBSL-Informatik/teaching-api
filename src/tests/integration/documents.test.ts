@@ -187,3 +187,99 @@ describe('Documents (integration)', () => {
         expect(teacher2Res2.body.length).toBe(0);
     });
 });
+
+describe('Document creation', () => {
+    it('prevents creating multiple main documents for the same document root', async () => {
+        const user = await createTestUser(Role.STUDENT);
+        const agent = agentAs(user.id);
+
+        const documentRootId = randomUUID();
+        await agent
+            .post(`${API_URL}/documentRoots/${documentRootId}`)
+            .send({ access: Access.RW_DocumentRoot });
+
+        const createRes = await agent.post(`${API_URL}/documents`).send({
+            type: 'test-type',
+            documentRootId,
+            data: { foo: 'bar' },
+            uniqOnRoot: 'main'
+        });
+        expect(createRes.status).toBe(200);
+        expect(createRes.body.documentRootId).toBe(documentRootId);
+        expect(createRes.body.authorId).toBe(user.id);
+        expect(createRes.body.data).toEqual({ foo: 'bar' });
+        expect(createRes.body.uniqOnRoot).toBe('main');
+        expect(createRes.body.uniqOnParent).toBeUndefined();
+
+        const createSecond = await agent.post(`${API_URL}/documents`).send({
+            type: 'test-type',
+            documentRootId,
+            data: { foo: 'another bar' },
+            uniqOnRoot: 'main'
+        });
+        expect(createSecond.status).toBe(403);
+        expect(createSecond.body.errors[0].message).toBe('[403] Unique constraint violation');
+
+        const createDifferentType = await agent.post(`${API_URL}/documents`).send({
+            type: 'demo-type',
+            documentRootId,
+            data: { foo: 'another bar' },
+            uniqOnRoot: 'main'
+        });
+        expect(createDifferentType.status).toBe(200);
+        expect(createDifferentType.body.documentRootId).toBe(documentRootId);
+        expect(createDifferentType.body.authorId).toBe(user.id);
+    });
+    it('prevents creating multiple child documents for the same parent document', async () => {
+        const user = await createTestUser(Role.STUDENT);
+        const agent = agentAs(user.id);
+
+        const documentRootId = randomUUID();
+        await agent
+            .post(`${API_URL}/documentRoots/${documentRootId}`)
+            .send({ access: Access.RW_DocumentRoot });
+
+        const parentDoc = await agent.post(`${API_URL}/documents`).send({
+            type: 'quiz',
+            documentRootId,
+            data: { foo: 'bar' },
+            uniqOnRoot: 'main'
+        });
+        expect(parentDoc.status).toBe(200);
+        expect(parentDoc.body.documentRootId).toBe(documentRootId);
+
+        const createChild = await agent.post(`${API_URL}/documents`).send({
+            type: 'choice_answer',
+            documentRootId,
+            parentId: parentDoc.body.id,
+            data: { qid: 'q1' },
+            uniqOnParent: 'q1'
+        });
+        expect(createChild.status).toBe(200);
+        expect(createChild.body.parentId).toBe(parentDoc.body.id);
+        expect(createChild.body.uniqOnParent).toBe('q1');
+
+        const createSecond = await agent.post(`${API_URL}/documents`).send({
+            type: 'choice_answer',
+            documentRootId,
+            parentId: parentDoc.body.id,
+            data: { qid: 'q1' },
+            uniqOnParent: 'q1'
+        });
+        expect(createSecond.status).toBe(403);
+        expect(createSecond.body.errors[0].message).toBe('[403] Unique constraint violation');
+
+        const createQ2 = await agent.post(`${API_URL}/documents`).send({
+            type: 'demo-type',
+            documentRootId,
+            parentId: parentDoc.body.id,
+            data: { qid: 'q2' },
+            uniqOnParent: 'q2'
+        });
+        expect(createQ2.status).toBe(200);
+        expect(createQ2.body.documentRootId).toBe(documentRootId);
+        expect(createQ2.body.authorId).toBe(user.id);
+        expect(createQ2.body.parentId).toBe(parentDoc.body.id);
+        expect(createQ2.body.uniqOnParent).toBe('q2');
+    });
+});

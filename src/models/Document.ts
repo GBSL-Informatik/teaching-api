@@ -1,4 +1,4 @@
-import type { JsonObject } from '@prisma/client/runtime/client';
+import { PrismaClientKnownRequestError, type JsonObject } from '@prisma/client/runtime/client';
 import { Access, Document as DbDocument, PrismaClient, User } from '../../prisma/generated/client.js';
 import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy.js';
 import prisma from '../prisma.js';
@@ -11,7 +11,8 @@ import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User.js';
 
 type AccessCheckableDocument = DbDocument & { documentRoot: AccessCheckableDocumentRoot };
 
-export type ApiDocument = DbDocument;
+export type ApiDocument = Omit<DbDocument, 'uniqOnRoot' | 'uniqOnParent' | 'parentId'> &
+    Partial<Pick<DbDocument, 'uniqOnRoot' | 'uniqOnParent' | 'parentId'>>;
 
 interface DocumentWithPermission {
     document: ApiDocument;
@@ -47,6 +48,15 @@ export const prepareDocument = (actorId: string, document: AccessCheckableDocume
         return null;
     }
     const model: ApiDocument = { ...document };
+    if (!model.parentId) {
+        delete model.parentId;
+    }
+    if (!model.uniqOnParent) {
+        delete model.uniqOnParent;
+    }
+    if (!model.uniqOnRoot) {
+        delete model.uniqOnRoot;
+    }
     delete (model as Partial<AccessCheckableDocument>).documentRoot;
     if (NoneAccess.has(permission)) {
         model.data = null;
@@ -89,7 +99,8 @@ function Document(db: PrismaClient['document']) {
             documentRootId: string,
             data: any,
             parentId?: string,
-            uniqueMain?: boolean,
+            uniqOnRoot?: string | null,
+            uniqOnParent?: string | null,
             _onBehalfOfUserId?: string /** this flag enables creation of documents on behalf of another user */
         ): Promise<Response<ApiDocument>> {
             const documentRoot = await DocumentRoot.findModel(actor, documentRootId);
@@ -127,18 +138,6 @@ function Document(db: PrismaClient['document']) {
                     throw new HTTP403Error('Insufficient access permission');
                 }
             }
-            if (uniqueMain) {
-                const mainDoc = await db.findFirst({
-                    where: { documentRootId: documentRootId, authorId: authorId, type: type }
-                });
-                if (mainDoc) {
-                    Logger.warn(
-                        `[not unique]: Main document fro documentRoot "${documentRootId}" already exists for user "${authorId}"`
-                    );
-                    // the frontend may depend on the error message (try to not change: status code + [not unique])
-                    throw new HTTP403Error('[not unique] Main document already exists for this user');
-                }
-            }
             /**
              * Since it is easyier to check wheter a user has permissions to create a model
              * when the model actually exists, we create the model first and then check the permissions.
@@ -150,7 +149,9 @@ function Document(db: PrismaClient['document']) {
                         documentRootId: documentRootId,
                         data: data,
                         parentId: parentId,
-                        authorId: authorId
+                        authorId: authorId,
+                        uniqOnRoot: uniqOnRoot,
+                        uniqOnParent: uniqOnParent
                     },
                     include: {
                         documentRoot: {
@@ -163,7 +164,13 @@ function Document(db: PrismaClient['document']) {
                         }
                     }
                 })
-                .then((doc) => prepareDocument(authorId, doc)!);
+                .then((doc) => prepareDocument(authorId, doc)!)
+                .catch((err) => {
+                    if (err instanceof PrismaClientKnownRequestError && err.code === 'P2002') {
+                        throw new HTTP403Error('Unique constraint violation');
+                    }
+                    throw err;
+                });
             /**
              * Check if the user has the required permissions to create the model.
              * If not, delete the model and throw an error.

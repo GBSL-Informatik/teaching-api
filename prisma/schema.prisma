@@ -158,6 +158,8 @@ model Document {
   type                            String
   data                            Json
   parentId                        String?                           @map("parent_id") @db.Uuid
+  uniqOnParent                    String?                           @map("uniq_on_parent_constraint")
+  uniqOnRoot                      String?                           @map("uniq_on_root_constraint")
   documentRootId                  String                            @map("document_root_id") @db.Uuid
   createdAt                       DateTime                          @default(now()) @map("created_at")
   updatedAt                       DateTime                          @default(now()) @updatedAt @map("updated_at")
@@ -168,6 +170,8 @@ model Document {
   view_DocumentUserPermissions    view_DocumentUserPermissions[]
   view_AllDocumentUserPermissions view_AllDocumentUserPermissions[]
 
+  @@unique([documentRootId, authorId, type, parentId, uniqOnParent], map: "unique_on_parent_constraint")
+  @@unique([documentRootId, authorId, type, uniqOnRoot], map: "unique_on_root_constraint")
   @@index([authorId], map: "document_author_id_index")
   @@map("documents")
 }

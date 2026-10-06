@@ -32,6 +32,8 @@ SELECT
                 'data', CASE WHEN (view__document_user_permissions.access='None_DocumentRoot' OR view__document_user_permissions.access='None_StudentGroup' OR view__document_user_permissions.access='None_User') THEN NULL ELSE d.data END,
                 'parentId', d.parent_id,
                 'documentRootId', d.document_root_id,
+                'uniqOnRoot', d.uniq_on_root_constraint,
+                'uniqOnParent', d.uniq_on_parent_constraint,
                 'createdAt', d.created_at,
                 'updatedAt', d.updated_at
             )

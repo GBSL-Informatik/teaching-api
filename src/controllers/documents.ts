@@ -13,14 +13,13 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     res.json(document);
 };
 
-export const create: RequestHandler<
-    any,
-    any,
-    DbDocument,
-    { onBehalfOf?: 'true'; uniqueMain?: 'true' }
-> = async (req, res, next) => {
-    const { type, documentRootId, data, parentId } = req.body;
-    const { onBehalfOf, uniqueMain } = req.query;
+export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' }> = async (
+    req,
+    res,
+    next
+) => {
+    const { type, documentRootId, data, parentId, uniqOnRoot, uniqOnParent } = req.body;
+    const { onBehalfOf } = req.query;
     const onBehalfUserId = onBehalfOf === 'true' ? req.body.authorId : undefined;
     const { model, permissions } = await Document.createModel(
         (req as any).user!,
@@ -28,7 +27,8 @@ export const create: RequestHandler<
         documentRootId,
         data,
         !parentId ? undefined : parentId,
-        uniqueMain === 'true',
+        uniqOnRoot,
+        uniqOnParent,
         onBehalfUserId
     );
     /**
