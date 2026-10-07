@@ -39,6 +39,22 @@ const extractPermission = (actorId: string, document: AccessCheckableDocument): 
     return highestAccess(new Set([document.documentRoot.sharedAccess]), usersPermission);
 };
 
+export const cleanupDocument = (doc: ApiDocument) => {
+    if (!doc?.uniqOnParent) {
+        delete (doc as any).uniqOnParent;
+    }
+    if (!doc?.uniqOnRoot) {
+        delete (doc as any).uniqOnRoot;
+    }
+    if (!doc?.parentId) {
+        delete (doc as any).parentId;
+    }
+    if ((doc as Partial<AccessCheckableDocument>).documentRoot) {
+        delete (doc as Partial<AccessCheckableDocument>).documentRoot;
+    }
+    return doc;
+};
+
 export const prepareDocument = (actorId: string, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
@@ -47,8 +63,7 @@ export const prepareDocument = (actorId: string, document: AccessCheckableDocume
     if (!permission) {
         return null;
     }
-    const model: ApiDocument = { ...document };
-    delete (model as Partial<AccessCheckableDocument>).documentRoot;
+    const model: ApiDocument = cleanupDocument({ ...document });
     if (NoneAccess.has(permission)) {
         model.data = null;
     }

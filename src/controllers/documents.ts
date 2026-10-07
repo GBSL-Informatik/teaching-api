@@ -2,7 +2,7 @@ import type { JsonObject } from '@prisma/client/runtime/client';
 import { RequestHandler } from 'express';
 import { Document as DbDocument, Prisma } from '../../prisma/generated/client.js';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy.js';
-import Document, { ApiDocument } from '../models/Document.js';
+import Document, { ApiDocument, cleanupDocument } from '../models/Document.js';
 import DocumentRoot from '../models/DocumentRoot.js';
 import prisma from '../prisma.js';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes.js';
@@ -50,7 +50,7 @@ export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' 
                 const doc = existing?.documents.find(isExisting);
                 if (doc) {
                     return {
-                        model: doc,
+                        model: cleanupDocument(doc),
                         exists: true,
                         permissions: {
                             access: existing!.access,

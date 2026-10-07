@@ -36,13 +36,22 @@ CREATE VIEW view__users_documents AS
                     'authorId', d.author_id,
                     'type', d.type,
                     'data', CASE WHEN (view__document_user_permissions.access='None_DocumentRoot' OR view__document_user_permissions.access='None_StudentGroup' OR view__document_user_permissions.access='None_User') THEN NULL ELSE d.data END,
-                    'parentId', d.parent_id,
                     'documentRootId', d.document_root_id,
-                    'uniqOnRoot', d.uniq_on_root_constraint,
-                    'uniqOnParent', d.uniq_on_parent_constraint,
                     'createdAt', d.created_at,
                     'updatedAt', d.updated_at
                 )
+                || CASE WHEN d.parent_id IS NOT NULL
+                    THEN JSONB_BUILD_OBJECT('parentId', d.parent_id)
+                    ELSE '{}'::jsonb
+                END
+                || CASE WHEN d.uniq_on_root_constraint IS NOT NULL
+                    THEN JSONB_BUILD_OBJECT('uniqOnRoot', d.uniq_on_root_constraint)
+                    ELSE '{}'::jsonb
+                END
+                || CASE WHEN d.uniq_on_parent_constraint IS NOT NULL
+                    THEN JSONB_BUILD_OBJECT('uniqOnParent', d.uniq_on_parent_constraint)
+                    ELSE '{}'::jsonb
+                END
             ) FILTER (WHERE d.id IS NOT NULL),
             '[]'::jsonb
         ) AS documents

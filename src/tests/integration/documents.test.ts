@@ -209,7 +209,7 @@ describe('Document creation', () => {
         expect(createRes.body.authorId).toBe(user.id);
         expect(createRes.body.data).toEqual({ foo: 'bar' });
         expect(createRes.body.uniqOnRoot).toBe('main');
-        expect(createRes.body.uniqOnParent).toBeNull();
+        expect(createRes.body.uniqOnParent).toBeUndefined();
 
         const createSecond = await agent.post(`${API_URL}/documents`).send({
             type: 'test-type',
@@ -222,7 +222,7 @@ describe('Document creation', () => {
         expect(createSecond.body.authorId).toBe(user.id);
         expect(createSecond.body.data).toEqual({ foo: 'bar' });
         expect(createSecond.body.uniqOnRoot).toBe('main');
-        expect(createSecond.body.uniqOnParent).toBeNull();
+        expect(createSecond.body.uniqOnParent).toBeUndefined();
 
         const createDifferentType = await agent.post(`${API_URL}/documents`).send({
             type: 'demo-type',
@@ -235,7 +235,7 @@ describe('Document creation', () => {
         expect(createDifferentType.body.authorId).toBe(user.id);
         expect(createDifferentType.body.data).toEqual({ foo: 'another bar' });
         expect(createDifferentType.body.uniqOnRoot).toBe('main');
-        expect(createDifferentType.body.uniqOnParent).toBeNull();
+        expect(createDifferentType.body.uniqOnParent).toBeUndefined();
     });
     it('prevents creating multiple child documents for the same parent document', async () => {
         const user = await createTestUser(Role.STUDENT);

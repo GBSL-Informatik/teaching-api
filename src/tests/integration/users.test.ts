@@ -155,7 +155,7 @@ describe('Users (integration)', () => {
         expect(resOtherUser.body[0].id).toBe(documentRootId);
         expect(resOtherUser.body[0].documents).toHaveLength(1);
         expect(resOtherUser.body[0].documents[0].authorId).toBe(otherUser.id);
-        expect(resOtherUser.body[0].documents[0].data).toEqual(null);
+        expect(resOtherUser.body[0].documents[0].data).toBeNull();
     });
 
     it('does not allow a user to request another users document roots', async () => {
