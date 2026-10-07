@@ -2,7 +2,8 @@ import type { JsonObject } from '@prisma/client/runtime/client';
 import { RequestHandler } from 'express';
 import { Document as DbDocument, Prisma } from '../../prisma/generated/client.js';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy.js';
-import Document from '../models/Document.js';
+import Document, { ApiDocument } from '../models/Document.js';
+import DocumentRoot from '../models/DocumentRoot.js';
 import prisma from '../prisma.js';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes.js';
 import { IoRoom } from '../routes/socketEvents.js';
@@ -21,7 +22,7 @@ export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' 
     const { type, documentRootId, data, parentId, uniqOnRoot, uniqOnParent } = req.body;
     const { onBehalfOf } = req.query;
     const onBehalfUserId = onBehalfOf === 'true' ? req.body.authorId : undefined;
-    const { model, permissions } = await Document.createModel(
+    const { model, permissions, exists } = await Document.createModel(
         (req as any).user!,
         type,
         documentRootId,
@@ -30,7 +31,40 @@ export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' 
         uniqOnRoot,
         uniqOnParent,
         onBehalfUserId
-    );
+    ).catch((err) => {
+        if (err.code === 'P2002') {
+            return DocumentRoot.findModel((req as any).user!, documentRootId).then((existing) => {
+                const uid = onBehalfUserId ?? (req as any).user!.id;
+                const isExisting = (doc: ApiDocument) => {
+                    if (doc.authorId !== uid || doc.type !== type || doc.documentRootId !== documentRootId) {
+                        return false;
+                    }
+                    if (uniqOnRoot && doc.uniqOnRoot === uniqOnRoot) {
+                        return true;
+                    }
+                    if (uniqOnParent && doc.parentId === parentId && doc.uniqOnParent === uniqOnParent) {
+                        return true;
+                    }
+                    return false;
+                };
+                const doc = existing?.documents.find(isExisting);
+                if (doc) {
+                    return {
+                        model: doc,
+                        exists: true,
+                        permissions: {
+                            access: existing!.access,
+                            user: existing!.userPermissions,
+                            group: existing!.groupPermissions,
+                            sharedAccess: existing!.sharedAccess
+                        }
+                    };
+                }
+                throw new HTTP403Error('Unique constraint violation');
+            });
+        }
+        throw err;
+    });
     /**
      * Notifications to
      * - the user who created the document
@@ -47,7 +81,8 @@ export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' 
             to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving,
         }
     ];
-    res.status(201).json(model);
+    const status = exists ? 200 : 201;
+    res.status(status).json(model);
 };
 
 export const update: RequestHandler<

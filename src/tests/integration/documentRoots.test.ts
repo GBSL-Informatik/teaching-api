@@ -55,6 +55,21 @@ describe('DocumentRoots (integration)', () => {
         expect(res.status).toBe(403);
     });
 
+    it('returns the existing document root when creating it again', async () => {
+        const user = await createTestUser(Role.STUDENT);
+        const documentRootId = randomUUID();
+
+        const agent = agentAs(user.id);
+
+        const res = await agent.post(`${API_URL}/documentRoots/${documentRootId}`).send({});
+        expect(res.status).toBe(201);
+        expect(res.body.id).toBe(documentRootId);
+
+        const res2 = await agent.post(`${API_URL}/documentRoots/${documentRootId}`).send({});
+        expect(res2.status).toBe(200);
+        expect(res2.body.id).toBe(documentRootId);
+    });
+
     it('only allows an admin to delete a document root', async () => {
         const student = await createTestUser(Role.STUDENT);
         const admin = await createTestUser(Role.ADMIN);

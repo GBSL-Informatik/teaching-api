@@ -1,4 +1,4 @@
-import { PrismaClientKnownRequestError, type JsonObject } from '@prisma/client/runtime/client';
+import { type JsonObject } from '@prisma/client/runtime/client';
 import { Access, Document as DbDocument, PrismaClient, User } from '../../prisma/generated/client.js';
 import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy.js';
 import prisma from '../prisma.js';
@@ -48,15 +48,6 @@ export const prepareDocument = (actorId: string, document: AccessCheckableDocume
         return null;
     }
     const model: ApiDocument = { ...document };
-    if (!model.parentId) {
-        delete model.parentId;
-    }
-    if (!model.uniqOnParent) {
-        delete model.uniqOnParent;
-    }
-    if (!model.uniqOnRoot) {
-        delete model.uniqOnRoot;
-    }
     delete (model as Partial<AccessCheckableDocument>).documentRoot;
     if (NoneAccess.has(permission)) {
         model.data = null;
@@ -66,6 +57,7 @@ export const prepareDocument = (actorId: string, document: AccessCheckableDocume
 
 type Response<T> = {
     model: T;
+    exists?: boolean; // wheter the model already existed and was returned instead of created
     permissions: {
         access: Access;
         sharedAccess: Access;
@@ -164,13 +156,7 @@ function Document(db: PrismaClient['document']) {
                         }
                     }
                 })
-                .then((doc) => prepareDocument(authorId, doc)!)
-                .catch((err) => {
-                    if (err instanceof PrismaClientKnownRequestError && err.code === 'P2002') {
-                        throw new HTTP403Error('Unique constraint violation');
-                    }
-                    throw err;
-                });
+                .then((doc) => prepareDocument(authorId, doc)!);
             /**
              * Check if the user has the required permissions to create the model.
              * If not, delete the model and throw an error.
