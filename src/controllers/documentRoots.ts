@@ -79,7 +79,7 @@ export const create: RequestHandler<{ id: string }, any, CreateConfig | undefine
             to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
         }
     ];
-    res.json(documentRoot);
+    res.status(201).json(documentRoot);
 };
 
 export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (req, res, next) => {

@@ -19,7 +19,7 @@ describe('Documents (integration)', () => {
             documentRootId,
             data: { foo: 'bar' }
         });
-        expect(createRes.status).toBe(200);
+        expect(createRes.status).toBe(201);
         expect(createRes.body.documentRootId).toBe(documentRootId);
         expect(createRes.body.authorId).toBe(user.id);
         expect(createRes.body.data).toEqual({ foo: 'bar' });
@@ -62,7 +62,7 @@ describe('Documents (integration)', () => {
                 documentRootId,
                 data: { secret: true }
             });
-        expect(createRes.status).toBe(200);
+        expect(createRes.status).toBe(201);
         const documentId = createRes.body.id as string;
 
         const strangerRes = await agentAs(stranger.id).get(`${API_URL}/documents/${documentId}`);
@@ -103,8 +103,8 @@ describe('Documents (integration)', () => {
                 documentRootId,
                 data: { secret: true }
             });
-        expect(createRes.status).toBe(200);
-        expect(strangersDocRes.status).toBe(200);
+        expect(createRes.status).toBe(201);
+        expect(strangersDocRes.status).toBe(201);
         const documentId = createRes.body.id as string;
         const strangersDocumentId = strangersDocRes.body.id as string;
 
@@ -204,7 +204,7 @@ describe('Document creation', () => {
             data: { foo: 'bar' },
             uniqOnRoot: 'main'
         });
-        expect(createRes.status).toBe(200);
+        expect(createRes.status).toBe(201);
         expect(createRes.body.documentRootId).toBe(documentRootId);
         expect(createRes.body.authorId).toBe(user.id);
         expect(createRes.body.data).toEqual({ foo: 'bar' });
@@ -226,7 +226,7 @@ describe('Document creation', () => {
             data: { foo: 'another bar' },
             uniqOnRoot: 'main'
         });
-        expect(createDifferentType.status).toBe(200);
+        expect(createDifferentType.status).toBe(201);
         expect(createDifferentType.body.documentRootId).toBe(documentRootId);
         expect(createDifferentType.body.authorId).toBe(user.id);
     });
@@ -245,7 +245,7 @@ describe('Document creation', () => {
             data: { foo: 'bar' },
             uniqOnRoot: 'main'
         });
-        expect(parentDoc.status).toBe(200);
+        expect(parentDoc.status).toBe(201);
         expect(parentDoc.body.documentRootId).toBe(documentRootId);
 
         const createChild = await agent.post(`${API_URL}/documents`).send({
@@ -255,7 +255,7 @@ describe('Document creation', () => {
             data: { qid: 'q1' },
             uniqOnParent: 'q1'
         });
-        expect(createChild.status).toBe(200);
+        expect(createChild.status).toBe(201);
         expect(createChild.body.parentId).toBe(parentDoc.body.id);
         expect(createChild.body.uniqOnParent).toBe('q1');
 
@@ -276,7 +276,7 @@ describe('Document creation', () => {
             data: { qid: 'q2' },
             uniqOnParent: 'q2'
         });
-        expect(createQ2.status).toBe(200);
+        expect(createQ2.status).toBe(201);
         expect(createQ2.body.documentRootId).toBe(documentRootId);
         expect(createQ2.body.authorId).toBe(user.id);
         expect(createQ2.body.parentId).toBe(parentDoc.body.id);

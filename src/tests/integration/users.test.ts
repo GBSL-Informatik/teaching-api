@@ -38,14 +38,14 @@ describe('Users (integration)', () => {
         const createRootRes = await agent.post(`${API_URL}/documentRoots/${documentRootId}`).send({
             access: Access.RW_DocumentRoot
         });
-        expect(createRootRes.status).toBe(200);
+        expect(createRootRes.status).toBe(201);
 
         const ownDocumentRes = await agent.post(`${API_URL}/documents`).send({
             type: 'document',
             documentRootId,
             data: { owner: user.id }
         });
-        expect(ownDocumentRes.status).toBe(200);
+        expect(ownDocumentRes.status).toBe(201);
 
         await prisma.document.create({
             data: {
@@ -79,14 +79,14 @@ describe('Users (integration)', () => {
             sharedAccess: Access.None_DocumentRoot,
             userPermissions: [{ userId: user.id, access: Access.RW_User }]
         });
-        expect(createRootRes.status).toBe(200);
+        expect(createRootRes.status).toBe(201);
 
         const ownDocumentRes = await agent.post(`${API_URL}/documents`).send({
             type: 'document',
             documentRootId,
             data: { owner: user.id }
         });
-        expect(ownDocumentRes.status).toBe(200);
+        expect(ownDocumentRes.status).toBe(201);
 
         await prisma.document.create({
             data: {
@@ -121,7 +121,7 @@ describe('Users (integration)', () => {
             sharedAccess: Access.RW_DocumentRoot,
             userPermissions: [{ userId: user.id, access: Access.RW_User }]
         });
-        expect(createRootRes.status).toBe(200);
+        expect(createRootRes.status).toBe(201);
 
         await prisma.document.create({
             data: {

@@ -17,7 +17,7 @@ describe('DocumentRoots (integration)', () => {
             .post(`${API_URL}/documentRoots/${documentRootId}`)
             .send({ access: Access.RW_DocumentRoot });
 
-        expect(createRes.status).toBe(200);
+        expect(createRes.status).toBe(201);
         expect(createRes.body.id).toBe(documentRootId);
         expect(createRes.body.access).toBe(Access.RW_DocumentRoot);
 

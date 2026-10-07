@@ -47,7 +47,7 @@ export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' 
             to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving,
         }
     ];
-    res.status(200).json(model);
+    res.status(201).json(model);
 };
 
 export const update: RequestHandler<
