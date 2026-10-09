@@ -1,7 +1,14 @@
 import { randomUUID } from 'crypto';
-import { describe, expect, it } from 'vitest';
+import request from 'supertest';
+import { describe, expect, it, vi } from 'vitest';
 import { Access } from '../../../prisma/generated/enums.js';
+import app from '../../app.js';
+import type { UniquenessConstraints } from '../../models/Document.js';
 import { Role } from '../../models/User.js';
+import prisma from '../../prisma.js';
+import { IoEvent, RecordType } from '../../routes/socketEventTypes.js';
+import { IoRoom } from '../../routes/socketEvents.js';
+import { notify } from '../../socketIoServer.js';
 import { API_URL, agentAs, createTestStudentGroup, createTestUser } from './helpers.js';
 
 describe('Documents (integration)', () => {
@@ -185,6 +192,232 @@ describe('Documents (integration)', () => {
             });
         expect(teacher2Res2.status).toBe(200);
         expect(teacher2Res2.body.length).toBe(0);
+    });
+});
+
+describe('Document constraint updates', () => {
+    const createFixture = async (constraints: UniquenessConstraints = {}) => {
+        const owner = await createTestUser();
+        const agent = agentAs(owner.id);
+        const documentRootId = randomUUID();
+        const root = await agent
+            .post(`${API_URL}/documentRoots/${documentRootId}`)
+            .send({ access: Access.RW_DocumentRoot, sharedAccess: Access.RW_DocumentRoot });
+        expect(root.status).toBe(201);
+        const parent = await agent.post(`${API_URL}/documents`).send({
+            type: 'constraint-parent',
+            documentRootId,
+            data: { title: 'Parent' }
+        });
+        expect(parent.status).toBe(201);
+        const created = await agent.post(`${API_URL}/documents`).send({
+            type: 'constraint-test',
+            documentRootId,
+            parentId: parent.body.id,
+            data: { answer: 'unchanged' },
+            ...constraints
+        });
+        expect(created.status).toBe(201);
+        const document = await prisma.document.findUniqueOrThrow({ where: { id: created.body.id } });
+        vi.mocked(notify).mockClear();
+        return {
+            owner,
+            agent,
+            document,
+            endpoint: `${API_URL}/documents/${document.id}/constraints`
+        };
+    };
+
+    const expectUnchanged = async (document: Awaited<ReturnType<typeof createFixture>>['document']) => {
+        expect(await prisma.document.findUniqueOrThrow({ where: { id: document.id } })).toEqual(document);
+        expect(notify).not.toHaveBeenCalled();
+    };
+
+    it.each([
+        { name: 'root', first: { uniqOnRoot: 'main' }, replacement: { uniqOnRoot: 'new-main' } },
+        { name: 'parent', first: { uniqOnParent: 'answer' }, replacement: { uniqOnParent: 'new-answer' } },
+        {
+            name: 'both',
+            first: { uniqOnRoot: 'main', uniqOnParent: 'answer' },
+            replacement: { uniqOnRoot: 'new-main', uniqOnParent: 'new-answer' }
+        }
+    ])(
+        'sets and replaces $name constraints, returning and persisting the document',
+        async ({ first, replacement }) => {
+            const { agent, document, endpoint } = await createFixture();
+            for (const data of [first, replacement]) {
+                const updated = await agent.put(endpoint).send({ data });
+                expect(updated.status).toBe(200);
+                expect(updated.body).toMatchObject({
+                    id: document.id,
+                    authorId: document.authorId,
+                    type: document.type,
+                    documentRootId: document.documentRootId,
+                    parentId: document.parentId,
+                    data: document.data,
+                    createdAt: document.createdAt.toISOString(),
+                    ...data
+                });
+                expect(updated.body).not.toHaveProperty('documentRoot');
+                expect(updated.body.updatedAt).toEqual(expect.any(String));
+                const fetched = await agent.get(`${API_URL}/documents/${document.id}`);
+                expect(fetched.status).toBe(200);
+                expect(fetched.body.document).toEqual(updated.body);
+                expect(await prisma.document.findUniqueOrThrow({ where: { id: document.id } })).toMatchObject(
+                    data
+                );
+            }
+        }
+    );
+
+    it.each(['uniqOnRoot', 'uniqOnParent'] as const)(
+        'preserves other fields when updating only %s',
+        async (field) => {
+            const { agent, document, endpoint } = await createFixture({
+                uniqOnRoot: 'main',
+                uniqOnParent: 'answer'
+            });
+            const updated = await agent.put(endpoint).send({ data: { [field]: 'replacement' } });
+            expect(updated.status).toBe(200);
+            const persisted = await prisma.document.findUniqueOrThrow({ where: { id: document.id } });
+            expect(persisted).toEqual({
+                ...document,
+                [field]: 'replacement',
+                updatedAt: persisted.updatedAt
+            });
+            expect(updated.body).toMatchObject({
+                uniqOnRoot: persisted.uniqOnRoot,
+                uniqOnParent: persisted.uniqOnParent,
+                data: document.data,
+                authorId: document.authorId,
+                type: document.type,
+                documentRootId: document.documentRootId,
+                parentId: document.parentId
+            });
+        }
+    );
+
+    it.each([
+        { name: 'root', data: { uniqOnRoot: null }, cleared: ['uniqOnRoot'] },
+        { name: 'parent', data: { uniqOnParent: null }, cleared: ['uniqOnParent'] },
+        {
+            name: 'both',
+            data: { uniqOnRoot: null, uniqOnParent: null },
+            cleared: ['uniqOnRoot', 'uniqOnParent']
+        }
+    ] as const)('clears $name constraints with null', async ({ data, cleared }) => {
+        const { agent, document, endpoint } = await createFixture({
+            uniqOnRoot: 'main',
+            uniqOnParent: 'answer'
+        });
+        const updated = await agent.put(endpoint).send({ data });
+        expect(updated.status).toBe(200);
+        const persisted = await prisma.document.findUniqueOrThrow({ where: { id: document.id } });
+        expect(persisted).toEqual({ ...document, ...data, updatedAt: persisted.updatedAt });
+        for (const field of cleared) {
+            expect(persisted[field]).toBeNull();
+            expect(updated.body).not.toHaveProperty(field);
+        }
+        const fetched = await agent.get(`${API_URL}/documents/${document.id}`);
+        expect(fetched.status).toBe(200);
+        expect(fetched.body.document).toEqual(updated.body);
+    });
+
+    it.each([Role.STUDENT, Role.TEACHER, Role.ADMIN])(
+        'rejects a non-author %s even with RW access',
+        async (role) => {
+            const { document, endpoint } = await createFixture({ uniqOnRoot: 'main' });
+            const other = await createTestUser(role);
+            const agent = agentAs(other.id);
+            const fetched = await agent.get(`${API_URL}/documents/${document.id}`);
+            expect(fetched.status).toBe(200);
+            expect(fetched.body.highestPermission).toBe(Access.RW_DocumentRoot);
+            const updated = await agent.put(endpoint).send({ data: { uniqOnRoot: null } });
+            expect(updated.status).toBe(403);
+            await expectUnchanged(document);
+        }
+    );
+
+    it.each([Access.RO_DocumentRoot, Access.None_DocumentRoot])(
+        'rejects the author with %s access',
+        async (access) => {
+            const { agent, document, endpoint } = await createFixture({ uniqOnRoot: 'main' });
+            await prisma.documentRoot.update({ where: { id: document.documentRootId }, data: { access } });
+            const fetched = await agent.get(`${API_URL}/documents/${document.id}`);
+            expect(fetched.status).toBe(200);
+            expect(fetched.body.highestPermission).toBe(access);
+            const updated = await agent.put(endpoint).send({ data: { uniqOnRoot: null } });
+            expect(updated.status).toBe(403);
+            await expectUnchanged(document);
+        }
+    );
+
+    it('returns 404 for a nonexistent document', async () => {
+        const owner = await createTestUser();
+        vi.mocked(notify).mockClear();
+        const updated = await agentAs(owner.id)
+            .put(`${API_URL}/documents/${randomUUID()}/constraints`)
+            .send({ data: { uniqOnRoot: 'main' } });
+        expect(updated.status).toBe(404);
+        expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('returns 401 without authentication', async () => {
+        const { document, endpoint } = await createFixture({ uniqOnRoot: 'main' });
+        const updated = await request(app)
+            .put(endpoint)
+            .send({ data: { uniqOnRoot: null } });
+        expect(updated.status).toBe(401);
+        await expectUnchanged(document);
+    });
+
+    it.each(['uniqOnRoot', 'uniqOnParent'] as const)(
+        'rejects a conflicting %s without changing either document',
+        async (field) => {
+            const { agent, document, endpoint } = await createFixture({ [field]: 'original' });
+            const created = await agent.post(`${API_URL}/documents`).send({
+                type: document.type,
+                documentRootId: document.documentRootId,
+                parentId: document.parentId,
+                data: { answer: 'other' },
+                [field]: 'taken'
+            });
+            expect(created.status).toBe(201);
+            const other = await prisma.document.findUniqueOrThrow({ where: { id: created.body.id } });
+            vi.mocked(notify).mockClear();
+            const updated = await agent.put(endpoint).send({ data: { [field]: 'taken' } });
+            expect(updated.status).toBeGreaterThanOrEqual(400);
+            await expectUnchanged(document);
+            await expectUnchanged(other);
+        }
+    );
+
+    it('notifies clients with the cleaned document after a successful update', async () => {
+        const { owner, agent, document, endpoint } = await createFixture({ uniqOnRoot: 'main' });
+        const updated = await agent
+            .put(endpoint)
+            .set('x-metadata-sid', 'constraint-update-socket')
+            .send({ data: { uniqOnRoot: null, uniqOnParent: 'answer' } });
+        expect(updated.status).toBe(200);
+        expect(notify).toHaveBeenCalledTimes(1);
+        expect(notify).toHaveBeenCalledWith(
+            {
+                event: IoEvent.CHANGED_RECORD,
+                message: {
+                    type: RecordType.Document,
+                    record: {
+                        ...updated.body,
+                        createdAt: new Date(updated.body.createdAt),
+                        updatedAt: new Date(updated.body.updatedAt)
+                    }
+                },
+                to: expect.arrayContaining([owner.id, IoRoom.ADMIN, IoRoom.ALL])
+            },
+            'constraint-update-socket'
+        );
+        expect(updated.body).not.toHaveProperty('documentRoot');
+        expect(updated.body).not.toHaveProperty('uniqOnRoot');
+        expect(updated.body.parentId).toBe(document.parentId);
     });
 });
 

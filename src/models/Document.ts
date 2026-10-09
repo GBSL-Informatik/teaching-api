@@ -282,7 +282,7 @@ function Document(db: PrismaClient['document']) {
             if (!record) {
                 throw new HTTP404Error('Document not found');
             }
-            if (record.document.authorId !== actor.id && !RWAccess.has(record.highestPermission)) {
+            if (record.document.authorId !== actor.id || !RWAccess.has(record.highestPermission)) {
                 throw new HTTP403Error('Not authorized');
             }
             const model = await db.update({
