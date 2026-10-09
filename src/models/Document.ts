@@ -171,8 +171,24 @@ function Document(db: PrismaClient['document']) {
                         },
                         orderBy: { createdAt: 'asc' }
                     });
-                    if (mainDocs.length > 0) {
-                        const enforcedMain = mainDocs.find((doc) => doc.uniqOnRoot === 'main') ?? mainDocs[0];
+                    if (mainDocs.length > 0 && mainDocs.every((doc) => !doc.uniqOnRoot)) {
+                        const enforcedMain = mainDocs[0];
+                        const cleanupRoot = await tx.documentRoot.findUniqueOrThrow({
+                            where: { id: documentRootId },
+                            include: {
+                                rootGroupPermissions: {
+                                    where: { studentGroup: { users: { some: { userId: actor.id } } } }
+                                },
+                                rootUserPermissions: { where: { userId: actor.id } }
+                            }
+                        });
+                        const permission = extractPermission(actor.id, {
+                            ...enforcedMain,
+                            documentRoot: cleanupRoot
+                        });
+                        if (!permission || !RWAccess.has(permission)) {
+                            throw new HTTP403Error('Insufficient access permission');
+                        }
                         // heuristic: use the doc with the biggest data size and delete the rest
                         let data = enforcedMain.data;
                         for (const doc of mainDocs) {
@@ -180,15 +196,13 @@ function Document(db: PrismaClient['document']) {
                                 data = doc.data;
                             }
                         }
-                        if (data !== enforcedMain.data || enforcedMain.uniqOnRoot !== 'main') {
-                            await tx.document.update({
-                                where: { id: enforcedMain.id },
-                                data: {
-                                    data: data!,
-                                    uniqOnRoot: 'main'
-                                }
-                            });
-                        }
+                        await tx.document.update({
+                            where: { id: enforcedMain.id },
+                            data: {
+                                data: data!,
+                                uniqOnRoot: 'main'
+                            }
+                        });
                         if (mainDocs.length > 1) {
                             // attach all others mainDocs children to the enforced main document and delete the rest
                             await tx.document.updateMany({

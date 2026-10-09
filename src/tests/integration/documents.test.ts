@@ -1,14 +1,16 @@
 import { randomUUID } from 'crypto';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
+import { Prisma } from '../../../prisma/generated/client.js';
 import { Access } from '../../../prisma/generated/enums.js';
 import app from '../../app.js';
-import type { UniquenessConstraints } from '../../models/Document.js';
+import Document, { type UniquenessConstraints } from '../../models/Document.js';
 import { Role } from '../../models/User.js';
 import prisma from '../../prisma.js';
 import { IoEvent, RecordType } from '../../routes/socketEventTypes.js';
 import { IoRoom } from '../../routes/socketEvents.js';
 import { notify } from '../../socketIoServer.js';
+import { HTTP403Error } from '../../utils/errors/Errors.js';
 import { API_URL, agentAs, createTestStudentGroup, createTestUser } from './helpers.js';
 
 describe('Documents (integration)', () => {
@@ -418,6 +420,331 @@ describe('Document constraint updates', () => {
         expect(updated.body).not.toHaveProperty('documentRoot');
         expect(updated.body).not.toHaveProperty('uniqOnRoot');
         expect(updated.body.parentId).toBe(document.parentId);
+    });
+});
+
+describe('Document main cleanup', () => {
+    const createFixture = async () => {
+        const owner = await createTestUser();
+        const root = await prisma.documentRoot.create({ data: { id: randomUUID() } });
+        const type = 'cleanup-test';
+        // Seed legacy rows directly so fixture creation does not trigger cleanup.
+        const createDocument = (overrides: Partial<Prisma.DocumentUncheckedCreateInput> = {}) =>
+            prisma.document.create({
+                data: {
+                    authorId: owner.id,
+                    documentRootId: root.id,
+                    type,
+                    data: { text: 'short' },
+                    ...overrides
+                }
+            });
+        const requestMain = () =>
+            agentAs(owner.id)
+                .post(`${API_URL}/documents`)
+                .send({
+                    documentRootId: root.id,
+                    type,
+                    uniqOnRoot: 'main',
+                    data: { text: 'new request data must not replace existing data' }
+                });
+        return { owner, root, type, createDocument, requestMain };
+    };
+
+    it.each([
+        { name: 'object', data: { text: 'legacy' }, expected: { text: 'legacy' } },
+        { name: 'JSON null', data: Prisma.JsonNull, expected: null }
+    ])(
+        'promotes a single legacy document with $name data and commits before P2002',
+        async ({ data, expected }) => {
+            const { owner, root, type, createDocument } = await createFixture();
+            const legacy = await createDocument({ data });
+
+            await expect(
+                Document.createModel(owner, type, root.id, { text: 'new' }, undefined, 'main')
+            ).rejects.toMatchObject({
+                code: 'P2002'
+            });
+
+            expect(await prisma.document.findMany({ where: { documentRootId: root.id } })).toEqual([
+                expect.objectContaining({
+                    id: legacy.id,
+                    data: expected,
+                    uniqOnRoot: 'main',
+                    createdAt: legacy.createdAt
+                })
+            ]);
+        }
+    );
+
+    it('retains the oldest legacy ID, selects the largest payload, and returns it without creating a row', async () => {
+        const { root, createDocument, requestMain } = await createFixture();
+        const oldest = await createDocument({ createdAt: new Date('2020-01-01') });
+        const largestData = { text: 'the longest saved document content' };
+        await createDocument({ data: largestData, createdAt: new Date('2020-01-02') });
+        await createDocument({ data: { text: 'medium' }, createdAt: new Date('2020-01-03') });
+
+        const response = await requestMain();
+
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({ id: oldest.id, data: largestData, uniqOnRoot: 'main' });
+        expect(await prisma.document.findMany({ where: { documentRootId: root.id } })).toEqual([
+            expect.objectContaining({ id: oldest.id, data: largestData, uniqOnRoot: 'main' })
+        ]);
+    });
+
+    it.each(['2020-01-01', '2020-01-03', '2020-01-05'])(
+        'leaves all documents unchanged when a main exists with creation date %s',
+        async (mainCreatedAt) => {
+            const { root, createDocument, requestMain } = await createFixture();
+            const legacy = await createDocument({
+                data: { text: 'the longest saved document content' },
+                createdAt: new Date('2020-01-02')
+            });
+            const main = await createDocument({ uniqOnRoot: 'main', createdAt: new Date(mainCreatedAt) });
+            await createDocument({ createdAt: new Date('2020-01-04') });
+            await createDocument({ parentId: main.id, type: 'child', uniqOnParent: 'q1' });
+            await createDocument({ parentId: legacy.id, type: 'child', uniqOnParent: 'q1' });
+            const child = await createDocument({ parentId: legacy.id, type: 'child' });
+            await createDocument({ parentId: child.id, type: 'grandchild' });
+            const query = { where: { documentRootId: root.id }, orderBy: { id: 'asc' as const } };
+            const before = await prisma.document.findMany(query);
+
+            const response = await requestMain();
+
+            expect(response.status).toBe(200);
+            expect(response.body).toMatchObject({ id: main.id, data: main.data, uniqOnRoot: 'main' });
+            expect(await prisma.document.findMany(query)).toEqual(before);
+        }
+    );
+
+    it('moves unconstrained children and preserves their descendants while deleting constrained children', async () => {
+        const { createDocument, requestMain } = await createFixture();
+        const main = await createDocument({ createdAt: new Date('2020-01-01') });
+        const duplicate = await createDocument({ createdAt: new Date('2020-01-02') });
+        const child = await createDocument({ parentId: duplicate.id, type: 'child' });
+        const grandchild = await createDocument({
+            parentId: child.id,
+            type: 'grandchild',
+            uniqOnParent: 'answer'
+        });
+        const retainedChild = await createDocument({ parentId: main.id, type: 'child', uniqOnParent: 'q1' });
+        const conflictingChild = await createDocument({
+            parentId: duplicate.id,
+            type: 'child',
+            uniqOnParent: 'q1'
+        });
+        const distinctConstrainedChild = await createDocument({
+            parentId: duplicate.id,
+            type: 'child',
+            uniqOnParent: 'q2'
+        });
+        const deletedGrandchild = await createDocument({ parentId: conflictingChild.id, type: 'grandchild' });
+
+        const response = await requestMain();
+
+        expect(response.status).toBe(200);
+        expect(response.body.id).toBe(main.id);
+        expect(await prisma.document.findUniqueOrThrow({ where: { id: child.id } })).toMatchObject({
+            id: child.id,
+            parentId: main.id,
+            data: child.data,
+            uniqOnParent: null
+        });
+        expect(await prisma.document.findUniqueOrThrow({ where: { id: grandchild.id } })).toEqual(grandchild);
+        expect(await prisma.document.findUniqueOrThrow({ where: { id: retainedChild.id } })).toEqual(
+            retainedChild
+        );
+        expect(
+            await prisma.document.findMany({
+                where: {
+                    id: {
+                        in: [
+                            duplicate.id,
+                            conflictingChild.id,
+                            distinctConstrainedChild.id,
+                            deletedGrandchild.id
+                        ]
+                    }
+                }
+            })
+        ).toEqual([]);
+    });
+
+    it.each([
+        { name: 'read-only root', rootAccess: Access.RO_DocumentRoot, allowed: false },
+        { name: 'no root access', rootAccess: Access.None_DocumentRoot, allowed: false },
+        {
+            name: 'read-only user override',
+            rootAccess: Access.RW_DocumentRoot,
+            userAccess: Access.RO_User,
+            allowed: false
+        },
+        {
+            name: 'no-access user override',
+            rootAccess: Access.RW_DocumentRoot,
+            userAccess: Access.None_User,
+            allowed: false
+        },
+        {
+            name: 'read-only group override',
+            rootAccess: Access.RW_DocumentRoot,
+            groupAccess: Access.RO_StudentGroup,
+            allowed: false
+        },
+        {
+            name: 'no-access group override',
+            rootAccess: Access.RW_DocumentRoot,
+            groupAccess: Access.None_StudentGroup,
+            allowed: false
+        },
+        {
+            name: 'write user grant',
+            rootAccess: Access.RO_DocumentRoot,
+            userAccess: Access.RW_User,
+            allowed: true
+        },
+        {
+            name: 'write group grant',
+            rootAccess: Access.RO_DocumentRoot,
+            groupAccess: Access.RW_StudentGroup,
+            allowed: true
+        },
+        {
+            name: 'user restriction over write group grant',
+            rootAccess: Access.RO_DocumentRoot,
+            groupAccess: Access.RW_StudentGroup,
+            userAccess: Access.RO_User,
+            allowed: false
+        }
+    ])(
+        'requires effective RW permission for cleanup: $name',
+        async ({ rootAccess, userAccess, groupAccess, allowed }) => {
+            const { owner, root, createDocument, requestMain } = await createFixture();
+            const oldest = await createDocument({ createdAt: new Date('2020-01-01') });
+            const largestData = { text: 'the longest saved document content' };
+            const duplicate = await createDocument({ data: largestData });
+            const child = await createDocument({ parentId: duplicate.id, type: 'child' });
+            const constrainedChild = await createDocument({
+                parentId: duplicate.id,
+                type: 'child',
+                uniqOnParent: 'q1'
+            });
+            await createDocument({ parentId: constrainedChild.id, type: 'grandchild' });
+            await prisma.documentRoot.update({ where: { id: root.id }, data: { access: rootAccess } });
+            if (userAccess) {
+                await prisma.rootUserPermission.create({
+                    data: { documentRootId: root.id, userId: owner.id, access: userAccess }
+                });
+            }
+            if (groupAccess) {
+                const group = await createTestStudentGroup('Cleanup permissions', [], [owner.id]);
+                await prisma.rootGroupPermission.create({
+                    data: { documentRootId: root.id, studentGroupId: group.id, access: groupAccess }
+                });
+            }
+            const query = { where: { documentRootId: root.id }, orderBy: { id: 'asc' as const } };
+            const before = await prisma.document.findMany(query);
+
+            const response = await requestMain();
+
+            if (!allowed) {
+                expect(response.status).toBe(403);
+                expect(await prisma.document.findMany(query)).toEqual(before);
+                return;
+            }
+            expect(response.status).toBe(200);
+            expect(response.body).toMatchObject({ id: oldest.id, data: largestData, uniqOnRoot: 'main' });
+            expect(await prisma.document.findMany(query)).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ id: oldest.id, data: largestData, uniqOnRoot: 'main' }),
+                    expect.objectContaining({ id: child.id, parentId: oldest.id })
+                ])
+            );
+            expect(await prisma.document.count({ where: { documentRootId: root.id } })).toBe(2);
+        }
+    );
+
+    it('returns an existing main without changing documents when the author has read-only access', async () => {
+        const { root, createDocument, requestMain } = await createFixture();
+        const main = await createDocument({ uniqOnRoot: 'main' });
+        await createDocument({ data: { text: 'a larger legacy payload' } });
+        await prisma.documentRoot.update({
+            where: { id: root.id },
+            data: { access: Access.RO_DocumentRoot }
+        });
+        const query = { where: { documentRootId: root.id }, orderBy: { id: 'asc' as const } };
+        const before = await prisma.document.findMany(query);
+
+        const response = await requestMain();
+
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({ id: main.id, data: main.data });
+        expect(await prisma.document.findMany(query)).toEqual(before);
+    });
+
+    it.each([
+        { sharedAccess: Access.None_DocumentRoot, allowed: false },
+        { sharedAccess: Access.RO_DocumentRoot, allowed: false },
+        { sharedAccess: Access.RW_DocumentRoot, allowed: true }
+    ])(
+        'requires RW access for on-behalf-of cleanup with $sharedAccess',
+        async ({ sharedAccess, allowed }) => {
+            const { owner, root, type, createDocument } = await createFixture();
+            const admin = await createTestUser(Role.ADMIN);
+            const oldest = await createDocument({ createdAt: new Date('2020-01-01') });
+            const largestData = { text: 'the longest saved document content' };
+            await createDocument({ data: largestData });
+            await prisma.documentRoot.update({ where: { id: root.id }, data: { sharedAccess } });
+            const query = { where: { documentRootId: root.id }, orderBy: { id: 'asc' as const } };
+            const before = await prisma.document.findMany(query);
+
+            const cleanup = Document.createModel(
+                admin,
+                type,
+                root.id,
+                { text: 'new' },
+                undefined,
+                'main',
+                undefined,
+                owner.id
+            );
+
+            if (!allowed) {
+                await expect(cleanup).rejects.toBeInstanceOf(HTTP403Error);
+                expect(await prisma.document.findMany(query)).toEqual(before);
+                return;
+            }
+            await expect(cleanup).rejects.toMatchObject({ code: 'P2002' });
+            expect(await prisma.document.findMany(query)).toEqual([
+                expect.objectContaining({
+                    id: oldest.id,
+                    authorId: owner.id,
+                    data: largestData,
+                    uniqOnRoot: 'main'
+                })
+            ]);
+        }
+    );
+
+    it('does not clean up legacy documents when creating a different uniqueness key', async () => {
+        const { owner, root, type, createDocument } = await createFixture();
+        const legacy = [await createDocument(), await createDocument()];
+
+        const result = await Document.createModel(
+            owner,
+            type,
+            root.id,
+            { text: 'secondary' },
+            undefined,
+            'secondary'
+        );
+
+        expect(result.model).toMatchObject({ uniqOnRoot: 'secondary', data: { text: 'secondary' } });
+        expect(await prisma.document.count({ where: { documentRootId: root.id } })).toBe(3);
+        for (const document of legacy) {
+            expect(await prisma.document.findUniqueOrThrow({ where: { id: document.id } })).toEqual(document);
+        }
     });
 });
 
