@@ -2,7 +2,7 @@ import type { JsonObject } from '@prisma/client/runtime/client';
 import { RequestHandler } from 'express';
 import { Document as DbDocument, Prisma } from '../../prisma/generated/client.js';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy.js';
-import Document, { ApiDocument, cleanupDocument } from '../models/Document.js';
+import Document, { ApiDocument, cleanupDocument, UniquenessConstraints } from '../models/Document.js';
 import DocumentRoot from '../models/DocumentRoot.js';
 import prisma from '../prisma.js';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes.js';
@@ -126,6 +126,42 @@ export const update: RequestHandler<
     ];
 
     res.status(204).send();
+};
+
+export const updateConstraints: RequestHandler<
+    { id: string },
+    any,
+    { data: { uniqOnRoot?: string; uniqOnParent?: string } }
+> = async (req, res, next) => {
+    const change: UniquenessConstraints = {};
+    const { data } = req.body;
+    if ('uniqOnRoot' in data && (!!data.uniqOnRoot || data.uniqOnRoot === null)) {
+        change.uniqOnRoot = data.uniqOnRoot;
+    }
+    if ('uniqOnParent' in data && (!!data.uniqOnParent || data.uniqOnParent === null)) {
+        change.uniqOnParent = data.uniqOnParent;
+    }
+    if (Object.keys(change).length === 0) {
+        throw new HTTP403Error('No valid constraints to update');
+    }
+    const model = await Document.updateConstraints((req as any).user!, req.params.id, change);
+    const groupIds = model.documentRoot.rootGroupPermissions
+        .filter((p) => !NoneAccess.has(p.access))
+        .map((p) => p.studentGroupId);
+    const userIds = model.documentRoot.rootUserPermissions
+        .filter((p) => !NoneAccess.has(p.access))
+        .map((p) => p.userId);
+    const sharedAccess = RO_RW_DocumentRootAccess.has(model.documentRoot.sharedAccess) ? [IoRoom.ALL] : [];
+
+    const updated = cleanupDocument(model);
+    res.notifications = [
+        {
+            event: IoEvent.CHANGED_RECORD,
+            message: { type: RecordType.Document, record: updated },
+            to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+        }
+    ];
+    res.status(200).json(updated);
 };
 
 const childrenSql = (parentId: string) => {

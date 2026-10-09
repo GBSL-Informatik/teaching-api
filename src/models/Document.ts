@@ -19,6 +19,11 @@ interface DocumentWithPermission {
     highestPermission: Access;
 }
 
+export interface UniquenessConstraints {
+    uniqOnRoot?: string | null;
+    uniqOnParent?: string | null;
+}
+
 const extractPermission = (actorId: string, document: AccessCheckableDocument): Access | null => {
     const hasBaseAccess =
         document.authorId === actorId || !NoneAccess.has(document.documentRoot.sharedAccess);
@@ -269,6 +274,29 @@ function Document(db: PrismaClient['document']) {
                     }
                 }
             })) satisfies DbDocument;
+            return model;
+        },
+
+        async updateConstraints(actor: User, id: string, update: UniquenessConstraints) {
+            const record = await this.findModel(actor, id);
+            if (!record) {
+                throw new HTTP404Error('Document not found');
+            }
+            if (record.document.authorId !== actor.id && !RWAccess.has(record.highestPermission)) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const model = await db.update({
+                where: { id: id },
+                data: update,
+                include: {
+                    documentRoot: {
+                        include: {
+                            rootGroupPermissions: { select: { access: true, studentGroupId: true } },
+                            rootUserPermissions: { select: { access: true, userId: true } }
+                        }
+                    }
+                }
+            });
             return model;
         },
 
