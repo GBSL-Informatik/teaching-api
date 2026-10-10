@@ -2,7 +2,8 @@ import type { JsonObject } from '@prisma/client/runtime/client';
 import { RequestHandler } from 'express';
 import { Document as DbDocument, Prisma } from '../../prisma/generated/client.js';
 import { NoneAccess, RO_RW_DocumentRootAccess, RWAccess } from '../helpers/accessPolicy.js';
-import Document from '../models/Document.js';
+import Document, { ApiDocument, cleanupDocument, UniquenessConstraints } from '../models/Document.js';
+import DocumentRoot from '../models/DocumentRoot.js';
 import prisma from '../prisma.js';
 import { ChangedDocument, IoEvent, RecordType } from '../routes/socketEventTypes.js';
 import { IoRoom } from '../routes/socketEvents.js';
@@ -13,24 +14,57 @@ export const find: RequestHandler<{ id: string }> = async (req, res, next) => {
     res.json(document);
 };
 
-export const create: RequestHandler<
-    any,
-    any,
-    DbDocument,
-    { onBehalfOf?: 'true'; uniqueMain?: 'true' }
-> = async (req, res, next) => {
-    const { type, documentRootId, data, parentId } = req.body;
-    const { onBehalfOf, uniqueMain } = req.query;
+export const create: RequestHandler<any, any, DbDocument, { onBehalfOf?: 'true' }> = async (
+    req,
+    res,
+    next
+) => {
+    const { type, documentRootId, data, parentId, uniqOnRoot, uniqOnParent } = req.body;
+    const { onBehalfOf } = req.query;
     const onBehalfUserId = onBehalfOf === 'true' ? req.body.authorId : undefined;
-    const { model, permissions } = await Document.createModel(
+    const { model, permissions, exists } = await Document.createModel(
         (req as any).user!,
         type,
         documentRootId,
         data,
         !parentId ? undefined : parentId,
-        uniqueMain === 'true',
+        uniqOnRoot,
+        uniqOnParent,
         onBehalfUserId
-    );
+    ).catch((err) => {
+        if (err.code === 'P2002') {
+            return DocumentRoot.findModel((req as any).user!, documentRootId).then((existing) => {
+                const uid = onBehalfUserId ?? (req as any).user!.id;
+                const isExisting = (doc: ApiDocument) => {
+                    if (doc.authorId !== uid || doc.type !== type || doc.documentRootId !== documentRootId) {
+                        return false;
+                    }
+                    if (uniqOnRoot && doc.uniqOnRoot === uniqOnRoot) {
+                        return true;
+                    }
+                    if (uniqOnParent && doc.parentId === parentId && doc.uniqOnParent === uniqOnParent) {
+                        return true;
+                    }
+                    return false;
+                };
+                const doc = existing?.documents.find(isExisting);
+                if (doc) {
+                    return {
+                        model: cleanupDocument(doc),
+                        exists: true,
+                        permissions: {
+                            access: existing!.access,
+                            user: existing!.userPermissions,
+                            group: existing!.groupPermissions,
+                            sharedAccess: existing!.sharedAccess
+                        }
+                    };
+                }
+                throw new HTTP403Error('Unique constraint violation');
+            });
+        }
+        throw err;
+    });
     /**
      * Notifications to
      * - the user who created the document
@@ -47,7 +81,8 @@ export const create: RequestHandler<
             to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving,
         }
     ];
-    res.status(200).json(model);
+    const status = exists ? 200 : 201;
+    res.status(status).json(model);
 };
 
 export const update: RequestHandler<
@@ -91,6 +126,42 @@ export const update: RequestHandler<
     ];
 
     res.status(204).send();
+};
+
+export const updateConstraints: RequestHandler<
+    { id: string },
+    any,
+    { data: { uniqOnRoot?: string; uniqOnParent?: string } }
+> = async (req, res, next) => {
+    const change: UniquenessConstraints = {};
+    const { data } = req.body;
+    if ('uniqOnRoot' in data && (!!data.uniqOnRoot || data.uniqOnRoot === null)) {
+        change.uniqOnRoot = data.uniqOnRoot;
+    }
+    if ('uniqOnParent' in data && (!!data.uniqOnParent || data.uniqOnParent === null)) {
+        change.uniqOnParent = data.uniqOnParent;
+    }
+    if (Object.keys(change).length === 0) {
+        throw new HTTP403Error('No valid constraints to update');
+    }
+    const model = await Document.updateConstraints((req as any).user!, req.params.id, change);
+    const groupIds = model.documentRoot.rootGroupPermissions
+        .filter((p) => !NoneAccess.has(p.access))
+        .map((p) => p.studentGroupId);
+    const userIds = model.documentRoot.rootUserPermissions
+        .filter((p) => !NoneAccess.has(p.access))
+        .map((p) => p.userId);
+    const sharedAccess = RO_RW_DocumentRootAccess.has(model.documentRoot.sharedAccess) ? [IoRoom.ALL] : [];
+
+    const updated = cleanupDocument(model);
+    res.notifications = [
+        {
+            event: IoEvent.CHANGED_RECORD,
+            message: { type: RecordType.Document, record: updated },
+            to: [...groupIds, ...sharedAccess, ...userIds, IoRoom.ADMIN, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+        }
+    ];
+    res.status(200).json(updated);
 };
 
 const childrenSql = (parentId: string) => {

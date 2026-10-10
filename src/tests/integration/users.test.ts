@@ -38,14 +38,14 @@ describe('Users (integration)', () => {
         const createRootRes = await agent.post(`${API_URL}/documentRoots/${documentRootId}`).send({
             access: Access.RW_DocumentRoot
         });
-        expect(createRootRes.status).toBe(200);
+        expect(createRootRes.status).toBe(201);
 
         const ownDocumentRes = await agent.post(`${API_URL}/documents`).send({
             type: 'document',
             documentRootId,
             data: { owner: user.id }
         });
-        expect(ownDocumentRes.status).toBe(200);
+        expect(ownDocumentRes.status).toBe(201);
 
         await prisma.document.create({
             data: {
@@ -79,14 +79,14 @@ describe('Users (integration)', () => {
             sharedAccess: Access.None_DocumentRoot,
             userPermissions: [{ userId: user.id, access: Access.RW_User }]
         });
-        expect(createRootRes.status).toBe(200);
+        expect(createRootRes.status).toBe(201);
 
         const ownDocumentRes = await agent.post(`${API_URL}/documents`).send({
             type: 'document',
             documentRootId,
             data: { owner: user.id }
         });
-        expect(ownDocumentRes.status).toBe(200);
+        expect(ownDocumentRes.status).toBe(201);
 
         await prisma.document.create({
             data: {
@@ -121,7 +121,7 @@ describe('Users (integration)', () => {
             sharedAccess: Access.RW_DocumentRoot,
             userPermissions: [{ userId: user.id, access: Access.RW_User }]
         });
-        expect(createRootRes.status).toBe(200);
+        expect(createRootRes.status).toBe(201);
 
         await prisma.document.create({
             data: {
@@ -155,7 +155,7 @@ describe('Users (integration)', () => {
         expect(resOtherUser.body[0].id).toBe(documentRootId);
         expect(resOtherUser.body[0].documents).toHaveLength(1);
         expect(resOtherUser.body[0].documents[0].authorId).toBe(otherUser.id);
-        expect(resOtherUser.body[0].documents[0].data).toEqual(null);
+        expect(resOtherUser.body[0].documents[0].data).toBeNull();
     });
 
     it('does not allow a user to request another users document roots', async () => {
