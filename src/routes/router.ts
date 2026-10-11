@@ -26,7 +26,8 @@ import {
     destroy as deleteDocument,
     find as findDocument,
     linkTo as linkDocument,
-    update as updateDocument
+    update as updateDocument,
+    updateConstraints as updateDocumentConstraints
 } from '../controllers/documents.js';
 import {
     create as createStudentGroupPermission,
@@ -96,6 +97,7 @@ router.post('/documents', createDocument);
 router.post('/documents/multiple', multipleDocuments);
 router.get('/documents/:id', findDocument);
 router.put('/documents/:id', updateDocument);
+router.put('/documents/:id/constraints', updateDocumentConstraints);
 router.put('/documents/:id/linkTo/:parentId', linkDocument);
 router.delete('/documents/:id', deleteDocument);
 

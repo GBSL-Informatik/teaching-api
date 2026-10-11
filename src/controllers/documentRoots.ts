@@ -5,7 +5,7 @@ import DocumentRoot, { Config as CreateConfig, UpdateConfig } from '../models/Do
 import { hasElevatedAccess } from '../models/User.js';
 import { ChangedRecord, IoEvent, RecordType } from '../routes/socketEventTypes.js';
 import { IoRoom } from '../routes/socketEvents.js';
-import { HTTP400Error, HTTP403Error } from '../utils/errors/Errors.js';
+import { HTTP400Error, HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
 
 export const findMultipleFor: RequestHandler<
     { id: string /** userId */ },
@@ -58,28 +58,48 @@ export const create: RequestHandler<{ id: string }, any, CreateConfig | undefine
     res,
     next
 ) => {
-    const documentRoot = await DocumentRoot.createModel(req.params.id, req.body);
-    /**
-     * Notifications to
-     * - the user who created the document
-     * - users with ro/rw access to the document root
-     * - student groups with ro/rw access to the document root
-     */
-    const groupIds = documentRoot.groupPermissions
-        .filter((p) => !NoneAccess.has(p.access))
-        .map((p) => p.groupId);
-    const userIds = documentRoot.userPermissions
-        .filter((p) => !NoneAccess.has(p.access))
-        .map((p) => p.userId);
-    const sharedAccess = RO_RW_DocumentRootAccess.has(documentRoot.sharedAccess) ? IoRoom.ALL : IoRoom.ADMIN;
-    res.notifications = [
-        {
-            event: IoEvent.NEW_RECORD,
-            message: { type: RecordType.DocumentRoot, record: documentRoot },
-            to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+    let exists = false;
+    const documentRoot = await DocumentRoot.createModel(req.params.id, req.body).catch((err) => {
+        if (err.code === 'P2002') {
+            exists = true;
+            // fetch the existing document root and return it
+            return DocumentRoot.findModel((req as any).user!, req.params.id).then((existing) => {
+                if (!existing) {
+                    throw new HTTP404Error('DocumentRoot not found');
+                }
+                return existing;
+            });
         }
-    ];
-    res.json(documentRoot);
+        throw err;
+    });
+
+    if (!exists) {
+        /**
+         * Notifications to
+         * - the user who created the document
+         * - users with ro/rw access to the document root
+         * - student groups with ro/rw access to the document root
+         */
+        const groupIds = documentRoot.groupPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.groupId);
+        const userIds = documentRoot.userPermissions
+            .filter((p) => !NoneAccess.has(p.access))
+            .map((p) => p.userId);
+        const sharedAccess = RO_RW_DocumentRootAccess.has(documentRoot.sharedAccess)
+            ? IoRoom.ALL
+            : IoRoom.ADMIN;
+        res.notifications = [
+            {
+                event: IoEvent.NEW_RECORD,
+                message: { type: RecordType.DocumentRoot, record: documentRoot },
+                to: [...groupIds, ...userIds, sharedAccess, (req as any).user!.id] // overlappings are handled by socket.io: https://socket.io/docs/v3/rooms/#joining-and-leaving
+            }
+        ];
+    }
+
+    const statusCode = exists ? 200 : 201;
+    res.status(statusCode).json(documentRoot);
 };
 
 export const update: RequestHandler<{ id: string }, any, UpdateConfig> = async (req, res, next) => {

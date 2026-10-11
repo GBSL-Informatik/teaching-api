@@ -1,5 +1,5 @@
-import type { JsonObject } from '@prisma/client/runtime/client';
-import { Access, Document as DbDocument, PrismaClient, User } from '../../prisma/generated/client.js';
+import { type JsonObject } from '@prisma/client/runtime/client';
+import { Access, Document as DbDocument, Prisma, PrismaClient, User } from '../../prisma/generated/client.js';
 import { highestAccess, NoneAccess, RWAccess } from '../helpers/accessPolicy.js';
 import prisma from '../prisma.js';
 import { HTTP403Error, HTTP404Error } from '../utils/errors/Errors.js';
@@ -11,11 +11,17 @@ import { hasElevatedAccess, Role, whereStudentGroupAccess } from './User.js';
 
 type AccessCheckableDocument = DbDocument & { documentRoot: AccessCheckableDocumentRoot };
 
-export type ApiDocument = DbDocument;
+export type ApiDocument = Omit<DbDocument, 'uniqOnRoot' | 'uniqOnParent' | 'parentId'> &
+    Partial<Pick<DbDocument, 'uniqOnRoot' | 'uniqOnParent' | 'parentId'>>;
 
 interface DocumentWithPermission {
     document: ApiDocument;
     highestPermission: Access;
+}
+
+export interface UniquenessConstraints {
+    uniqOnRoot?: string | null;
+    uniqOnParent?: string | null;
 }
 
 const extractPermission = (actorId: string, document: AccessCheckableDocument): Access | null => {
@@ -38,6 +44,22 @@ const extractPermission = (actorId: string, document: AccessCheckableDocument): 
     return highestAccess(new Set([document.documentRoot.sharedAccess]), usersPermission);
 };
 
+export const cleanupDocument = (doc: ApiDocument) => {
+    if (!doc?.uniqOnParent) {
+        delete (doc as any).uniqOnParent;
+    }
+    if (!doc?.uniqOnRoot) {
+        delete (doc as any).uniqOnRoot;
+    }
+    if (!doc?.parentId) {
+        delete (doc as any).parentId;
+    }
+    if ((doc as Partial<AccessCheckableDocument>).documentRoot) {
+        delete (doc as Partial<AccessCheckableDocument>).documentRoot;
+    }
+    return doc;
+};
+
 export const prepareDocument = (actorId: string, document: AccessCheckableDocument | null) => {
     if (!document) {
         return null;
@@ -46,8 +68,7 @@ export const prepareDocument = (actorId: string, document: AccessCheckableDocume
     if (!permission) {
         return null;
     }
-    const model: ApiDocument = { ...document };
-    delete (model as Partial<AccessCheckableDocument>).documentRoot;
+    const model: ApiDocument = cleanupDocument({ ...document });
     if (NoneAccess.has(permission)) {
         model.data = null;
     }
@@ -56,6 +77,7 @@ export const prepareDocument = (actorId: string, document: AccessCheckableDocume
 
 type Response<T> = {
     model: T;
+    exists?: boolean; // wheter the model already existed and was returned instead of created
     permissions: {
         access: Access;
         sharedAccess: Access;
@@ -89,7 +111,8 @@ function Document(db: PrismaClient['document']) {
             documentRootId: string,
             data: any,
             parentId?: string,
-            uniqueMain?: boolean,
+            uniqOnRoot?: string | null,
+            uniqOnParent?: string | null,
             _onBehalfOfUserId?: string /** this flag enables creation of documents on behalf of another user */
         ): Promise<Response<ApiDocument>> {
             const documentRoot = await DocumentRoot.findModel(actor, documentRootId);
@@ -127,55 +150,135 @@ function Document(db: PrismaClient['document']) {
                     throw new HTTP403Error('Insufficient access permission');
                 }
             }
-            if (uniqueMain) {
-                const mainDoc = await db.findFirst({
-                    where: { documentRootId: documentRootId, authorId: authorId, type: type }
-                });
-                if (mainDoc) {
-                    Logger.warn(
-                        `[not unique]: Main document fro documentRoot "${documentRootId}" already exists for user "${authorId}"`
-                    );
-                    // the frontend may depend on the error message (try to not change: status code + [not unique])
-                    throw new HTTP403Error('[not unique] Main document already exists for this user');
-                }
-            }
-            /**
-             * Since it is easyier to check wheter a user has permissions to create a model
-             * when the model actually exists, we create the model first and then check the permissions.
-             */
-            const model = await db
-                .create({
-                    data: {
-                        type: type,
-                        documentRootId: documentRootId,
-                        data: data,
-                        parentId: parentId,
-                        authorId: authorId
-                    },
-                    include: {
-                        documentRoot: {
+            const model:
+                | { exists: true }
+                | {
+                      exists: false;
+                      model: {
+                          document: ApiDocument;
+                          highestPermission: Access;
+                      };
+                  } = await prisma.$transaction(async (tx) => {
+                // TODO: Remove this once the unique main check is distributed and applied on the database level.
+                if (uniqOnRoot === 'main') {
+                    const mainDocs = await tx.document.findMany({
+                        where: {
+                            documentRootId: documentRootId,
+                            authorId: authorId,
+                            OR: [{ uniqOnRoot: 'main' }, { uniqOnRoot: null }],
+                            parentId: null,
+                            type: type
+                        },
+                        orderBy: { createdAt: 'asc' }
+                    });
+                    if (mainDocs.length > 0 && mainDocs.every((doc) => !doc.uniqOnRoot)) {
+                        const enforcedMain = mainDocs[0];
+                        const cleanupRoot = await tx.documentRoot.findUniqueOrThrow({
+                            where: { id: documentRootId },
                             include: {
                                 rootGroupPermissions: {
-                                    where: { studentGroup: { users: { some: { userId: authorId } } } }
+                                    where: { studentGroup: { users: { some: { userId: actor.id } } } }
                                 },
-                                rootUserPermissions: { where: { user: { id: authorId } } }
+                                rootUserPermissions: { where: { userId: actor.id } }
+                            }
+                        });
+                        const permission = extractPermission(actor.id, {
+                            ...enforcedMain,
+                            documentRoot: cleanupRoot
+                        });
+                        if (!permission || !RWAccess.has(permission)) {
+                            throw new HTTP403Error('Insufficient access permission');
+                        }
+                        // heuristic: use the doc with the biggest data size and delete the rest
+                        let data = enforcedMain.data;
+                        for (const doc of mainDocs) {
+                            if (doc.data && JSON.stringify(doc.data).length > JSON.stringify(data).length) {
+                                data = doc.data;
                             }
                         }
+                        await tx.document.update({
+                            where: { id: enforcedMain.id },
+                            data: {
+                                data: data!,
+                                uniqOnRoot: 'main'
+                            }
+                        });
+                        if (mainDocs.length > 1) {
+                            // attach all others mainDocs children to the enforced main document and delete the rest
+                            await tx.document.updateMany({
+                                where: {
+                                    parentId: {
+                                        in: mainDocs
+                                            .map((doc) => doc.id)
+                                            .filter((id) => id !== enforcedMain.id)
+                                    },
+                                    uniqOnParent: null // delete children having a uniqOnParent constraint - we don't want to risk overwriting a child with a unique constraint
+                                },
+                                data: { parentId: enforcedMain.id }
+                            });
+                            await tx.document.deleteMany({
+                                where: {
+                                    id: {
+                                        in: mainDocs
+                                            .filter((doc) => doc.id !== enforcedMain.id)
+                                            .map((doc) => doc.id)
+                                    }
+                                }
+                            });
+                        }
+                        return { exists: true };
                     }
-                })
-                .then((doc) => prepareDocument(authorId, doc)!);
-            /**
-             * Check if the user has the required permissions to create the model.
-             * If not, delete the model and throw an error.
-             */
-            const canCreate = RWAccess.has(model.highestPermission);
-            if (!canCreate && !onBehalfOf) {
-                Logger.info(`❌ New Model [${model.document.id}]: ${model.highestPermission}`);
-                db.delete({ where: { id: model.document.id } });
-                throw new HTTP403Error('Insufficient access permission');
+                }
+                /**
+                 * Since it is easyier to check wheter a user has permissions to create a model
+                 * when the model actually exists, we create the model first and then check the permissions.
+                 */
+                const model = await tx.document
+                    .create({
+                        data: {
+                            type: type,
+                            documentRootId: documentRootId,
+                            data: data,
+                            parentId: parentId,
+                            authorId: authorId,
+                            uniqOnRoot: uniqOnRoot,
+                            uniqOnParent: uniqOnParent
+                        },
+                        include: {
+                            documentRoot: {
+                                include: {
+                                    rootGroupPermissions: {
+                                        where: { studentGroup: { users: { some: { userId: authorId } } } }
+                                    },
+                                    rootUserPermissions: { where: { user: { id: authorId } } }
+                                }
+                            }
+                        }
+                    })
+                    .then((doc) => prepareDocument(authorId, doc)!);
+                /**
+                 * Check if the user has the required permissions to create the model.
+                 * If not, delete the model and throw an error.
+                 */
+                const canCreate = RWAccess.has(model.highestPermission);
+                if (!canCreate && !onBehalfOf) {
+                    Logger.info(`❌ New Model [${model.document.id}]: ${model.highestPermission}`);
+                    throw new HTTP403Error('Insufficient access permission');
+                }
+                return { exists: false, model: model };
+            });
+            if (model.exists) {
+                // throw new prisma P2002 error to indicate that the model already exists and was not created
+                throw new Prisma.PrismaClientKnownRequestError('Unique constraint failed on main document', {
+                    code: 'P2002',
+                    clientVersion: Prisma.prismaVersion.client,
+                    meta: {
+                        target: ['uniqOnRoot']
+                    }
+                });
             }
             return {
-                model: model.document,
+                model: model.model.document,
                 permissions: {
                     access: documentRoot.access,
                     sharedAccess: documentRoot.sharedAccess,
@@ -261,6 +364,29 @@ function Document(db: PrismaClient['document']) {
                     }
                 }
             })) satisfies DbDocument;
+            return model;
+        },
+
+        async updateConstraints(actor: User, id: string, update: UniquenessConstraints) {
+            const record = await this.findModel(actor, id);
+            if (!record) {
+                throw new HTTP404Error('Document not found');
+            }
+            if (record.document.authorId !== actor.id || !RWAccess.has(record.highestPermission)) {
+                throw new HTTP403Error('Not authorized');
+            }
+            const model = await db.update({
+                where: { id: id },
+                data: update,
+                include: {
+                    documentRoot: {
+                        include: {
+                            rootGroupPermissions: { select: { access: true, studentGroupId: true } },
+                            rootUserPermissions: { select: { access: true, userId: true } }
+                        }
+                    }
+                }
+            });
             return model;
         },
 

@@ -63,6 +63,10 @@ const prepareUserPermission = (permission: Omit<RootUserPermission, 'documentRoo
 };
 
 const { ADMIN_USER_GROUP_ID } = process.env;
+const ADMIN_USER_GROUP = {
+    id: null as string | null,
+    checked: !ADMIN_USER_GROUP_ID
+};
 
 function DocumentRoot(db: PrismaClient['documentRoot']) {
     return Object.assign(db, {
@@ -154,12 +158,15 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
         async createModel(id: string, config: Config = {}): Promise<ApiDocumentRootWithoutDocuments> {
             const groupPermissions = config.groupPermissions || [];
             const access = asDocumentRootAccess(config.access);
+            if (!ADMIN_USER_GROUP.checked) {
+                await this._checkAdminUserGroup();
+            }
             if (
                 access !== Access.RW_DocumentRoot &&
-                ADMIN_USER_GROUP_ID &&
-                !groupPermissions.some((gp) => gp.groupId === ADMIN_USER_GROUP_ID)
+                ADMIN_USER_GROUP.id &&
+                !groupPermissions.some((gp) => gp.groupId === ADMIN_USER_GROUP.id)
             ) {
-                groupPermissions.push({ groupId: ADMIN_USER_GROUP_ID, access: Access.RW_DocumentRoot });
+                groupPermissions.push({ groupId: ADMIN_USER_GROUP.id, access: Access.RW_DocumentRoot });
             }
             const model = await db.create({
                 data: {
@@ -260,6 +267,18 @@ function DocumentRoot(db: PrismaClient['documentRoot']) {
                 }
             });
             return model;
+        },
+        async _checkAdminUserGroup(): Promise<boolean> {
+            if (!ADMIN_USER_GROUP_ID || ADMIN_USER_GROUP.checked) {
+                return Promise.resolve(false);
+            }
+            const group = await prisma.studentGroup.findUnique({
+                where: { id: ADMIN_USER_GROUP_ID },
+                select: { id: true }
+            });
+            ADMIN_USER_GROUP.checked = true;
+            ADMIN_USER_GROUP.id = group?.id || null;
+            return !!group;
         }
     });
 }
