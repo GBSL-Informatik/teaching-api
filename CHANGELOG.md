@@ -164,7 +164,6 @@ if there are no duplicates, proceed with step 3 directly.
     DELETE FROM documents
     WHERE id IN (SELECT id FROM empty_roots)
     RETURNING *;
-    );
     ```
 
 3. Finally, update the `uniq_on_root_constraint` for the remaining root documents:
