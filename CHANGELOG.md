@@ -1,8 +1,9 @@
 # Changelog
-## 09.10.2026
+## 11.10.2026 https://github.com/GBSL-Informatik/teaching-api/pull/66
+
+!! Make sure to create a backup before running the migration, as you may delete documents in order to enforce the uniqueness constraints.
 
 Introduced new columns `uniq_on_parent_constraint` and `uniq_on_root_constraint` to the `documents` table to enforce client specified uniqueness constraints.
-
 
 ### Special document types needing manual migration
 
@@ -173,3 +174,44 @@ if there are no duplicates, proceed with step 3 directly.
     SET uniq_on_root_constraint = 'main'
     WHERE type='dir' AND parent_id is null;
     ```
+
+#### Manual checks for other document types
+
+Depending on the current state of your database, you may have to manually check for duplicates in other document types as well.
+
+- check for types having duplicates:
+    ```sql
+    select distinct type
+    from documents 
+    where 
+        uniq_on_root_constraint is null and
+        uniq_on_parent_constraint is null and
+        type!='dir' and
+        type!='file' and
+        type!='script_version' and
+        type!='mdx_comment' and
+        type!='text_message' and
+        type!='dynamic_document_roots'
+    ```
+- proceed type-by-type, checking for duplicates and deleting them if necessary, before adding the constraints.
+    ```sql
+    select document_root_id, author_id, count(*), array_agg(distinct type), array_agg(created_at), array_agg(data) as data, array_agg(id) as ids
+    from documents 
+    where 
+        uniq_on_root_constraint is null and
+        uniq_on_parent_constraint is null and
+        type='script' 
+    group by author_id, document_root_id
+    order by count(*) desc;
+    ```
+- check what's the issue with the duplicates and delete/update them when necessary, before adding the constraints.
+
+```sql
+SELECT * FROM documents
+--delete from documents
+--UPDATE documents SET uniq_on_root_constraint='main'
+WHERE uniq_on_root_constraint IS NULL
+  AND uniq_on_parent_constraint IS NULL
+  AND type='script'
+  AND data->>'code'='print("Hello World")'
+```
