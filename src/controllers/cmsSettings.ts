@@ -8,11 +8,6 @@ export const find: RequestHandler = async (req, res, next) => {
     res.json(settings);
 };
 
-export const update: RequestHandler<any, any, Partial<DbCmsSettings>> = async (req, res, next) => {
-    await CmsSettings.updateModel((req as any).user!, req.body);
-    res.status(204).send();
-};
-
 export const logout: RequestHandler<any, any, Partial<DbCmsSettings>> = async (req, res, next) => {
     const model = await CmsSettings.logout((req as any).user!);
     if (!model) {

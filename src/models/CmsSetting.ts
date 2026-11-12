@@ -1,8 +1,6 @@
-import { CmsSettings as DbCmsSettings, Prisma, PrismaClient, User } from '../../prisma/generated/client.js';
-import { createDataExtractor } from '../helpers/dataExtractor.js';
+import { CmsSettings as DbCmsSettings, PrismaClient, User } from '../../prisma/generated/client.js';
 import prisma from '../prisma.js';
 import Logger from '../utils/logger.js';
-const getData = createDataExtractor<Prisma.CmsSettingsUncheckedUpdateInput>(['activeBranch', 'activePath']);
 
 export type ApiCmsSettings = Omit<DbCmsSettings, 'refresh_token' | 'refresh_token_expires_at'> & {
     token?: string;
@@ -132,20 +130,6 @@ function CmsSetting(db: PrismaClient['cmsSettings']) {
                 where: { userId: actor.id },
                 update: {},
                 create: { userId: actor.id }
-            });
-            const refreshed = await this._refreshGithubToken(settings);
-            return prepareRecord(refreshed);
-        },
-        async updateModel(actor: User, data: Partial<DbCmsSettings>): Promise<DbCmsSettings> {
-            const sanitized = getData(data);
-            const settings = await db.upsert({
-                where: { userId: actor.id! },
-                update: getData(data),
-                create: {
-                    user: { connect: { id: actor.id! } },
-                    activeBranch: sanitized.activeBranch as string | null,
-                    activePath: sanitized.activePath as string | null
-                }
             });
             const refreshed = await this._refreshGithubToken(settings);
             return prepareRecord(refreshed);

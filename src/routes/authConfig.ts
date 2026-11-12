@@ -54,7 +54,7 @@ const authConfig: Config = {
             path: '/documentRoots/permissions',
             access: [{ methods: ['POST'], minRole: Role.TEACHER }]
         },
-        githubToken: { path: '/cms', access: [{ methods: ['GET', 'PUT'], minRole: Role.STUDENT }] },
+        githubToken: { path: '/cms', access: [{ methods: ['GET'], minRole: Role.STUDENT }] },
         githubLogout: { path: '/cms/logout', access: [{ methods: ['POST'], minRole: Role.STUDENT }] }
     }
 };

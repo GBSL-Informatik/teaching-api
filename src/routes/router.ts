@@ -7,12 +7,7 @@ import {
     linkUserPassword,
     revokeUserPassword
 } from '../controllers/admins.js';
-import {
-    find as findCmsSettings,
-    logout as githubLogout,
-    githubToken,
-    update as updateCmsSettings
-} from '../controllers/cmsSettings.js';
+import { find as findCmsSettings, logout as githubLogout, githubToken } from '../controllers/cmsSettings.js';
 import {
     permissions as allPermissions,
     create as createDocumentRoot,
@@ -109,7 +104,6 @@ router.post('/admin/users/:id/revokeUserPassword', revokeUserPassword);
 router.post('/admin/export', exportData);
 
 router.get('/cms/settings', findCmsSettings);
-router.put('/cms/settings', updateCmsSettings);
 router.get('/cms/github-token', githubToken);
 router.post('/cms/logout', githubLogout);
 
