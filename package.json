@@ -70,7 +70,7 @@
     "vitest": "^5.0.0"
   },
   "engines": {
-    "node": "24.16.x || 24.18.x || 24.21.x"
+    "node": "^24.16.0"
   },
   "optionalDependencies": {
     "puppeteer": "^24.34.0"

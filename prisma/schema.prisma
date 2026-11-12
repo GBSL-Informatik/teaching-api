@@ -106,9 +106,6 @@ model CmsSettings {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique @map("user_id") @db.Uuid
 
-  activeBranch String? @map("active_branch")
-  activePath   String? @map("active_path")
-
   token                 String?   @map("token")
   tokenExpiresAt        DateTime? @map("token_expires_at")
   refreshToken          String?   @map("refresh_token")
