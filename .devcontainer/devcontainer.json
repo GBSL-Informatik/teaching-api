@@ -12,12 +12,24 @@
 			"version": "17"
 		},
 		"ghcr.io/code-fabrik/features/dokku-cli:latest": {},
-	    "ghcr.io/georglauterbach/dev-container-features/cache-vscode-extensions:0": {}
+		"ghcr.io/georglauterbach/dev-container-features/cache-vscode-extensions:0": {},
+		"ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// This can be used to network with other containers or with the host.
 	"forwardPorts": [3002, 5432],
-	// Use 'postCreateCommand' to run commands after the container is created.
+	// Persist Claude Code config/auth across container rebuilds.
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind"
+	],
+	"containerEnv": {
+		"CLAUDE_CONFIG_DIR": "/home/node/.claude"
+	},
+	"remoteEnv": {
+		"DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api?schema=public",
+		"TEST_DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api_test?schema=public"
+	},
+	// Fix volume ownership (new volumes are created as root), then install deps.
 	"postCreateCommand": "yarn install",
 	// Configure tool-specific properties.
 	"customizations": {
@@ -27,7 +39,6 @@
 				"mhutchie.git-graph",
 				"dbaeumer.vscode-eslint",
 				"motivesoft.vscode-uuid-generator",
-		        "dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"ms-ossdata.vscode-pgsql",
 				"GitHub.copilot",
@@ -69,10 +80,6 @@
 				}
 			}
 		}
-	},
-	"remoteEnv": {
-		"DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api?schema=public",
-		"TEST_DATABASE_URL": "postgresql://postgres:postgres@db:5432/teaching_api_test?schema=public"
 	}
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
